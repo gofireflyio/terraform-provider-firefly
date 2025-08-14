@@ -4,6 +4,7 @@ import (
 	"context"
 	"terraform-provider-firefly/internal/client"
 
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
@@ -77,6 +78,7 @@ func (r *guardrailResource) planToAPIGuardrail(ctx context.Context, plan Guardra
 		Type:      plan.Type.ValueString(),
 		IsEnabled: plan.IsEnabled.ValueBool(),
 		Severity:  int(plan.Severity.ValueInt64()),
+		CreatedBy: "terraform-provider", // Auto-populate required field
 	}
 
 	if !plan.NotificationID.IsNull() {
@@ -216,7 +218,7 @@ func (r *guardrailResource) planToAPIGuardrail(ctx context.Context, plan Guardra
 				guardrail.Criteria.Resource.SpecificResources = specificResources
 			}
 
-			// Regions
+			// Regions - always provide default if not specified
 			if plan.Criteria.Resource.Regions != nil {
 				guardrail.Criteria.Resource.Regions = &client.IncludeExcludeWildcard{}
 
@@ -231,9 +233,14 @@ func (r *guardrailResource) planToAPIGuardrail(ctx context.Context, plan Guardra
 					plan.Criteria.Resource.Regions.Exclude.ElementsAs(ctx, &exclude, false)
 					guardrail.Criteria.Resource.Regions.Exclude = exclude
 				}
+			} else {
+				// Provide default regions if not specified (required by API)
+				guardrail.Criteria.Resource.Regions = &client.IncludeExcludeWildcard{
+					Include: []string{"*"},
+				}
 			}
 
-			// Asset types
+			// Asset types - always provide default if not specified
 			if plan.Criteria.Resource.AssetTypes != nil {
 				guardrail.Criteria.Resource.AssetTypes = &client.IncludeExcludeWildcard{}
 
@@ -247,6 +254,11 @@ func (r *guardrailResource) planToAPIGuardrail(ctx context.Context, plan Guardra
 					var exclude []string
 					plan.Criteria.Resource.AssetTypes.Exclude.ElementsAs(ctx, &exclude, false)
 					guardrail.Criteria.Resource.AssetTypes.Exclude = exclude
+				}
+			} else {
+				// Provide default asset types if not specified (may be required by API)
+				guardrail.Criteria.Resource.AssetTypes = &client.IncludeExcludeWildcard{
+					Include: []string{"*"},
 				}
 			}
 		}
@@ -268,9 +280,10 @@ func (r *guardrailResource) planToAPIGuardrail(ctx context.Context, plan Guardra
 			if !plan.Criteria.Tag.RequiredValues.IsNull() {
 				requiredValues := make(map[string][]string)
 				for k, v := range plan.Criteria.Tag.RequiredValues.Elements() {
-					var values []string
-					v.As(ctx, &values, false)
-					requiredValues[k] = values
+					if strVal, ok := v.(types.String); ok {
+						// Store single values as single-element arrays
+						requiredValues[k] = []string{strVal.ValueString()}
+					}
 				}
 				guardrail.Criteria.Tag.RequiredValues = requiredValues
 			}
@@ -473,7 +486,7 @@ func (r *guardrailResource) apiGuardrailToPlan(ctx context.Context, apiGuardrail
 			}
 
 			if apiGuardrail.Criteria.Tag.RequiredValues != nil {
-				elements := make(map[string]types.List)
+				elements := make(map[string]attr.Value)
 				for k, v := range apiGuardrail.Criteria.Tag.RequiredValues {
 					elements[k] = types.ListValueMust(types.StringType, listToValues(v))
 				}
@@ -486,8 +499,8 @@ func (r *guardrailResource) apiGuardrailToPlan(ctx context.Context, apiGuardrail
 }
 
 // Helper function to convert a string slice to a slice of types.String
-func listToValues(list []string) []types.String {
-	values := make([]types.String, len(list))
+func listToValues(list []string) []attr.Value {
+	values := make([]attr.Value, len(list))
 	for i, v := range list {
 		values[i] = types.StringValue(v)
 	}

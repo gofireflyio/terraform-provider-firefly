@@ -105,7 +105,7 @@ func (c *Client) ensureAuthenticated() error {
 		return fmt.Errorf("error encoding login request: %s", err)
 	}
 	
-	req, err := http.NewRequest(http.MethodPost, fmt.Sprintf("%s/api/v2/login", c.baseURL), bytes.NewBuffer(reqBody))
+	req, err := http.NewRequest(http.MethodPost, fmt.Sprintf("%s/v2/login", c.baseURL), bytes.NewBuffer(reqBody))
 	if err != nil {
 		return fmt.Errorf("error creating login request: %s", err)
 	}

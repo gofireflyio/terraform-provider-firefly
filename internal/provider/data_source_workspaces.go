@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -361,7 +362,7 @@ func (d *workspacesDataSource) Read(ctx context.Context, req datasource.ReadRequ
 	
 	// Set workspaces in the data model
 	workspacesList, diags := types.ListValueFrom(ctx, types.ObjectType{
-		AttrTypes: map[string]types.Type{
+		AttrTypes: map[string]attr.Type{
 			"id":                 types.StringType,
 			"account_id":         types.StringType,
 			"workspace_id":       types.StringType,

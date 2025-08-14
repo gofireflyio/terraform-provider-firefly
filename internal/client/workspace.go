@@ -65,6 +65,17 @@ type WorkspaceRun struct {
 	Status        string `json:"status,omitempty"`
 	CreatedAt     string `json:"createdAt,omitempty"`
 	UpdatedAt     string `json:"updatedAt,omitempty"`
+	Branch        string `json:"branch,omitempty"`
+	CommitID      string `json:"commitId,omitempty"`
+	CommitURL     string `json:"commitUrl,omitempty"`
+	RunnerType    string `json:"runnerType,omitempty"`
+	BuildID       string `json:"buildId,omitempty"`
+	BuildURL      string `json:"buildUrl,omitempty"`
+	BuildName     string `json:"buildName,omitempty"`
+	VCSType       string `json:"vcsType,omitempty"`
+	Repo          string `json:"repo,omitempty"`
+	RepoURL       string `json:"repoUrl,omitempty"`
+	Title         string `json:"title,omitempty"`
 }
 
 // WorkspaceRunFilters represents filters for listing workspace runs

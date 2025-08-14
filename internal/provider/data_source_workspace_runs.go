@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -394,7 +395,7 @@ func (d *workspaceRunsDataSource) Read(ctx context.Context, req datasource.ReadR
 	
 	// Set runs in the data model
 	runsList, diags := types.ListValueFrom(ctx, types.ObjectType{
-		AttrTypes: map[string]types.Type{
+		AttrTypes: map[string]attr.Type{
 			"id":             types.StringType,
 			"workspace_id":   types.StringType,
 			"workspace_name": types.StringType,

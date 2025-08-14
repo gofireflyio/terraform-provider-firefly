@@ -124,7 +124,7 @@ func (s *GuardrailService) ListGuardrails(request *ListGuardrailsRequest, page, 
 	queryParams.Add("pageSize", strconv.Itoa(pageSize))
 	
 	// Create the request
-	req, err := s.client.newRequest(http.MethodPost, fmt.Sprintf("/guardrails/search?%s", queryParams.Encode()), request)
+	req, err := s.client.newRequest(http.MethodPost, fmt.Sprintf("/v2/guardrails/search?%s", queryParams.Encode()), request)
 	if err != nil {
 		return nil, err
 	}
@@ -154,7 +154,7 @@ func (s *GuardrailService) ListGuardrails(request *ListGuardrailsRequest, page, 
 // CreateGuardrail creates a new guardrail rule
 func (s *GuardrailService) CreateGuardrail(guardrail *GuardrailRule) (*CreateGuardrailResponse, error) {
 	// Create the request
-	req, err := s.client.newRequest(http.MethodPost, "/guardrails", guardrail)
+	req, err := s.client.newRequest(http.MethodPost, "/v2/guardrails", guardrail)
 	if err != nil {
 		return nil, err
 	}
@@ -172,10 +172,25 @@ func (s *GuardrailService) CreateGuardrail(guardrail *GuardrailRule) (*CreateGua
 		return nil, fmt.Errorf("failed to create guardrail: %s (status code: %d)", string(bodyBytes), resp.StatusCode)
 	}
 	
-	// Parse the response
+	// Parse the response - API returns just the rule ID as a string
+	bodyBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("error reading create guardrail response: %s", err)
+	}
+	
+	// Try to unmarshal as JSON object first
 	var createResp CreateGuardrailResponse
-	if err := json.NewDecoder(resp.Body).Decode(&createResp); err != nil {
-		return nil, fmt.Errorf("error parsing create guardrail response: %s", err)
+	if err := json.Unmarshal(bodyBytes, &createResp); err != nil {
+		// If that fails, try to unmarshal as a simple string (which the API actually returns)
+		var ruleID string
+		if err := json.Unmarshal(bodyBytes, &ruleID); err != nil {
+			return nil, fmt.Errorf("error parsing create guardrail response: %s", err)
+		}
+		// Create response object from string
+		createResp = CreateGuardrailResponse{
+			RuleID: ruleID,
+			NotificationID: "", // Not provided in string response
+		}
 	}
 	
 	return &createResp, nil
@@ -208,7 +223,7 @@ func (s *GuardrailService) GetGuardrail(ruleID string) (*GuardrailRule, error) {
 // UpdateGuardrail updates an existing guardrail rule
 func (s *GuardrailService) UpdateGuardrail(ruleID string, guardrail *GuardrailRule) (*UpdateGuardrailResponse, error) {
 	// Create the request
-	req, err := s.client.newRequest(http.MethodPatch, fmt.Sprintf("/guardrails/%s", ruleID), guardrail)
+	req, err := s.client.newRequest(http.MethodPatch, fmt.Sprintf("/v2/guardrails/%s", ruleID), guardrail)
 	if err != nil {
 		return nil, err
 	}
@@ -238,7 +253,7 @@ func (s *GuardrailService) UpdateGuardrail(ruleID string, guardrail *GuardrailRu
 // DeleteGuardrail deletes a guardrail rule by ID
 func (s *GuardrailService) DeleteGuardrail(ruleID string) (*DeleteGuardrailResponse, error) {
 	// Create the request
-	req, err := s.client.newRequest(http.MethodDelete, fmt.Sprintf("/guardrails/%s", ruleID), nil)
+	req, err := s.client.newRequest(http.MethodDelete, fmt.Sprintf("/v2/guardrails/%s", ruleID), nil)
 	if err != nil {
 		return nil, err
 	}

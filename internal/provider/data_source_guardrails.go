@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -293,7 +294,7 @@ func (d *guardrailsDataSource) Read(ctx context.Context, req datasource.ReadRequ
 	
 	// Set guardrails in the data model
 	guardrailsList, diags := types.ListValueFrom(ctx, types.ObjectType{
-		AttrTypes: map[string]types.Type{
+		AttrTypes: map[string]attr.Type{
 			"id":              types.StringType,
 			"account_id":      types.StringType,
 			"created_by":      types.StringType,

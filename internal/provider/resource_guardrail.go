@@ -6,9 +6,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"terraform-provider-firefly/internal/client"
@@ -92,9 +89,11 @@ func (r *guardrailResource) Create(ctx context.Context, req resource.CreateReque
 	// Set ID from response
 	plan.ID = types.StringValue(createResp.RuleID)
 	
-	// If notification ID was returned and none was provided in the plan, set it
-	if plan.NotificationID.IsNull() && createResp.NotificationID != "" {
+	// Set notification ID from response or empty string if none
+	if createResp.NotificationID != "" {
 		plan.NotificationID = types.StringValue(createResp.NotificationID)
+	} else {
+		plan.NotificationID = types.StringValue("")
 	}
 
 	// Fetch the created guardrail to get all of its properties
