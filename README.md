@@ -1,21 +1,51 @@
 # Terraform Provider for Firefly
 
-This Terraform Provider allows you to manage your Firefly SaaS resources using Terraform.
+[![Go Report Card](https://goreportcard.com/badge/github.com/gofireflyio/terraform-provider-firefly)](https://goreportcard.com/report/github.com/gofireflyio/terraform-provider-firefly)
+[![License: MPL 2.0](https://img.shields.io/badge/License-MPL%202.0-brightgreen.svg)](https://opensource.org/licenses/MPL-2.0)
+
+A comprehensive Terraform Provider for managing [Firefly](https://gofirefly.io) infrastructure resources. This provider enables Infrastructure as Code (IaC) management of projects, workspaces, variable sets, guardrails, and more through Terraform.
+
+## Features
+
+- **Complete Resource Coverage** - Manage all major Firefly resources
+- **Production Ready** - Comprehensive testing with 49 test scenarios
+- **Modern Architecture** - Built with Terraform Plugin Framework v1.15.1
+- **Professional Tooling** - Makefile, automated releases, and development tools
+- **Extensive Documentation** - Complete examples and usage guides
 
 ## Requirements
 
 - [Terraform](https://www.terraform.io/downloads.html) >= 1.0
-- [Go](https://golang.org/doc/install) >= 1.21
+- [Go](https://golang.org/doc/install) >= 1.23.7 (for development)
 
-## Building The Provider
+## Installation
 
-1. Clone the repository
-2. Enter the repository directory
-3. Build the provider using the Go `install` command:
+### Terraform Registry (Recommended)
 
-```shell
-go install
+```hcl
+terraform {
+  required_providers {
+    firefly = {
+      source  = "firefly/firefly"
+      version = "~> 1.0"
+    }
+  }
+}
 ```
+
+### Building From Source
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/gofireflyio/terraform-provider-firefly.git
+   cd terraform-provider-firefly
+   ```
+
+2. Build the provider:
+   ```bash
+   make build
+   # or: go install
+   ```
 
 ## Using the provider
 
@@ -186,18 +216,95 @@ resource "firefly_runners_workspace" "with_shared_vars" {
 }
 ```
 
-## Developing the Provider
+## Testing
 
-If you wish to work on the provider, you'll first need [Go](http://www.golang.org) installed on your machine (see [Requirements](#requirements) above).
+The provider includes comprehensive test coverage with 49 total tests:
 
-To compile the provider, run `go install`. This will build the provider and put the provider binary in the `$GOPATH/bin` directory.
+### Unit Tests (21 tests)
+```bash
+# Run all unit tests
+make test
 
-To generate or update documentation, run `go generate`.
-
-In order to run the full suite of Acceptance tests, run `make testacc`.
-
-*Note:* Acceptance tests create real resources, and often cost money to run.
-
-```shell
-make testacc
+# Run specific client tests
+go test ./internal/client -v -run TestProject
 ```
+
+### Acceptance Tests (28 scenarios)
+Acceptance tests create real resources and require valid Firefly credentials.
+
+```bash
+# Set required environment variables
+export FIREFLY_ACCESS_KEY="your-access-key"
+export FIREFLY_SECRET_KEY="your-secret-key"
+export TF_ACC=1
+
+# Run all acceptance tests
+make testacc
+
+# Run specific resource tests
+go test ./internal/provider -v -run TestAccProject
+```
+
+## Development
+
+### Prerequisites
+- [Go](https://golang.org/doc/install) >= 1.23.7
+- [Terraform](https://www.terraform.io/downloads.html) >= 1.0
+- Valid Firefly API credentials (for acceptance tests)
+
+### Setup
+```bash
+# Clone the repository
+git clone https://github.com/gofireflyio/terraform-provider-firefly.git
+cd terraform-provider-firefly
+
+# Install dependencies
+make deps
+
+# Build the provider
+make build
+
+# Run tests
+make test
+```
+
+### Development Commands
+```bash
+# Format code
+make fmt
+
+# Run linting
+make vet
+
+# Generate documentation
+make docs
+
+# Build for debugging
+make debug
+
+# Run specific tests
+go test ./internal/client -v
+go test ./internal/provider -v
+```
+
+### Testing Your Changes
+1. Build the provider: `make build`
+2. Run unit tests: `make test`
+3. Run acceptance tests: `TF_ACC=1 make testacc` (requires credentials)
+4. Test manually with debug mode: `make debug`
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Make your changes
+4. Add tests for new functionality
+5. Ensure all tests pass (`make test`)
+6. Format code (`make fmt`)
+7. Commit your changes (`git commit -m 'Add amazing feature'`)
+8. Push to the branch (`git push origin feature/amazing-feature`)
+9. Open a Pull Request
+
+## License
+
+This project is licensed under the Mozilla Public License 2.0 - see the [LICENSE](LICENSE) file for details.
