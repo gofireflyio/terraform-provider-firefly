@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"terraform-provider-firefly/internal/client"
+	"github.com/gofireflyio/terraform-provider-firefly/internal/client"
 )
 
 // Ensure the implementation satisfies the provider.Provider interface
@@ -33,10 +33,14 @@ type FireflyProviderModel struct {
 }
 
 // New creates a new provider instance
-func New() func() provider.Provider {
+func New(version ...string) func() provider.Provider {
 	return func() provider.Provider {
+		ver := "dev"
+		if len(version) > 0 && version[0] != "" {
+			ver = version[0]
+		}
 		return &FireflyProvider{
-			version: "dev",
+			version: ver,
 		}
 	}
 }

@@ -2,7 +2,7 @@ package provider
 
 import (
 	"context"
-	"terraform-provider-firefly/internal/client"
+	"github.com/gofireflyio/terraform-provider-firefly/internal/client"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"

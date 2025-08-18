@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"terraform-provider-firefly/internal/client"
+	"github.com/gofireflyio/terraform-provider-firefly/internal/client"
 )
 
 // Ensure the implementation satisfies the expected interfaces
