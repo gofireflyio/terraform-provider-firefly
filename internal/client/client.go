@@ -36,8 +36,11 @@ type Client struct {
 	expiresAt  time.Time
 	
 	// Services
-	Workspaces *WorkspaceService
-	Guardrails *GuardrailService
+	Workspaces        *WorkspaceService
+	Guardrails        *GuardrailService
+	Projects          *ProjectService
+	RunnersWorkspaces *RunnersWorkspaceService
+	VariableSets      *VariableSetService
 }
 
 // AuthResponse represents the response from the login endpoint
@@ -85,6 +88,9 @@ func NewClient(config Config) (*Client, error) {
 	// Create service endpoints
 	c.Workspaces = &WorkspaceService{client: c}
 	c.Guardrails = &GuardrailService{client: c}
+	c.Projects = &ProjectService{client: c}
+	c.RunnersWorkspaces = &RunnersWorkspaceService{client: c}
+	c.VariableSets = &VariableSetService{client: c}
 	
 	return c, nil
 }

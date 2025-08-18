@@ -139,6 +139,10 @@ func (p *FireflyProvider) DataSources(_ context.Context) []func() datasource.Dat
 		NewWorkspacesDataSource,
 		NewWorkspaceRunsDataSource,
 		NewGuardrailsDataSource,
+		NewProjectsDataSource,
+		NewProjectDataSource,
+		NewVariableSetsDataSource,
+		NewVariableSetDataSource,
 	}
 }
 
@@ -147,5 +151,8 @@ func (p *FireflyProvider) Resources(_ context.Context) []func() resource.Resourc
 	return []func() resource.Resource{
 		NewWorkspaceLabelsResource,
 		NewGuardrailResource,
+		NewProjectResource,
+		NewRunnersWorkspaceResource,
+		NewVariableSetResource,
 	}
 }

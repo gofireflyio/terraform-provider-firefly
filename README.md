@@ -38,21 +38,106 @@ provider "firefly" {
 }
 ```
 
+## Resources
+
+The provider supports the following resources:
+
+- **`firefly_project`** - Manage Firefly projects with hierarchical organization
+- **`firefly_runners_workspace`** - Manage Terraform/OpenTofu runner workspaces with VCS integration
+- **`firefly_variable_set`** - Manage reusable variable sets with inheritance
+- **`firefly_guardrail`** - Manage guardrail rules for cost, policy, and resource governance
+- **`firefly_workspace_labels`** - Manage workspace label assignments
+
+## Data Sources
+
+The provider supports the following data sources:
+
+- **`firefly_projects`** - List and filter projects
+- **`firefly_project`** - Get a single project by ID
+- **`firefly_variable_sets`** - List and filter variable sets
+- **`firefly_variable_set`** - Get a single variable set by ID
+- **`firefly_workspaces`** - List and filter CI workspaces
+- **`firefly_workspace_runs`** - Get workspace run information
+- **`firefly_guardrails`** - List and filter guardrail rules
+
 ### Examples
 
-**Creating a guardrail rule:**
+**Creating a complete infrastructure setup:**
 
 ```hcl
+# Create a project
+resource "firefly_project" "main" {
+  name        = "Production Infrastructure"
+  description = "Main production project"
+  labels      = ["production", "critical"]
+  
+  variables {
+    key         = "AWS_REGION"
+    value       = "us-west-2"
+    sensitivity = "string"
+    destination = "env"
+  }
+}
+
+# Create a variable set for shared configuration
+resource "firefly_variable_set" "aws_config" {
+  name        = "AWS Configuration"
+  description = "Shared AWS configuration variables"
+  labels      = ["aws", "shared"]
+  
+  variables {
+    key         = "AWS_DEFAULT_REGION"
+    value       = "us-west-2"
+    sensitivity = "string"
+    destination = "env"
+  }
+  
+  variables {
+    key         = "AWS_ACCESS_KEY_ID"
+    value       = var.aws_access_key
+    sensitivity = "secret"
+    destination = "env"
+  }
+}
+
+# Create a runners workspace
+resource "firefly_runners_workspace" "app" {
+  name                 = "production-app"
+  description          = "Production application infrastructure"
+  project_id           = firefly_project.main.id
+  
+  repository           = "myorg/infrastructure"
+  vcs_integration_id   = "your-vcs-integration-id"
+  vcs_type            = "github"
+  default_branch      = "main"
+  working_directory   = "environments/production"
+  
+  iac_type            = "terraform"
+  terraform_version   = "1.6.0"
+  apply_rule          = "manual"
+  triggers            = ["merge"]
+  
+  labels              = ["production", "terraform"]
+  consumed_variable_sets = [firefly_variable_set.aws_config.id]
+  
+  variables {
+    key         = "ENVIRONMENT"
+    value       = "production"
+    sensitivity = "string"
+    destination = "env"
+  }
+}
+
+# Create a guardrail rule
 resource "firefly_guardrail" "cost_guardrail" {
-  name      = "Cost Threshold Alert"
+  name      = "Production Cost Threshold"
   type      = "cost"
   is_enabled = true
   severity  = 2
   
   scope {
     workspaces {
-      include = ["prod-*"]
-      exclude = ["prod-test"]
+      include = ["production-*"]
     }
     
     labels {
@@ -68,26 +153,36 @@ resource "firefly_guardrail" "cost_guardrail" {
 }
 ```
 
-**Managing workspace labels:**
+**Using data sources to reference existing infrastructure:**
 
 ```hcl
-resource "firefly_workspace_labels" "prod_labels" {
-  workspace_id = "507f1f77bcf86cd799439011"
-  labels       = ["production", "terraform", "critical"]
-}
-```
-
-**Reading workspaces:**
-
-```hcl
-data "firefly_workspaces" "all" {
-  filters {
-    labels = ["production"]
-  }
+# Find existing projects
+data "firefly_projects" "existing" {
+  search_query = "legacy"
 }
 
-output "production_workspaces" {
-  value = data.firefly_workspaces.all
+# Get specific project details
+data "firefly_project" "main" {
+  id = "existing-project-id"
+}
+
+# Create workspace in existing project
+resource "firefly_runners_workspace" "new_service" {
+  name       = "new-service"
+  project_id = data.firefly_project.main.id
+  # ... other configuration
+}
+
+# Find shared variable sets
+data "firefly_variable_sets" "shared" {
+  search_query = "aws"
+}
+
+# Reference existing variable set
+resource "firefly_runners_workspace" "with_shared_vars" {
+  name = "service-with-shared-config"
+  consumed_variable_sets = [data.firefly_variable_sets.shared.variable_sets[0].id]
+  # ... other configuration
 }
 ```
 
