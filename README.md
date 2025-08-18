@@ -287,6 +287,61 @@ go test ./internal/client -v
 go test ./internal/provider -v
 ```
 
+### Running the Provider Locally
+
+To test the provider locally with Terraform:
+
+1. **Build the provider:**
+   ```bash
+   make build
+   # or: go install
+   ```
+
+2. **Run in debug mode:**
+   ```bash
+   go run main.go -debug
+   ```
+   This will output a `TF_REATTACH_PROVIDERS` environment variable that you need to set.
+
+3. **Set up your Terraform configuration:**
+   ```bash
+   # Copy the TF_REATTACH_PROVIDERS from the debug output and export it
+   export TF_REATTACH_PROVIDERS='{"firefly/firefly":{"Protocol":"grpc","ProtocolVersion":6,"Pid":12345,"Test":true,"Addr":{"Network":"unix","String":"/var/folders/.../T/plugin123456789"}}}'
+   
+   # Create a test Terraform configuration
+   mkdir test-terraform && cd test-terraform
+   ```
+
+4. **Create a test configuration file (main.tf):**
+   ```hcl
+   terraform {
+     required_providers {
+       firefly = {
+         source = "firefly/firefly"
+       }
+     }
+   }
+   
+   provider "firefly" {
+     access_key = "your-firefly-access-key"
+     secret_key = "your-firefly-secret-key"
+     api_url    = "https://api.firefly.ai"
+   }
+   
+   # Test resource
+   resource "firefly_project" "test" {
+     name        = "Local Test Project"
+     description = "Testing locally built provider"
+   }
+   ```
+
+5. **Run Terraform commands:**
+   ```bash
+   terraform init
+   terraform plan
+   terraform apply
+   ```
+
 ### Testing Your Changes
 1. Build the provider: `make build`
 2. Run unit tests: `make test`
