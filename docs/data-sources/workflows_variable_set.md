@@ -1,28 +1,28 @@
-# firefly_variable_set (Data Source)
+# firefly_workflows_variable_set (Data Source)
 
 Fetches a single Firefly variable set by ID.
 
 ## Example Usage
 
 ```terraform
-data "firefly_variable_set" "aws_config" {
+data "firefly_workflows_variable_set" "aws_config" {
   id = "existing-variable-set-id"
 }
 
 # Use the variable set in a workspace
-resource "firefly_runners_workspace" "app" {
+resource "firefly_workflows_runners_workspace" "app" {
   name = "production-app"
-  consumed_variable_sets = [data.firefly_variable_set.aws_config.id]
+  consumed_variable_sets = [data.firefly_workflows_variable_set.aws_config.id]
   # ... other configuration
 }
 
 # Output variable set information
 output "variable_set_info" {
   value = {
-    name        = data.firefly_variable_set.aws_config.name
-    description = data.firefly_variable_set.aws_config.description
-    version     = data.firefly_variable_set.aws_config.version
-    labels      = data.firefly_variable_set.aws_config.labels
+    name        = data.firefly_workflows_variable_set.aws_config.name
+    description = data.firefly_workflows_variable_set.aws_config.description
+    version     = data.firefly_workflows_variable_set.aws_config.version
+    labels      = data.firefly_workflows_variable_set.aws_config.labels
   }
 }
 ```

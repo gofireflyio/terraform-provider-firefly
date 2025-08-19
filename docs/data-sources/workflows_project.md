@@ -1,27 +1,27 @@
-# firefly_project (Data Source)
+# firefly_workflows_project (Data Source)
 
 Fetches a single Firefly project by ID.
 
 ## Example Usage
 
 ```terraform
-data "firefly_project" "main" {
+data "firefly_workflows_project" "main" {
   id = "existing-project-id"
 }
 
 # Use the project data
-resource "firefly_runners_workspace" "app" {
+resource "firefly_workflows_runners_workspace" "app" {
   name       = "new-app"
-  project_id = data.firefly_project.main.id
+  project_id = data.firefly_workflows_project.main.id
   # ... other configuration
 }
 
 # Output project information
 output "project_info" {
   value = {
-    name           = data.firefly_project.main.name
-    description    = data.firefly_project.main.description
-    workspace_count = data.firefly_project.main.workspace_count
+    name            = data.firefly_workflows_project.main.name
+    description     = data.firefly_workflows_project.main.description
+    workspace_count = data.firefly_workflows_project.main.workspace_count
   }
 }
 ```
