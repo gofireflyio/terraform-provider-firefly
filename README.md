@@ -8,6 +8,7 @@ A comprehensive Terraform Provider for managing [Firefly](https://gofirefly.io) 
 ## Features
 
 - **Complete Resource Coverage** - Manage all major Firefly resources
+- **Project Membership Management** - Assign users to projects with roles (admin/member) for UI visibility
 - **Production Ready** - Comprehensive testing with 49 test scenarios
 - **Modern Architecture** - Built with Terraform Plugin Framework v1.15.1
 - **Professional Tooling** - Makefile, automated releases, and development tools
@@ -156,6 +157,7 @@ You can configure authentication in several ways:
 The provider supports the following resources:
 
 - **`firefly_workflows_project`** - Manage Firefly projects with hierarchical organization
+- **`firefly_project_membership`** - Manage project member assignments and roles (admin, member)
 - **`firefly_workflows_runners_workspace`** - Manage Terraform/OpenTofu runner workspaces with VCS integration
 - **`firefly_workflows_variable_set`** - Manage reusable variable sets with inheritance
 - **`firefly_workflows_guardrail`** - Manage guardrail rules for cost, policy, and resource governance
@@ -180,7 +182,7 @@ The provider supports the following data sources:
 ```hcl
 # Create a project
 resource "firefly_workflows_project" "main" {
-  name        = "Production Infrastructure"
+  name        = "production-infrastructure"
   description = "Main production project"
   labels      = ["production", "critical"]
   
@@ -190,6 +192,21 @@ resource "firefly_workflows_project" "main" {
     sensitivity = "string"
     destination = "env"
   }
+}
+
+# Add team members to the project (makes it visible in UI)
+resource "firefly_project_membership" "admin" {
+  project_id = firefly_workflows_project.main.id
+  user_id    = "user123"
+  email      = "admin@company.com"
+  role       = "admin"
+}
+
+resource "firefly_project_membership" "developer" {
+  project_id = firefly_workflows_project.main.id
+  user_id    = "user456" 
+  email      = "dev@company.com"
+  role       = "member"
 }
 
 # Create a variable set for shared configuration

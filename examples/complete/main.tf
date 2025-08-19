@@ -46,14 +46,22 @@ variable "aws_secret_key" {
 
 # Create a parent project
 resource "firefly_workflows_project" "organization" {
-  name        = "Organization Infrastructure"
+  name        = "organization-infrastructure"
   description = "Top-level organization project"
   labels      = ["organization", "root"]
 }
 
+# Add team members to organization project (makes it visible in UI)
+resource "firefly_project_membership" "org_admin" {
+  project_id = firefly_workflows_project.organization.id
+  user_id    = "admin-user-123"
+  email      = "admin@company.com"
+  role       = "admin"
+}
+
 # Create environment projects
 resource "firefly_workflows_project" "production" {
-  name        = "Production Environment"
+  name        = "production-environment"
   description = "Production infrastructure project"
   labels      = ["production", "critical"]
   parent_id   = firefly_workflows_project.organization.id
@@ -69,8 +77,23 @@ resource "firefly_workflows_project" "production" {
   }
 }
 
+# Add production team members
+resource "firefly_project_membership" "prod_admin" {
+  project_id = firefly_workflows_project.production.id
+  user_id    = "prod-admin-456"
+  email      = "prod-admin@company.com"
+  role       = "admin"
+}
+
+resource "firefly_project_membership" "prod_member" {
+  project_id = firefly_workflows_project.production.id
+  user_id    = "prod-dev-789"
+  email      = "prod-dev@company.com"
+  role       = "member"
+}
+
 resource "firefly_workflows_project" "staging" {
-  name        = "Staging Environment"
+  name        = "staging-environment"
   description = "Staging infrastructure project"
   labels      = ["staging", "test"]
   parent_id   = firefly_workflows_project.organization.id
@@ -81,6 +104,14 @@ resource "firefly_workflows_project" "staging" {
     sensitivity = "string"
     destination = "env"
   }
+}
+
+# Add staging team members
+resource "firefly_project_membership" "staging_lead" {
+  project_id = firefly_workflows_project.staging.id
+  user_id    = "staging-lead-321"
+  email      = "staging-lead@company.com"
+  role       = "admin"
 }
 
 # Create base variable set

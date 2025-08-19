@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -201,6 +202,38 @@ func (r *variableSetResource) Create(ctx context.Context, req resource.CreateReq
 
 	plan.ID = types.StringValue(createResp.VariableSetID)
 
+	// Fetch the created variable set to get computed fields
+	variableSet, err := r.client.VariableSets.GetVariableSet(createResp.VariableSetID)
+	if err != nil {
+		resp.Diagnostics.AddError("Error Reading Variable Set", fmt.Sprintf("Could not read variable set after creation: %s", err))
+		return
+	}
+
+	// Update plan with computed values
+	plan.Version = types.Int64Value(int64(variableSet.Version))
+	
+	// Set parents - use empty list if no parents
+	if len(variableSet.Parents) > 0 {
+		parentList := make([]types.String, len(variableSet.Parents))
+		for i, parent := range variableSet.Parents {
+			parentList[i] = types.StringValue(parent)
+		}
+		plan.Parents = types.ListValueMust(types.StringType, labelListToValues(parentList))
+	} else {
+		plan.Parents = types.ListValueMust(types.StringType, []attr.Value{})
+	}
+
+	// Ensure labels is set properly too
+	if len(variableSet.Labels) > 0 {
+		labelList := make([]types.String, len(variableSet.Labels))
+		for i, label := range variableSet.Labels {
+			labelList[i] = types.StringValue(label)
+		}
+		plan.Labels = types.ListValueMust(types.StringType, labelListToValues(labelList))
+	} else if plan.Labels.IsNull() || plan.Labels.IsUnknown() {
+		plan.Labels = types.ListValueMust(types.StringType, []attr.Value{})
+	}
+
 	diags = resp.State.Set(ctx, plan)
 	resp.Diagnostics.Append(diags...)
 }
@@ -231,6 +264,8 @@ func (r *variableSetResource) Read(ctx context.Context, req resource.ReadRequest
 			labelList[i] = types.StringValue(label)
 		}
 		state.Labels = types.ListValueMust(types.StringType, labelListToValues(labelList))
+	} else {
+		state.Labels = types.ListValueMust(types.StringType, []attr.Value{})
 	}
 
 	if len(variableSet.Parents) > 0 {
@@ -239,6 +274,8 @@ func (r *variableSetResource) Read(ctx context.Context, req resource.ReadRequest
 			parentList[i] = types.StringValue(parent)
 		}
 		state.Parents = types.ListValueMust(types.StringType, labelListToValues(parentList))
+	} else {
+		state.Parents = types.ListValueMust(types.StringType, []attr.Value{})
 	}
 
 	diags = resp.State.Set(ctx, state)
@@ -306,7 +343,30 @@ func (r *variableSetResource) Update(ctx context.Context, req resource.UpdateReq
 		return
 	}
 
+	// Update plan with computed values from the API response
 	plan.Version = types.Int64Value(int64(variableSet.Version))
+	
+	// Set parents - use empty list if no parents
+	if len(variableSet.Parents) > 0 {
+		parentList := make([]types.String, len(variableSet.Parents))
+		for i, parent := range variableSet.Parents {
+			parentList[i] = types.StringValue(parent)
+		}
+		plan.Parents = types.ListValueMust(types.StringType, labelListToValues(parentList))
+	} else {
+		plan.Parents = types.ListValueMust(types.StringType, []attr.Value{})
+	}
+
+	// Ensure labels is set properly too
+	if len(variableSet.Labels) > 0 {
+		labelList := make([]types.String, len(variableSet.Labels))
+		for i, label := range variableSet.Labels {
+			labelList[i] = types.StringValue(label)
+		}
+		plan.Labels = types.ListValueMust(types.StringType, labelListToValues(labelList))
+	} else if plan.Labels.IsNull() || plan.Labels.IsUnknown() {
+		plan.Labels = types.ListValueMust(types.StringType, []attr.Value{})
+	}
 
 	diags = resp.State.Set(ctx, plan)
 	resp.Diagnostics.Append(diags...)

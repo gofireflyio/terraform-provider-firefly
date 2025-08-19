@@ -241,13 +241,22 @@ func (s *ProjectService) AddProjectMembers(projectID string, members []Member) (
 		return nil, fmt.Errorf("failed to add project members: %s (status code: %d)", string(bodyBytes), resp.StatusCode)
 	}
 
-	// Parse the response
-	var addedMembers []Member
-	if err := json.NewDecoder(resp.Body).Decode(&addedMembers); err != nil {
+	// Parse the response - API returns success message, not member data
+	bodyBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("error reading response body: %w", err)
+	}
+
+	// Check for success message
+	var successResp struct {
+		Message string `json:"message"`
+	}
+	if err := json.Unmarshal(bodyBytes, &successResp); err != nil {
 		return nil, fmt.Errorf("error decoding response: %w", err)
 	}
 
-	return addedMembers, nil
+	// Return the original members that were sent (API doesn't return member details)
+	return members, nil
 }
 
 // RemoveProjectMembers removes members from a project
@@ -272,6 +281,53 @@ func (s *ProjectService) RemoveProjectMembers(projectID string, userIDs []string
 	}
 
 	return nil
+}
+
+// GetProjectMember retrieves a specific member of a project
+func (s *ProjectService) GetProjectMember(projectID, userID string) (*Member, error) {
+	members, err := s.ListProjectMembers(projectID)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, member := range members {
+		if member.UserID == userID {
+			return &member, nil
+		}
+	}
+
+	return nil, fmt.Errorf("member with user ID %s not found in project %s", userID, projectID)
+}
+
+// AddProjectMember adds a single member to a project
+func (s *ProjectService) AddProjectMember(projectID string, member Member) (*Member, error) {
+	members := []Member{member}
+	addedMembers, err := s.AddProjectMembers(projectID, members)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(addedMembers) == 0 {
+		return nil, fmt.Errorf("no members were added")
+	}
+
+	return &addedMembers[0], nil
+}
+
+// RemoveProjectMember removes a single member from a project
+func (s *ProjectService) RemoveProjectMember(projectID, userID string) error {
+	return s.RemoveProjectMembers(projectID, []string{userID})
+}
+
+// UpdateProjectMember updates a member's role in a project
+func (s *ProjectService) UpdateProjectMember(projectID string, member Member) (*Member, error) {
+	// First remove the member
+	if err := s.RemoveProjectMember(projectID, member.UserID); err != nil {
+		return nil, fmt.Errorf("failed to remove member for update: %w", err)
+	}
+
+	// Then add with the new role
+	return s.AddProjectMember(projectID, member)
 }
 
 // ProjectsListResponse represents the response from listing projects

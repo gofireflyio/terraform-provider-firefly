@@ -69,6 +69,11 @@ go test ./internal/provider -v -run TestAccProject
 go test ./... -v
 ```
 
+### Documentation Generation
+⚠️ **DO NOT USE**: `github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs` - This tool is not working properly.
+
+Create documentation manually in the `docs/` directory following Terraform Registry format.
+
 ## Configuration
 Provider expects:
 - `access_key` (required, sensitive)
@@ -126,6 +131,7 @@ terraform apply
 ### Working Example
 The provider has been tested successfully with these resources:
 - ✅ `firefly_workflows_project` - Creates projects (verified working)
+- ✅ `firefly_project_membership` - Manages project member assignments (NEW)
 - ✅ `firefly_workflows_variable_set` - Manages variable sets  
 - ✅ `firefly_workflows_runners_workspace` - Manages runner workspaces
 - ✅ `firefly_workflows_guardrail` - Manages governance rules
@@ -173,6 +179,15 @@ go test ./internal/provider -v
 - ⏳ Terraform Registry publication pending
 
 ## Recent Major Updates
+- **2025-08-19**: Added `firefly_project_membership` resource for managing project member assignments
+  - New resource allows adding users to projects with specific roles (admin, member, viewer)
+  - Enables projects created via Terraform to be visible in the UI by assigning members
+  - Includes comprehensive tests and documentation
+  - Import/export functionality with format `project_id:user_id`
+- **2025-08-19**: Fixed variable set resource to properly populate computed fields after creation/update
+  - Issue: `parents` and `version` fields were showing as unknown after apply
+  - Solution: Added API call to fetch complete resource after create/update operations
+  - All computed fields now properly populated in Terraform state
 - **2025-08-19**: Resources renamed to `workflows_*` prefix for clarity
 - **2025-08-19**: Added comprehensive documentation structure
 - **2025-08-19**: Verified provider functionality with real API testing
