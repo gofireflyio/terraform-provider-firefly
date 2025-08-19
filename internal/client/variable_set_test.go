@@ -201,14 +201,14 @@ func TestVariableSetService_CreateVariableSet(t *testing.T) {
 			{
 				Key:         "TEST_VAR",
 				Value:       "test-value",
-				Sensitivity: "string",
-				Destination: "env",
+				Sensitivity: SensitivityString,
+				Destination: DestinationEnv,
 			},
 			{
 				Key:         "SECRET_VAR",
 				Value:       "secret-value",
-				Sensitivity: "secret",
-				Destination: "env",
+				Sensitivity: SensitivitySecret,
+				Destination: DestinationEnv,
 			},
 		},
 	}
@@ -285,8 +285,8 @@ func TestVariableSetService_UpdateVariableSet(t *testing.T) {
 			{
 				Key:         "UPDATED_VAR",
 				Value:       "updated-value",
-				Sensitivity: "string",
-				Destination: "env",
+				Sensitivity: SensitivityString,
+				Destination: DestinationEnv,
 			},
 		},
 	}

@@ -177,8 +177,8 @@ func (r *variableSetResource) Create(ctx context.Context, req resource.CreateReq
 			variables = append(variables, client.Variable{
 				Key:         v.Key.ValueString(),
 				Value:       v.Value.ValueString(),
-				Sensitivity: v.Sensitivity.ValueString(),
-				Destination: v.Destination.ValueString(),
+				Sensitivity: client.VariableSensitivity(v.Sensitivity.ValueString()),
+				Destination: client.VariableDestination(v.Destination.ValueString()),
 			})
 		}
 	}
@@ -284,8 +284,8 @@ func (r *variableSetResource) Update(ctx context.Context, req resource.UpdateReq
 			variables = append(variables, client.Variable{
 				Key:         v.Key.ValueString(),
 				Value:       v.Value.ValueString(),
-				Sensitivity: v.Sensitivity.ValueString(),
-				Destination: v.Destination.ValueString(),
+				Sensitivity: client.VariableSensitivity(v.Sensitivity.ValueString()),
+				Destination: client.VariableDestination(v.Destination.ValueString()),
 			})
 		}
 	}

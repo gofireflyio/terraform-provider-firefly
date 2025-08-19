@@ -205,8 +205,8 @@ func (r *projectResource) Create(ctx context.Context, req resource.CreateRequest
 			variables = append(variables, client.Variable{
 				Key:         v.Key.ValueString(),
 				Value:       v.Value.ValueString(),
-				Sensitivity: v.Sensitivity.ValueString(),
-				Destination: v.Destination.ValueString(),
+				Sensitivity: client.VariableSensitivity(v.Sensitivity.ValueString()),
+				Destination: client.VariableDestination(v.Destination.ValueString()),
 			})
 		}
 	}
@@ -288,8 +288,8 @@ func (r *projectResource) Read(ctx context.Context, req resource.ReadRequest, re
 			varList[i] = ProjectVariableModel{
 				Key:         types.StringValue(v.Key),
 				Value:       types.StringValue(v.Value),
-				Sensitivity: types.StringValue(v.Sensitivity),
-				Destination: types.StringValue(v.Destination),
+				Sensitivity: types.StringValue(string(v.Sensitivity)),
+				Destination: types.StringValue(string(v.Destination)),
 			}
 		}
 		state.Variables = types.ListValueMust(types.ObjectType{
@@ -341,8 +341,8 @@ func (r *projectResource) Update(ctx context.Context, req resource.UpdateRequest
 			variables = append(variables, client.Variable{
 				Key:         v.Key.ValueString(),
 				Value:       v.Value.ValueString(),
-				Sensitivity: v.Sensitivity.ValueString(),
-				Destination: v.Destination.ValueString(),
+				Sensitivity: client.VariableSensitivity(v.Sensitivity.ValueString()),
+				Destination: client.VariableDestination(v.Destination.ValueString()),
 			})
 		}
 	}

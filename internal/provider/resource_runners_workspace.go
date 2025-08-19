@@ -280,8 +280,8 @@ func (r *runnersWorkspaceResource) Create(ctx context.Context, req resource.Crea
 			variables = append(variables, client.Variable{
 				Key:         v.Key.ValueString(),
 				Value:       v.Value.ValueString(),
-				Sensitivity: v.Sensitivity.ValueString(),
-				Destination: v.Destination.ValueString(),
+				Sensitivity: client.VariableSensitivity(v.Sensitivity.ValueString()),
+				Destination: client.VariableDestination(v.Destination.ValueString()),
 			})
 		}
 	}
@@ -432,8 +432,8 @@ func (r *runnersWorkspaceResource) Update(ctx context.Context, req resource.Upda
 			variables = append(variables, client.Variable{
 				Key:         v.Key.ValueString(),
 				Value:       v.Value.ValueString(),
-				Sensitivity: v.Sensitivity.ValueString(),
-				Destination: v.Destination.ValueString(),
+				Sensitivity: client.VariableSensitivity(v.Sensitivity.ValueString()),
+				Destination: client.VariableDestination(v.Destination.ValueString()),
 			})
 		}
 	}

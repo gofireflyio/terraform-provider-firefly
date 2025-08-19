@@ -12,12 +12,28 @@ type ProjectService struct {
 	client *Client
 }
 
+// VariableSensitivity represents the sensitivity level of a variable
+type VariableSensitivity string
+
+const (
+	SensitivityString VariableSensitivity = "string"
+	SensitivitySecret VariableSensitivity = "secret"
+)
+
+// VariableDestination represents where the variable should be used
+type VariableDestination string
+
+const (
+	DestinationEnv VariableDestination = "env"
+	DestinationIAC VariableDestination = "iac"
+)
+
 // Variable represents a project variable
 type Variable struct {
-	Key         string `json:"key"`
-	Value       string `json:"value"`
-	Sensitivity string `json:"sensitivity,omitempty"` // "string" or "secret"
-	Destination string `json:"destination,omitempty"` // "env" or "iac"
+	Key         string               `json:"key"`
+	Value       string               `json:"value"`
+	Sensitivity VariableSensitivity  `json:"sensitivity,omitempty"`
+	Destination VariableDestination  `json:"destination,omitempty"`
 }
 
 // CreateProjectRequest represents a request to create a new project
