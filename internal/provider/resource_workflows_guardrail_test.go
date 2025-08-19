@@ -16,16 +16,16 @@ func TestAccGuardrailResource_basic(t *testing.T) {
 			{
 				Config: testAccGuardrailResourceConfig("test-guardrail", "cost", 2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("firefly_guardrail.test", "name", "test-guardrail"),
-					resource.TestCheckResourceAttr("firefly_guardrail.test", "type", "cost"),
-					resource.TestCheckResourceAttr("firefly_guardrail.test", "is_enabled", "true"),
-					resource.TestCheckResourceAttr("firefly_guardrail.test", "severity", "2"),
-					resource.TestCheckResourceAttrSet("firefly_guardrail.test", "id"),
+					resource.TestCheckResourceAttr("firefly_workflows_guardrail.test", "name", "test-guardrail"),
+					resource.TestCheckResourceAttr("firefly_workflows_guardrail.test", "type", "cost"),
+					resource.TestCheckResourceAttr("firefly_workflows_guardrail.test", "is_enabled", "true"),
+					resource.TestCheckResourceAttr("firefly_workflows_guardrail.test", "severity", "2"),
+					resource.TestCheckResourceAttrSet("firefly_workflows_guardrail.test", "id"),
 				),
 			},
 			// ImportState testing
 			{
-				ResourceName:      "firefly_guardrail.test",
+				ResourceName:      "firefly_workflows_guardrail.test",
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -33,8 +33,8 @@ func TestAccGuardrailResource_basic(t *testing.T) {
 			{
 				Config: testAccGuardrailResourceConfig("test-guardrail-updated", "cost", 1),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("firefly_guardrail.test", "name", "test-guardrail-updated"),
-					resource.TestCheckResourceAttr("firefly_guardrail.test", "severity", "1"),
+					resource.TestCheckResourceAttr("firefly_workflows_guardrail.test", "name", "test-guardrail-updated"),
+					resource.TestCheckResourceAttr("firefly_workflows_guardrail.test", "severity", "1"),
 				),
 			},
 			// Delete testing automatically occurs in TestCase
@@ -101,7 +101,7 @@ func TestAccGuardrailResource_withScope(t *testing.T) {
 
 func testAccGuardrailResourceConfig(name, guardrailType string, severity int) string {
 	return fmt.Sprintf(`
-resource "firefly_guardrail" "test" {
+resource "firefly_workflows_guardrail" "test" {
   name       = %[1]q
   type       = %[2]q
   is_enabled = true
@@ -112,7 +112,7 @@ resource "firefly_guardrail" "test" {
 
 func testAccGuardrailResourceCostConfig() string {
 	return `
-resource "firefly_guardrail" "cost" {
+resource "firefly_workflows_guardrail" "cost" {
   name       = "Cost Threshold Guardrail"
   type       = "cost"
   is_enabled = true
@@ -129,7 +129,7 @@ resource "firefly_guardrail" "cost" {
 
 func testAccGuardrailResourceTagConfig() string {
 	return `
-resource "firefly_guardrail" "tag" {
+resource "firefly_workflows_guardrail" "tag" {
   name       = "Tag Policy Guardrail"
   type       = "tag"
   is_enabled = true
@@ -147,7 +147,7 @@ resource "firefly_guardrail" "tag" {
 
 func testAccGuardrailResourceWithScopeConfig() string {
 	return `
-resource "firefly_guardrail" "scoped" {
+resource "firefly_workflows_guardrail" "scoped" {
   name       = "Scoped Guardrail"
   type       = "cost"
   is_enabled = true

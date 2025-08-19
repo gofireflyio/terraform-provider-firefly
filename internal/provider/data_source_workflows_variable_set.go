@@ -35,7 +35,7 @@ type VariableSetSingleDataSourceModel struct {
 }
 
 func (d *variableSetDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_variable_set"
+	resp.TypeName = req.ProviderTypeName + "_workflows_variable_set"
 }
 
 func (d *variableSetDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {

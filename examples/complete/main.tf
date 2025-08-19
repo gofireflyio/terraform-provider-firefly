@@ -45,18 +45,18 @@ variable "aws_secret_key" {
 }
 
 # Create a parent project
-resource "firefly_project" "organization" {
+resource "firefly_workflows_project" "organization" {
   name        = "Organization Infrastructure"
   description = "Top-level organization project"
   labels      = ["organization", "root"]
 }
 
 # Create environment projects
-resource "firefly_project" "production" {
+resource "firefly_workflows_project" "production" {
   name        = "Production Environment"
   description = "Production infrastructure project"
   labels      = ["production", "critical"]
-  parent_id   = firefly_project.organization.id
+  parent_id   = firefly_workflows_project.organization.id
   
   # Scheduled daily execution at 2 AM
   cron_execution_pattern = "0 2 * * *"
@@ -69,11 +69,11 @@ resource "firefly_project" "production" {
   }
 }
 
-resource "firefly_project" "staging" {
+resource "firefly_workflows_project" "staging" {
   name        = "Staging Environment"
   description = "Staging infrastructure project"
   labels      = ["staging", "test"]
-  parent_id   = firefly_project.organization.id
+  parent_id   = firefly_workflows_project.organization.id
   
   variables {
     key         = "ENVIRONMENT"
@@ -84,7 +84,7 @@ resource "firefly_project" "staging" {
 }
 
 # Create base variable set
-resource "firefly_variable_set" "base_config" {
+resource "firefly_workflows_variable_set" "base_config" {
   name        = "Base Configuration"
   description = "Base configuration variables"
   labels      = ["base", "shared"]
@@ -105,11 +105,11 @@ resource "firefly_variable_set" "base_config" {
 }
 
 # Create AWS variable set
-resource "firefly_variable_set" "aws_config" {
+resource "firefly_workflows_variable_set" "aws_config" {
   name        = "AWS Configuration"
   description = "AWS configuration variables"
   labels      = ["aws", "cloud", "shared"]
-  parents     = [firefly_variable_set.base_config.id]
+  parents     = [firefly_workflows_variable_set.base_config.id]
   
   variables {
     key         = "AWS_DEFAULT_REGION"
@@ -141,11 +141,11 @@ resource "firefly_variable_set" "aws_config" {
 }
 
 # Create production-specific variable set
-resource "firefly_variable_set" "production_config" {
+resource "firefly_workflows_variable_set" "production_config" {
   name        = "Production Configuration"
   description = "Production-specific variables"
   labels      = ["production", "config"]
-  parents     = [firefly_variable_set.aws_config.id]
+  parents     = [firefly_workflows_variable_set.aws_config.id]
   
   variables {
     key         = "INSTANCE_TYPE"
@@ -163,10 +163,10 @@ resource "firefly_variable_set" "production_config" {
 }
 
 # Create production workspaces
-resource "firefly_runners_workspace" "prod_app" {
+resource "firefly_workflows_runners_workspace" "prod_app" {
   name        = "production-application"
   description = "Production application infrastructure"
-  project_id  = firefly_project.production.id
+  project_id  = firefly_workflows_project.production.id
   
   # VCS Configuration
   repository           = "myorg/app-infrastructure"
@@ -184,7 +184,7 @@ resource "firefly_runners_workspace" "prod_app" {
   # Labels and variable sets
   labels = ["production", "application", "terraform"]
   consumed_variable_sets = [
-    firefly_variable_set.production_config.id
+    firefly_workflows_variable_set.production_config.id
   ]
   
   # Workspace-specific variables
@@ -203,10 +203,10 @@ resource "firefly_runners_workspace" "prod_app" {
   }
 }
 
-resource "firefly_runners_workspace" "prod_database" {
+resource "firefly_workflows_runners_workspace" "prod_database" {
   name        = "production-database"
   description = "Production database infrastructure"
-  project_id  = firefly_project.production.id
+  project_id  = firefly_workflows_project.production.id
   
   # VCS Configuration
   repository           = "myorg/database-infrastructure"
@@ -224,7 +224,7 @@ resource "firefly_runners_workspace" "prod_database" {
   # Labels and variable sets
   labels = ["production", "database", "terraform"]
   consumed_variable_sets = [
-    firefly_variable_set.production_config.id
+    firefly_workflows_variable_set.production_config.id
   ]
   
   # Database-specific variables
@@ -244,10 +244,10 @@ resource "firefly_runners_workspace" "prod_database" {
 }
 
 # Create staging workspace
-resource "firefly_runners_workspace" "staging_app" {
+resource "firefly_workflows_runners_workspace" "staging_app" {
   name        = "staging-application"
   description = "Staging application infrastructure"
-  project_id  = firefly_project.staging.id
+  project_id  = firefly_workflows_project.staging.id
   
   # VCS Configuration
   repository           = "myorg/app-infrastructure"
@@ -265,7 +265,7 @@ resource "firefly_runners_workspace" "staging_app" {
   # Labels and variable sets
   labels = ["staging", "application", "terraform"]
   consumed_variable_sets = [
-    firefly_variable_set.aws_config.id  # Use base AWS config for staging
+    firefly_workflows_variable_set.aws_config.id  # Use base AWS config for staging
   ]
   
   # Staging-specific variables
@@ -285,11 +285,11 @@ resource "firefly_runners_workspace" "staging_app" {
 }
 
 # Data sources for existing resources
-data "firefly_projects" "all_projects" {
+data "firefly_workflows_projects" "all_projects" {
   search_query = "infrastructure"
 }
 
-data "firefly_variable_sets" "shared_sets" {
+data "firefly_workflows_variable_sets" "shared_sets" {
   search_query = "shared"
 }
 
@@ -297,18 +297,18 @@ data "firefly_variable_sets" "shared_sets" {
 output "production_project_info" {
   description = "Production project information"
   value = {
-    id             = firefly_project.production.id
-    name           = firefly_project.production.name
-    workspace_count = firefly_project.production.workspace_count
+    id             = firefly_workflows_project.production.id
+    name           = firefly_workflows_project.production.name
+    workspace_count = firefly_workflows_project.production.workspace_count
   }
 }
 
 output "workspace_ids" {
   description = "All workspace IDs"
   value = {
-    prod_app      = firefly_runners_workspace.prod_app.id
-    prod_database = firefly_runners_workspace.prod_database.id
-    staging_app   = firefly_runners_workspace.staging_app.id
+    prod_app      = firefly_workflows_runners_workspace.prod_app.id
+    prod_database = firefly_workflows_runners_workspace.prod_database.id
+    staging_app   = firefly_workflows_runners_workspace.staging_app.id
   }
 }
 
@@ -316,12 +316,12 @@ output "variable_set_info" {
   description = "Variable set information"
   value = {
     aws_config = {
-      id      = firefly_variable_set.aws_config.id
-      version = firefly_variable_set.aws_config.version
+      id      = firefly_workflows_variable_set.aws_config.id
+      version = firefly_workflows_variable_set.aws_config.version
     }
     production_config = {
-      id      = firefly_variable_set.production_config.id
-      version = firefly_variable_set.production_config.version
+      id      = firefly_workflows_variable_set.production_config.id
+      version = firefly_workflows_variable_set.production_config.version
     }
   }
 }

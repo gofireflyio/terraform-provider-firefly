@@ -63,7 +63,7 @@ type IacProvisionerModel struct {
 
 // Metadata returns the resource type name
 func (r *runnersWorkspaceResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_runners_workspace"
+	resp.TypeName = req.ProviderTypeName + "_workflows_runners_workspace"
 }
 
 // Schema defines the schema for the resource

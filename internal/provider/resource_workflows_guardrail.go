@@ -30,7 +30,7 @@ type guardrailResource struct {
 
 // Metadata returns the resource type name
 func (r *guardrailResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_guardrail"
+	resp.TypeName = req.ProviderTypeName + "_workflows_guardrail"
 }
 
 // Configure adds the provider configured client to the resource

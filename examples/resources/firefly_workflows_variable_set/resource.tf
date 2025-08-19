@@ -1,10 +1,10 @@
-resource "firefly_variable_set" "example" {
+resource "firefly_workflows_variable_set" "example" {
   name        = "AWS Configuration"
   description = "Shared AWS configuration variables"
   labels      = ["aws", "shared", "production"]
   
   # Parent variable sets for inheritance
-  parents = [firefly_variable_set.base_config.id]
+  parents = [firefly_workflows_variable_set.base_config.id]
   
   # Variables in the set
   variables {

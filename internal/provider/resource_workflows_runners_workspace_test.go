@@ -16,23 +16,23 @@ func TestAccRunnersWorkspaceResource_basic(t *testing.T) {
 			{
 				Config: testAccRunnersWorkspaceResourceConfig("test-workspace"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("firefly_runners_workspace.test", "name", "test-workspace"),
-					resource.TestCheckResourceAttr("firefly_runners_workspace.test", "description", "Test runners workspace"),
-					resource.TestCheckResourceAttr("firefly_runners_workspace.test", "repository", "myorg/infrastructure"),
-					resource.TestCheckResourceAttr("firefly_runners_workspace.test", "vcs_type", "github"),
-					resource.TestCheckResourceAttr("firefly_runners_workspace.test", "default_branch", "main"),
-					resource.TestCheckResourceAttr("firefly_runners_workspace.test", "iac_type", "terraform"),
-					resource.TestCheckResourceAttr("firefly_runners_workspace.test", "terraform_version", "1.6.0"),
-					resource.TestCheckResourceAttr("firefly_runners_workspace.test", "apply_rule", "manual"),
-					resource.TestCheckResourceAttr("firefly_runners_workspace.test", "labels.#", "2"),
-					resource.TestCheckResourceAttr("firefly_runners_workspace.test", "triggers.#", "1"),
-					resource.TestCheckResourceAttr("firefly_runners_workspace.test", "triggers.0", "merge"),
-					resource.TestCheckResourceAttrSet("firefly_runners_workspace.test", "id"),
+					resource.TestCheckResourceAttr("firefly_workflows_runners_workspace.test", "name", "test-workspace"),
+					resource.TestCheckResourceAttr("firefly_workflows_runners_workspace.test", "description", "Test runners workspace"),
+					resource.TestCheckResourceAttr("firefly_workflows_runners_workspace.test", "repository", "myorg/infrastructure"),
+					resource.TestCheckResourceAttr("firefly_workflows_runners_workspace.test", "vcs_type", "github"),
+					resource.TestCheckResourceAttr("firefly_workflows_runners_workspace.test", "default_branch", "main"),
+					resource.TestCheckResourceAttr("firefly_workflows_runners_workspace.test", "iac_type", "terraform"),
+					resource.TestCheckResourceAttr("firefly_workflows_runners_workspace.test", "terraform_version", "1.6.0"),
+					resource.TestCheckResourceAttr("firefly_workflows_runners_workspace.test", "apply_rule", "manual"),
+					resource.TestCheckResourceAttr("firefly_workflows_runners_workspace.test", "labels.#", "2"),
+					resource.TestCheckResourceAttr("firefly_workflows_runners_workspace.test", "triggers.#", "1"),
+					resource.TestCheckResourceAttr("firefly_workflows_runners_workspace.test", "triggers.0", "merge"),
+					resource.TestCheckResourceAttrSet("firefly_workflows_runners_workspace.test", "id"),
 				),
 			},
 			// ImportState testing
 			{
-				ResourceName:      "firefly_runners_workspace.test",
+				ResourceName:      "firefly_workflows_runners_workspace.test",
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -40,8 +40,8 @@ func TestAccRunnersWorkspaceResource_basic(t *testing.T) {
 			{
 				Config: testAccRunnersWorkspaceResourceConfig("test-workspace-updated"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("firefly_runners_workspace.test", "name", "test-workspace-updated"),
-					resource.TestCheckResourceAttr("firefly_runners_workspace.test", "apply_rule", "manual"),
+					resource.TestCheckResourceAttr("firefly_workflows_runners_workspace.test", "name", "test-workspace-updated"),
+					resource.TestCheckResourceAttr("firefly_workflows_runners_workspace.test", "apply_rule", "manual"),
 				),
 			},
 			// Delete testing automatically occurs in TestCase
@@ -58,8 +58,8 @@ func TestAccRunnersWorkspaceResource_withProject(t *testing.T) {
 				Config: testAccRunnersWorkspaceResourceWithProjectConfig(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("firefly_project.test", "name", "test-project-for-workspace"),
-					resource.TestCheckResourceAttr("firefly_runners_workspace.test", "name", "workspace-with-project"),
-					resource.TestCheckResourceAttrPair("firefly_runners_workspace.test", "project_id", "firefly_project.test", "id"),
+					resource.TestCheckResourceAttr("firefly_workflows_runners_workspace.test", "name", "workspace-with-project"),
+					resource.TestCheckResourceAttrPair("firefly_workflows_runners_workspace.test", "project_id", "firefly_project.test", "id"),
 				),
 			},
 		},
@@ -74,12 +74,12 @@ func TestAccRunnersWorkspaceResource_withVariables(t *testing.T) {
 			{
 				Config: testAccRunnersWorkspaceResourceWithVariablesConfig(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("firefly_runners_workspace.test", "name", "workspace-with-vars"),
-					resource.TestCheckResourceAttr("firefly_runners_workspace.test", "variables.#", "2"),
-					resource.TestCheckResourceAttr("firefly_runners_workspace.test", "variables.0.key", "ENVIRONMENT"),
-					resource.TestCheckResourceAttr("firefly_runners_workspace.test", "variables.0.value", "test"),
-					resource.TestCheckResourceAttr("firefly_runners_workspace.test", "variables.0.sensitivity", "string"),
-					resource.TestCheckResourceAttr("firefly_runners_workspace.test", "variables.0.destination", "env"),
+					resource.TestCheckResourceAttr("firefly_workflows_runners_workspace.test", "name", "workspace-with-vars"),
+					resource.TestCheckResourceAttr("firefly_workflows_runners_workspace.test", "variables.#", "2"),
+					resource.TestCheckResourceAttr("firefly_workflows_runners_workspace.test", "variables.0.key", "ENVIRONMENT"),
+					resource.TestCheckResourceAttr("firefly_workflows_runners_workspace.test", "variables.0.value", "test"),
+					resource.TestCheckResourceAttr("firefly_workflows_runners_workspace.test", "variables.0.sensitivity", "string"),
+					resource.TestCheckResourceAttr("firefly_workflows_runners_workspace.test", "variables.0.destination", "env"),
 				),
 			},
 		},
@@ -95,9 +95,9 @@ func TestAccRunnersWorkspaceResource_withVariableSets(t *testing.T) {
 				Config: testAccRunnersWorkspaceResourceWithVariableSetsConfig(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("firefly_variable_set.test", "name", "test-varset-for-workspace"),
-					resource.TestCheckResourceAttr("firefly_runners_workspace.test", "name", "workspace-with-varsets"),
-					resource.TestCheckResourceAttr("firefly_runners_workspace.test", "consumed_variable_sets.#", "1"),
-					resource.TestCheckResourceAttrPair("firefly_runners_workspace.test", "consumed_variable_sets.0", "firefly_variable_set.test", "id"),
+					resource.TestCheckResourceAttr("firefly_workflows_runners_workspace.test", "name", "workspace-with-varsets"),
+					resource.TestCheckResourceAttr("firefly_workflows_runners_workspace.test", "consumed_variable_sets.#", "1"),
+					resource.TestCheckResourceAttrPair("firefly_workflows_runners_workspace.test", "consumed_variable_sets.0", "firefly_variable_set.test", "id"),
 				),
 			},
 		},
@@ -106,7 +106,7 @@ func TestAccRunnersWorkspaceResource_withVariableSets(t *testing.T) {
 
 func testAccRunnersWorkspaceResourceConfig(name string) string {
 	return fmt.Sprintf(`
-resource "firefly_runners_workspace" "test" {
+resource "firefly_workflows_runners_workspace" "test" {
   name              = %[1]q
   description       = "Test runners workspace"
   repository        = "myorg/infrastructure"
@@ -131,7 +131,7 @@ resource "firefly_project" "test" {
   labels      = ["test", "project"]
 }
 
-resource "firefly_runners_workspace" "test" {
+resource "firefly_workflows_runners_workspace" "test" {
   name              = "workspace-with-project"
   description       = "Workspace linked to project"
   project_id        = firefly_project.test.id
@@ -150,7 +150,7 @@ resource "firefly_runners_workspace" "test" {
 
 func testAccRunnersWorkspaceResourceWithVariablesConfig() string {
 	return `
-resource "firefly_runners_workspace" "test" {
+resource "firefly_workflows_runners_workspace" "test" {
   name              = "workspace-with-vars"
   description       = "Workspace with variables"
   repository        = "myorg/infrastructure"
@@ -195,7 +195,7 @@ resource "firefly_variable_set" "test" {
   }
 }
 
-resource "firefly_runners_workspace" "test" {
+resource "firefly_workflows_runners_workspace" "test" {
   name                   = "workspace-with-varsets"
   description            = "Workspace consuming variable sets"
   repository             = "myorg/infrastructure"

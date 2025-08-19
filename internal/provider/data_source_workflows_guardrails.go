@@ -60,7 +60,7 @@ type GuardrailsDataSourceModel struct {
 
 // Metadata returns the data source type name
 func (d *guardrailsDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_guardrails"
+	resp.TypeName = req.ProviderTypeName + "_workflows_guardrails"
 }
 
 // Schema defines the schema for the data source

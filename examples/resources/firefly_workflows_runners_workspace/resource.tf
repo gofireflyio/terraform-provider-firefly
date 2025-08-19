@@ -1,4 +1,4 @@
-resource "firefly_runners_workspace" "example" {
+resource "firefly_workflows_runners_workspace" "example" {
   name        = "production-app"
   description = "Production application infrastructure"
   
@@ -17,8 +17,8 @@ resource "firefly_runners_workspace" "example" {
   
   # Organization
   labels              = ["production", "terraform"]
-  project_id          = firefly_project.main.id
-  consumed_variable_sets = [firefly_variable_set.aws_config.id]
+  project_id          = firefly_workflows_project.main.id
+  consumed_variable_sets = [firefly_workflows_variable_set.aws_config.id]
   
   # Workspace Variables
   variables {

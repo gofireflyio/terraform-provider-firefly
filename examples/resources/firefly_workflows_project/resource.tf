@@ -1,4 +1,4 @@
-resource "firefly_project" "example" {
+resource "firefly_workflows_project" "example" {
   name        = "Example Project"
   description = "An example Firefly project"
   labels      = ["example", "terraform"]

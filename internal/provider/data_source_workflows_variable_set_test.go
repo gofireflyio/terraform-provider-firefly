@@ -14,12 +14,12 @@ func TestAccVariableSetDataSource_basic(t *testing.T) {
 			{
 				Config: testAccVariableSetDataSourceConfig(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("firefly_variable_set.test", "name", "single-datasource-test-varset"),
-					resource.TestCheckResourceAttrPair("data.firefly_variable_set.test", "id", "firefly_variable_set.test", "id"),
-					resource.TestCheckResourceAttrPair("data.firefly_variable_set.test", "name", "firefly_variable_set.test", "name"),
-					resource.TestCheckResourceAttrPair("data.firefly_variable_set.test", "description", "firefly_variable_set.test", "description"),
-					resource.TestCheckResourceAttrPair("data.firefly_variable_set.test", "labels", "firefly_variable_set.test", "labels"),
-					resource.TestCheckResourceAttrSet("data.firefly_variable_set.test", "version"),
+					resource.TestCheckResourceAttr("firefly_workflows_variable_set.test", "name", "single-datasource-test-varset"),
+					resource.TestCheckResourceAttrPair("data.firefly_workflows_variable_set.test", "id", "firefly_workflows_variable_set.test", "id"),
+					resource.TestCheckResourceAttrPair("data.firefly_workflows_variable_set.test", "name", "firefly_workflows_variable_set.test", "name"),
+					resource.TestCheckResourceAttrPair("data.firefly_workflows_variable_set.test", "description", "firefly_workflows_variable_set.test", "description"),
+					resource.TestCheckResourceAttrPair("data.firefly_workflows_variable_set.test", "labels", "firefly_workflows_variable_set.test", "labels"),
+					resource.TestCheckResourceAttrSet("data.firefly_workflows_variable_set.test", "version"),
 				),
 			},
 		},
@@ -41,8 +41,8 @@ resource "firefly_variable_set" "test" {
   }
 }
 
-data "firefly_variable_set" "test" {
-  id = firefly_variable_set.test.id
+data "firefly_workflows_variable_set" "test" {
+  id = firefly_workflows_variable_set.test.id
 }
 `
 }

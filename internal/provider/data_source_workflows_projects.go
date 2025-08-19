@@ -49,7 +49,7 @@ type ProjectDataModel struct {
 
 // Metadata returns the data source type name
 func (d *projectsDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_projects"
+	resp.TypeName = req.ProviderTypeName + "_workflows_projects"
 }
 
 // Schema defines the schema for the data source

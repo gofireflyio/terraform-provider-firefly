@@ -16,18 +16,18 @@ func TestAccVariableSetResource_basic(t *testing.T) {
 			{
 				Config: testAccVariableSetResourceConfig("test-varset", "Test variable set description"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("firefly_variable_set.test", "name", "test-varset"),
-					resource.TestCheckResourceAttr("firefly_variable_set.test", "description", "Test variable set description"),
-					resource.TestCheckResourceAttr("firefly_variable_set.test", "labels.#", "2"),
-					resource.TestCheckResourceAttr("firefly_variable_set.test", "labels.0", "test"),
-					resource.TestCheckResourceAttr("firefly_variable_set.test", "labels.1", "terraform"),
-					resource.TestCheckResourceAttrSet("firefly_variable_set.test", "id"),
-					resource.TestCheckResourceAttrSet("firefly_variable_set.test", "version"),
+					resource.TestCheckResourceAttr("firefly_workflows_variable_set.test", "name", "test-varset"),
+					resource.TestCheckResourceAttr("firefly_workflows_variable_set.test", "description", "Test variable set description"),
+					resource.TestCheckResourceAttr("firefly_workflows_variable_set.test", "labels.#", "2"),
+					resource.TestCheckResourceAttr("firefly_workflows_variable_set.test", "labels.0", "test"),
+					resource.TestCheckResourceAttr("firefly_workflows_variable_set.test", "labels.1", "terraform"),
+					resource.TestCheckResourceAttrSet("firefly_workflows_variable_set.test", "id"),
+					resource.TestCheckResourceAttrSet("firefly_workflows_variable_set.test", "version"),
 				),
 			},
 			// ImportState testing
 			{
-				ResourceName:      "firefly_variable_set.test",
+				ResourceName:      "firefly_workflows_variable_set.test",
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -35,8 +35,8 @@ func TestAccVariableSetResource_basic(t *testing.T) {
 			{
 				Config: testAccVariableSetResourceConfig("test-varset-updated", "Updated variable set description"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("firefly_variable_set.test", "name", "test-varset-updated"),
-					resource.TestCheckResourceAttr("firefly_variable_set.test", "description", "Updated variable set description"),
+					resource.TestCheckResourceAttr("firefly_workflows_variable_set.test", "name", "test-varset-updated"),
+					resource.TestCheckResourceAttr("firefly_workflows_variable_set.test", "description", "Updated variable set description"),
 				),
 			},
 			// Delete testing automatically occurs in TestCase
@@ -52,16 +52,16 @@ func TestAccVariableSetResource_withVariables(t *testing.T) {
 			{
 				Config: testAccVariableSetResourceWithVariablesConfig(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("firefly_variable_set.test", "name", "test-varset-with-vars"),
-					resource.TestCheckResourceAttr("firefly_variable_set.test", "variables.#", "3"),
-					resource.TestCheckResourceAttr("firefly_variable_set.test", "variables.0.key", "AWS_REGION"),
-					resource.TestCheckResourceAttr("firefly_variable_set.test", "variables.0.value", "us-west-2"),
-					resource.TestCheckResourceAttr("firefly_variable_set.test", "variables.0.sensitivity", "string"),
-					resource.TestCheckResourceAttr("firefly_variable_set.test", "variables.0.destination", "env"),
-					resource.TestCheckResourceAttr("firefly_variable_set.test", "variables.1.key", "AWS_ACCESS_KEY_ID"),
-					resource.TestCheckResourceAttr("firefly_variable_set.test", "variables.1.sensitivity", "secret"),
-					resource.TestCheckResourceAttr("firefly_variable_set.test", "variables.2.key", "TF_VAR_region"),
-					resource.TestCheckResourceAttr("firefly_variable_set.test", "variables.2.destination", "iac"),
+					resource.TestCheckResourceAttr("firefly_workflows_variable_set.test", "name", "test-varset-with-vars"),
+					resource.TestCheckResourceAttr("firefly_workflows_variable_set.test", "variables.#", "3"),
+					resource.TestCheckResourceAttr("firefly_workflows_variable_set.test", "variables.0.key", "AWS_REGION"),
+					resource.TestCheckResourceAttr("firefly_workflows_variable_set.test", "variables.0.value", "us-west-2"),
+					resource.TestCheckResourceAttr("firefly_workflows_variable_set.test", "variables.0.sensitivity", "string"),
+					resource.TestCheckResourceAttr("firefly_workflows_variable_set.test", "variables.0.destination", "env"),
+					resource.TestCheckResourceAttr("firefly_workflows_variable_set.test", "variables.1.key", "AWS_ACCESS_KEY_ID"),
+					resource.TestCheckResourceAttr("firefly_workflows_variable_set.test", "variables.1.sensitivity", "secret"),
+					resource.TestCheckResourceAttr("firefly_workflows_variable_set.test", "variables.2.key", "TF_VAR_region"),
+					resource.TestCheckResourceAttr("firefly_workflows_variable_set.test", "variables.2.destination", "iac"),
 				),
 			},
 		},
@@ -89,7 +89,7 @@ func TestAccVariableSetResource_withInheritance(t *testing.T) {
 
 func testAccVariableSetResourceConfig(name, description string) string {
 	return fmt.Sprintf(`
-resource "firefly_variable_set" "test" {
+resource "firefly_workflows_variable_set" "test" {
   name        = %[1]q
   description = %[2]q
   labels      = ["test", "terraform"]
@@ -99,7 +99,7 @@ resource "firefly_variable_set" "test" {
 
 func testAccVariableSetResourceWithVariablesConfig() string {
 	return `
-resource "firefly_variable_set" "test" {
+resource "firefly_workflows_variable_set" "test" {
   name        = "test-varset-with-vars"
   description = "Test variable set with variables"
   labels      = ["test", "variables"]
@@ -130,7 +130,7 @@ resource "firefly_variable_set" "test" {
 
 func testAccVariableSetResourceWithInheritanceConfig() string {
 	return `
-resource "firefly_variable_set" "parent" {
+resource "firefly_workflows_variable_set" "parent" {
   name        = "parent-varset"
   description = "Parent variable set"
   labels      = ["parent", "base"]
@@ -143,7 +143,7 @@ resource "firefly_variable_set" "parent" {
   }
 }
 
-resource "firefly_variable_set" "child" {
+resource "firefly_workflows_variable_set" "child" {
   name        = "child-varset"
   description = "Child variable set inheriting from parent"
   labels      = ["child", "derived"]
