@@ -211,6 +211,20 @@ func (r *projectResource) Create(ctx context.Context, req resource.CreateRequest
 		}
 	}
 
+	// Get the root project ID if no parent is specified
+	parentID := plan.ParentID.ValueString()
+	if parentID == "" {
+		rootProjectID, err := r.getRootProjectID(ctx)
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Error Finding Root Project",
+				fmt.Sprintf("Could not find root project: %s", err),
+			)
+			return
+		}
+		parentID = rootProjectID
+	}
+
 	// Create the project
 	createReq := client.CreateProjectRequest{
 		Name:                 plan.Name.ValueString(),
@@ -218,7 +232,7 @@ func (r *projectResource) Create(ctx context.Context, req resource.CreateRequest
 		Labels:               labels,
 		CronExecutionPattern: plan.CronExecutionPattern.ValueString(),
 		Variables:            variables,
-		ParentID:             plan.ParentID.ValueString(),
+		ParentID:             parentID,
 	}
 
 	tflog.Debug(ctx, "Creating project", map[string]interface{}{
@@ -437,4 +451,26 @@ func projectVariablesToValues(ctx context.Context, variables []ProjectVariableMo
 		values[i] = obj
 	}
 	return values
+}
+
+// getRootProjectID finds the root project ID by listing projects and finding one without a parent
+func (r *projectResource) getRootProjectID(ctx context.Context) (string, error) {
+	// List projects to find the root project
+	projects, err := r.client.Projects.ListProjects(100, 0, "")
+	if err != nil {
+		return "", fmt.Errorf("failed to list projects: %w", err)
+	}
+
+	// Find the project without a parent (root project)
+	for _, project := range projects.Data {
+		if project.ParentID == "" {
+			tflog.Debug(ctx, "Found root project", map[string]interface{}{
+				"root_project_id": project.ID,
+				"root_project_name": project.Name,
+			})
+			return project.ID, nil
+		}
+	}
+
+	return "", fmt.Errorf("no root project found")
 }
