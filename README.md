@@ -13,6 +13,20 @@ A comprehensive Terraform Provider for managing [Firefly](https://gofirefly.io) 
 - **Professional Tooling** - Makefile, automated releases, and development tools
 - **Extensive Documentation** - Complete examples and usage guides
 
+## Status
+
+🚧 **Provider Status**: This provider is fully functional but not yet published to the Terraform Registry.
+
+✅ **What Works**:
+- All resources and data sources are implemented and tested
+- Full CRUD operations for all Firefly resources
+- Comprehensive test coverage (49 test scenarios)
+- Complete documentation and examples
+
+🔄 **Next Steps**:
+- Terraform Registry publication pending
+- For now, use local development mode (instructions below)
+
 ## Requirements
 
 - [Terraform](https://www.terraform.io/downloads.html) >= 1.0
@@ -20,53 +34,122 @@ A comprehensive Terraform Provider for managing [Firefly](https://gofirefly.io) 
 
 ## Installation
 
-### Terraform Registry (Recommended)
+> **⚠️ Important**: This provider is not yet published to the Terraform Registry. Use the local development method below.
+
+### Local Development (Required)
+
+Since the provider is not yet in the Terraform Registry, you need to build and run it locally:
+
+1. **Clone and build the provider:**
+   ```bash
+   git clone https://github.com/gofireflyio/terraform-provider-firefly.git
+   cd terraform-provider-firefly
+   go build -o terraform-provider-firefly
+   ```
+
+2. **Run the provider in debug mode:**
+   ```bash
+   go run main.go -debug
+   ```
+   
+   This will output something like:
+   ```
+   Provider started. To attach Terraform CLI, set the TF_REATTACH_PROVIDERS environment variable with the following:
+   
+   TF_REATTACH_PROVIDERS='{"registry.terraform.io/firefly/firefly":{"Protocol":"grpc","ProtocolVersion":6,"Pid":12345,"Test":true,"Addr":{"Network":"unix","String":"/tmp/plugin123"}}}'
+   ```
+
+3. **In another terminal, set the environment variable and run Terraform:**
+   ```bash
+   export TF_REATTACH_PROVIDERS='{"registry.terraform.io/firefly/firefly":{"Protocol":"grpc","ProtocolVersion":6,"Pid":12345,"Test":true,"Addr":{"Network":"unix","String":"/tmp/plugin123"}}}'
+   
+   # Now you can use terraform normally
+   terraform init
+   terraform plan
+   terraform apply
+   ```
+
+### Future Registry Installation
+
+Once published to the Terraform Registry, you'll be able to use:
 
 ```hcl
 terraform {
   required_providers {
     firefly = {
-      source  = "firefly/firefly"
+      source  = "gofireflyio/firefly"
       version = "~> 1.0"
     }
   }
 }
 ```
 
-### Building From Source
+## Using the Provider
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/gofireflyio/terraform-provider-firefly.git
-   cd terraform-provider-firefly
-   ```
+### Provider Configuration
 
-2. Build the provider:
-   ```bash
-   make build
-   # or: go install
-   ```
-
-## Using the provider
-
-To use the provider, create a `terraform` block:
+When running locally (current method), configure your Terraform files like this:
 
 ```hcl
 terraform {
   required_providers {
     firefly = {
-      source = "firefly/firefly"
-      version = "~> 1.0"
+      source = "registry.terraform.io/firefly/firefly"  # For local debug mode
     }
   }
 }
 
 provider "firefly" {
-  access_key = "your-access-key"
-  secret_key = "your-secret-key"
+  access_key = "your-firefly-access-key"
+  secret_key = "your-firefly-secret-key"
   api_url    = "https://api.firefly.ai"  # Optional, defaults to https://api.firefly.ai
 }
 ```
+
+### Authentication
+
+You can configure authentication in several ways:
+
+1. **Direct configuration (not recommended for production):**
+   ```hcl
+   provider "firefly" {
+     access_key = "your-access-key"
+     secret_key = "your-secret-key"
+   }
+   ```
+
+2. **Environment variables (recommended):**
+   ```bash
+   export FIREFLY_ACCESS_KEY="your-access-key"
+   export FIREFLY_SECRET_KEY="your-secret-key"
+   export FIREFLY_API_URL="https://api.firefly.ai"  # Optional
+   ```
+   
+   ```hcl
+   provider "firefly" {
+     # Configuration will be read from environment variables
+   }
+   ```
+
+3. **Terraform variables:**
+   ```hcl
+   variable "firefly_access_key" {
+     description = "Firefly access key"
+     type        = string
+     sensitive   = true
+   }
+   
+   variable "firefly_secret_key" {
+     description = "Firefly secret key"
+     type        = string
+     sensitive   = true
+   }
+   
+   provider "firefly" {
+     access_key = var.firefly_access_key
+     secret_key = var.firefly_secret_key
+   }
+   ```
 
 ## Resources
 
@@ -306,7 +389,8 @@ To test the provider locally with Terraform:
 3. **Set up your Terraform configuration:**
    ```bash
    # Copy the TF_REATTACH_PROVIDERS from the debug output and export it
-   export TF_REATTACH_PROVIDERS='{"firefly/firefly":{"Protocol":"grpc","ProtocolVersion":6,"Pid":12345,"Test":true,"Addr":{"Network":"unix","String":"/var/folders/.../T/plugin123456789"}}}'
+   # Note: Use the exact output from step 2, it will look like this:
+   export TF_REATTACH_PROVIDERS='{"registry.terraform.io/firefly/firefly":{"Protocol":"grpc","ProtocolVersion":6,"Pid":12345,"Test":true,"Addr":{"Network":"unix","String":"/var/folders/.../T/plugin123456789"}}}'
    
    # Create a test Terraform configuration
    mkdir test-terraform && cd test-terraform
@@ -317,7 +401,7 @@ To test the provider locally with Terraform:
    terraform {
      required_providers {
        firefly = {
-         source = "firefly/firefly"
+         source = "registry.terraform.io/firefly/firefly"  # Required for debug mode
        }
      }
    }
@@ -328,10 +412,18 @@ To test the provider locally with Terraform:
      api_url    = "https://api.firefly.ai"
    }
    
-   # Test resource
+   # Test resource - note that project names must be alphanumeric with hyphens/underscores
    resource "firefly_workflows_project" "test" {
-     name        = "Local Test Project"
+     name        = "local-test-project"
      description = "Testing locally built provider"
+     labels      = ["test", "local"]
+     
+     variables {
+       key         = "TEST_ENV" 
+       value       = "local"
+       sensitivity = "string"
+       destination = "env"
+     }
    }
    ```
 
