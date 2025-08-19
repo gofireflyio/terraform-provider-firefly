@@ -73,7 +73,7 @@ go test ./... -v
 Provider expects:
 - `access_key` (required, sensitive)
 - `secret_key` (required, sensitive) 
-- `api_url` (optional, defaults to https://api.firefly.ai)
+- `api_url` (optional, defaults to https://api.gofirefly.io)
 
 Environment variables supported:
 - `FIREFLY_ACCESS_KEY`

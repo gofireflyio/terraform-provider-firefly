@@ -102,7 +102,7 @@ terraform {
 provider "firefly" {
   access_key = "your-firefly-access-key"
   secret_key = "your-firefly-secret-key"
-  api_url    = "https://api.firefly.ai"  # Optional, defaults to https://api.firefly.ai
+  api_url    = "https://api.gofirefly.io"  # Optional, defaults to https://api.gofirefly.io
 }
 ```
 
@@ -122,7 +122,7 @@ You can configure authentication in several ways:
    ```bash
    export FIREFLY_ACCESS_KEY="your-access-key"
    export FIREFLY_SECRET_KEY="your-secret-key"
-   export FIREFLY_API_URL="https://api.firefly.ai"  # Optional
+   export FIREFLY_API_URL="https://api.gofirefly.io"  # Optional
    ```
    
    ```hcl
@@ -409,7 +409,7 @@ To test the provider locally with Terraform:
    provider "firefly" {
      access_key = "your-firefly-access-key"
      secret_key = "your-firefly-secret-key"
-     api_url    = "https://api.firefly.ai"
+     api_url    = "https://api.gofirefly.io"
    }
    
    # Test resource - note that project names must be alphanumeric with hyphens/underscores

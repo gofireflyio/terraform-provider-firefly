@@ -29,7 +29,7 @@ variable "firefly_secret_key" {
 variable "firefly_api_url" {
   description = "Firefly API URL"
   type        = string
-  default     = "https://api.firefly.ai"
+  default     = "https://api.gofirefly.io"
 }
 
 variable "aws_access_key" {
@@ -57,10 +57,10 @@ resource "firefly_workflows_project" "production" {
   description = "Production infrastructure project"
   labels      = ["production", "critical"]
   parent_id   = firefly_workflows_project.organization.id
-  
+
   # Scheduled daily execution at 2 AM
   cron_execution_pattern = "0 2 * * *"
-  
+
   variables {
     key         = "ENVIRONMENT"
     value       = "production"
@@ -74,7 +74,7 @@ resource "firefly_workflows_project" "staging" {
   description = "Staging infrastructure project"
   labels      = ["staging", "test"]
   parent_id   = firefly_workflows_project.organization.id
-  
+
   variables {
     key         = "ENVIRONMENT"
     value       = "staging"
@@ -88,14 +88,14 @@ resource "firefly_workflows_variable_set" "base_config" {
   name        = "Base Configuration"
   description = "Base configuration variables"
   labels      = ["base", "shared"]
-  
+
   variables {
     key         = "COMPANY_NAME"
     value       = "ACME Corp"
     sensitivity = "string"
     destination = "env"
   }
-  
+
   variables {
     key         = "TF_LOG_LEVEL"
     value       = "INFO"
@@ -110,28 +110,28 @@ resource "firefly_workflows_variable_set" "aws_config" {
   description = "AWS configuration variables"
   labels      = ["aws", "cloud", "shared"]
   parents     = [firefly_workflows_variable_set.base_config.id]
-  
+
   variables {
     key         = "AWS_DEFAULT_REGION"
     value       = "us-west-2"
     sensitivity = "string"
     destination = "env"
   }
-  
+
   variables {
     key         = "AWS_ACCESS_KEY_ID"
     value       = var.aws_access_key
     sensitivity = "secret"
     destination = "env"
   }
-  
+
   variables {
     key         = "AWS_SECRET_ACCESS_KEY"
     value       = var.aws_secret_key
     sensitivity = "secret"
     destination = "env"
   }
-  
+
   variables {
     key         = "TF_VAR_region"
     value       = "us-west-2"
@@ -146,14 +146,14 @@ resource "firefly_workflows_variable_set" "production_config" {
   description = "Production-specific variables"
   labels      = ["production", "config"]
   parents     = [firefly_workflows_variable_set.aws_config.id]
-  
+
   variables {
     key         = "INSTANCE_TYPE"
     value       = "m5.large"
     sensitivity = "string"
     destination = "iac"
   }
-  
+
   variables {
     key         = "MIN_CAPACITY"
     value       = "3"
@@ -167,26 +167,26 @@ resource "firefly_workflows_runners_workspace" "prod_app" {
   name        = "production-application"
   description = "Production application infrastructure"
   project_id  = firefly_workflows_project.production.id
-  
+
   # VCS Configuration
-  repository           = "myorg/app-infrastructure"
-  vcs_integration_id   = "github-integration-id"
-  vcs_type            = "github"
-  default_branch      = "main"
-  working_directory   = "environments/production"
-  
+  repository         = "myorg/app-infrastructure"
+  vcs_integration_id = "github-integration-id"
+  vcs_type           = "github"
+  default_branch     = "main"
+  working_directory  = "environments/production"
+
   # Infrastructure Configuration
-  iac_type            = "terraform"
-  terraform_version   = "1.6.0"
-  apply_rule          = "manual"
-  triggers            = ["merge"]
-  
+  iac_type          = "terraform"
+  terraform_version = "1.6.0"
+  apply_rule        = "manual"
+  triggers          = ["merge"]
+
   # Labels and variable sets
   labels = ["production", "application", "terraform"]
   consumed_variable_sets = [
     firefly_workflows_variable_set.production_config.id
   ]
-  
+
   # Workspace-specific variables
   variables {
     key         = "APP_NAME"
@@ -194,7 +194,7 @@ resource "firefly_workflows_runners_workspace" "prod_app" {
     sensitivity = "string"
     destination = "env"
   }
-  
+
   variables {
     key         = "TF_VAR_app_name"
     value       = "production-app"
@@ -207,26 +207,26 @@ resource "firefly_workflows_runners_workspace" "prod_database" {
   name        = "production-database"
   description = "Production database infrastructure"
   project_id  = firefly_workflows_project.production.id
-  
+
   # VCS Configuration
-  repository           = "myorg/database-infrastructure"
-  vcs_integration_id   = "github-integration-id"
-  vcs_type            = "github"
-  default_branch      = "main"
-  working_directory   = "environments/production"
-  
+  repository         = "myorg/database-infrastructure"
+  vcs_integration_id = "github-integration-id"
+  vcs_type           = "github"
+  default_branch     = "main"
+  working_directory  = "environments/production"
+
   # Infrastructure Configuration
-  iac_type            = "terraform"
-  terraform_version   = "1.6.0"
-  apply_rule          = "manual"
-  triggers            = ["merge"]
-  
+  iac_type          = "terraform"
+  terraform_version = "1.6.0"
+  apply_rule        = "manual"
+  triggers          = ["merge"]
+
   # Labels and variable sets
   labels = ["production", "database", "terraform"]
   consumed_variable_sets = [
     firefly_workflows_variable_set.production_config.id
   ]
-  
+
   # Database-specific variables
   variables {
     key         = "DB_INSTANCE_CLASS"
@@ -234,7 +234,7 @@ resource "firefly_workflows_runners_workspace" "prod_database" {
     sensitivity = "string"
     destination = "iac"
   }
-  
+
   variables {
     key         = "DB_BACKUP_RETENTION"
     value       = "30"
@@ -248,26 +248,26 @@ resource "firefly_workflows_runners_workspace" "staging_app" {
   name        = "staging-application"
   description = "Staging application infrastructure"
   project_id  = firefly_workflows_project.staging.id
-  
+
   # VCS Configuration
-  repository           = "myorg/app-infrastructure"
-  vcs_integration_id   = "github-integration-id"
-  vcs_type            = "github"
-  default_branch      = "develop"
-  working_directory   = "environments/staging"
-  
+  repository         = "myorg/app-infrastructure"
+  vcs_integration_id = "github-integration-id"
+  vcs_type           = "github"
+  default_branch     = "develop"
+  working_directory  = "environments/staging"
+
   # Infrastructure Configuration
-  iac_type            = "terraform"
-  terraform_version   = "1.6.0"
-  apply_rule          = "auto"  # Auto-apply for staging
-  triggers            = ["merge", "push"]
-  
+  iac_type          = "terraform"
+  terraform_version = "1.6.0"
+  apply_rule        = "auto" # Auto-apply for staging
+  triggers          = ["merge", "push"]
+
   # Labels and variable sets
   labels = ["staging", "application", "terraform"]
   consumed_variable_sets = [
-    firefly_workflows_variable_set.aws_config.id  # Use base AWS config for staging
+    firefly_workflows_variable_set.aws_config.id # Use base AWS config for staging
   ]
-  
+
   # Staging-specific variables
   variables {
     key         = "TF_VAR_instance_type"
@@ -275,7 +275,7 @@ resource "firefly_workflows_runners_workspace" "staging_app" {
     sensitivity = "string"
     destination = "iac"
   }
-  
+
   variables {
     key         = "TF_VAR_min_capacity"
     value       = "1"
@@ -297,8 +297,8 @@ data "firefly_workflows_variable_sets" "shared_sets" {
 output "production_project_info" {
   description = "Production project information"
   value = {
-    id             = firefly_workflows_project.production.id
-    name           = firefly_workflows_project.production.name
+    id              = firefly_workflows_project.production.id
+    name            = firefly_workflows_project.production.name
     workspace_count = firefly_workflows_project.production.workspace_count
   }
 }
