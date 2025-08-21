@@ -29,7 +29,7 @@ variable "firefly_secret_key" {
 variable "firefly_api_url" {
   description = "Firefly API URL"
   type        = string
-  default     = "https://api.gofirefly.io"
+  default     = "https://api.firefly.ai"
 }
 
 variable "aws_access_key" {

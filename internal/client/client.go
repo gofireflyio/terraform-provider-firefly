@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	defaultBaseURL   = "https://api.gofirefly.io"
+	defaultBaseURL   = "https://api.firefly.ai"
 	defaultUserAgent = "terraform-provider-firefly"
 )
 

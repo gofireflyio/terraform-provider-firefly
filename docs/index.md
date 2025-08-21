@@ -16,7 +16,7 @@ terraform {
 provider "firefly" {
   access_key = var.firefly_access_key
   secret_key = var.firefly_secret_key
-  api_url    = "https://api.gofirefly.io" # Optional
+  api_url    = "https://api.firefly.ai" # Optional
 }
 
 # Create a project
@@ -65,7 +65,7 @@ resource "firefly_workflows_runners_workspace" "app" {
 
 ### Optional
 
-- `api_url` (String) - Firefly API URL. Defaults to `https://api.gofirefly.io`
+- `api_url` (String) - Firefly API URL. Defaults to `https://api.firefly.ai`
 
 ## Environment Variables
 

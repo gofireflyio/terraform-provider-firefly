@@ -87,7 +87,7 @@ func (p *FireflyProvider) Configure(ctx context.Context, req provider.ConfigureR
 	}
 	
 	// Default values for the API URL if unspecified
-	apiURL := "https://api.gofirefly.io"
+	apiURL := "https://api.firefly.ai"
 	if !config.APIURL.IsNull() {
 		apiURL = config.APIURL.ValueString()
 	}
