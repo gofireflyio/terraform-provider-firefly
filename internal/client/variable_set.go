@@ -138,13 +138,9 @@ func (s *VariableSetService) UpdateVariableSet(id string, req UpdateVariableSetR
 		return nil, fmt.Errorf("failed to update variable set: %s (status code: %d)", string(bodyBytes), resp.StatusCode)
 	}
 
-	// Parse the response
-	var variableSet VariableSet
-	if err := json.NewDecoder(resp.Body).Decode(&variableSet); err != nil {
-		return nil, fmt.Errorf("error decoding response: %w", err)
-	}
-
-	return &variableSet, nil
+	// The update API returns an empty string on success
+	// We need to fetch the updated variable set
+	return s.GetVariableSet(id)
 }
 
 // DeleteVariableSet deletes a variable set

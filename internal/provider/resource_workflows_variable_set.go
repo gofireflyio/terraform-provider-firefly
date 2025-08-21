@@ -278,6 +278,42 @@ func (r *variableSetResource) Read(ctx context.Context, req resource.ReadRequest
 		state.Parents = types.ListValueMust(types.StringType, []attr.Value{})
 	}
 
+	// Convert variables
+	if len(variableSet.Variables) > 0 {
+		varList := make([]ProjectVariableModel, len(variableSet.Variables))
+		for i, v := range variableSet.Variables {
+			varList[i] = ProjectVariableModel{
+				Key:         types.StringValue(v.Key),
+				Value:       types.StringValue(v.Value),
+				Sensitivity: types.StringValue(string(v.Sensitivity)),
+				Destination: types.StringValue(string(v.Destination)),
+			}
+		}
+		
+		varObjType := types.ObjectType{
+			AttrTypes: map[string]attr.Type{
+				"key":         types.StringType,
+				"value":       types.StringType,
+				"sensitivity": types.StringType,
+				"destination": types.StringType,
+			},
+		}
+		
+		varValues := make([]attr.Value, len(varList))
+		for i, v := range varList {
+			varValues[i] = types.ObjectValueMust(varObjType.AttrTypes, map[string]attr.Value{
+				"key":         v.Key,
+				"value":       v.Value,
+				"sensitivity": v.Sensitivity,
+				"destination": v.Destination,
+			})
+		}
+		state.Variables = types.ListValueMust(varObjType, varValues)
+	} else {
+		// Keep existing variables if API doesn't return them
+		// This ensures we don't lose track of variables in the state
+	}
+
 	diags = resp.State.Set(ctx, state)
 	resp.Diagnostics.Append(diags...)
 }
