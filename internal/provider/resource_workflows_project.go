@@ -3,6 +3,7 @@ package provider
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -297,6 +298,14 @@ func (r *projectResource) Read(ctx context.Context, req resource.ReadRequest, re
 	// Get project from API
 	project, err := r.client.Projects.GetProject(state.ID.ValueString())
 	if err != nil {
+		// Check if the project was deleted outside of Terraform (404 error)
+		if strings.Contains(err.Error(), "404") || strings.Contains(err.Error(), "not found") {
+			tflog.Warn(ctx, "Project not found, removing from state", map[string]interface{}{
+				"id": state.ID.ValueString(),
+			})
+			resp.State.RemoveResource(ctx)
+			return
+		}
 		resp.Diagnostics.AddError(
 			"Error Reading Project",
 			fmt.Sprintf("Could not read project ID %s: %s", state.ID.ValueString(), err),

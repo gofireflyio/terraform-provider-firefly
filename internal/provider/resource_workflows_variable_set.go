@@ -3,6 +3,7 @@ package provider
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -249,6 +250,14 @@ func (r *variableSetResource) Read(ctx context.Context, req resource.ReadRequest
 
 	variableSet, err := r.client.VariableSets.GetVariableSet(state.ID.ValueString())
 	if err != nil {
+		// Check if the variable set was deleted outside of Terraform (404 error)
+		if strings.Contains(err.Error(), "404") || strings.Contains(err.Error(), "not found") {
+			tflog.Warn(ctx, "Variable set not found, removing from state", map[string]interface{}{
+				"id": state.ID.ValueString(),
+			})
+			resp.State.RemoveResource(ctx)
+			return
+		}
 		resp.Diagnostics.AddError("Error Reading Variable Set", fmt.Sprintf("Could not read variable set ID %s: %s", state.ID.ValueString(), err))
 		return
 	}
