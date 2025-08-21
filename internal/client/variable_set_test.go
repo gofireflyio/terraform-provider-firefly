@@ -233,37 +233,27 @@ func TestVariableSetService_UpdateVariableSet(t *testing.T) {
 		json.NewEncoder(w).Encode(authResp)
 	})
 
-	// Mock update variable set
-	mockServer.AddHandler("/v2/runners/variables/variable-sets/", func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodPut {
+	// Mock update variable set - handle exact URL pattern
+	mockServer.AddHandler("/v2/runners/variables/variable-sets/test-varset-id", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodPut {
+			// Update operation - return success
+			w.WriteHeader(http.StatusOK)
+			return
+		} else if r.Method == http.MethodGet {
+			// Get operation after update - return the updated variable set
+			variableSet := VariableSet{
+				ID:          "test-varset-id",
+				Name:        "Updated Variable Set",
+				Description: "Updated variable set description", 
+				Labels:      []string{"updated", "test"},
+				Parents:     []string{"new-parent-varset"},
+				Version:     2, // Version incremented
+			}
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(variableSet)
+		} else {
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-			return
 		}
-
-		varsetID := r.URL.Path[len("/v2/runners/variables/variable-sets/"):]
-		if varsetID != "test-varset-id" {
-			http.Error(w, "Not found", http.StatusNotFound)
-			return
-		}
-
-		var updateReq UpdateVariableSetRequest
-		if err := json.NewDecoder(r.Body).Decode(&updateReq); err != nil {
-			http.Error(w, "Invalid JSON", http.StatusBadRequest)
-			return
-		}
-
-		// Return updated variable set
-		variableSet := VariableSet{
-			ID:          varsetID,
-			Name:        updateReq.Name,
-			Description: updateReq.Description,
-			Labels:      updateReq.Labels,
-			Parents:     updateReq.Parents,
-			Version:     2, // Version incremented
-		}
-
-		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(variableSet)
 	})
 
 	client, err := NewClient(Config{

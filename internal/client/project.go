@@ -241,13 +241,19 @@ func (s *ProjectService) AddProjectMembers(projectID string, members []Member) (
 		return nil, fmt.Errorf("failed to add project members: %s (status code: %d)", string(bodyBytes), resp.StatusCode)
 	}
 
-	// Parse the response - API returns success message, not member data
+	// Parse the response - try to decode as array first, fall back to success message
 	bodyBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("error reading response body: %w", err)
 	}
 
-	// Check for success message
+	// Try to decode as array of members first
+	var addedMembers []Member
+	if err := json.Unmarshal(bodyBytes, &addedMembers); err == nil && len(addedMembers) > 0 {
+		return addedMembers, nil
+	}
+
+	// Fall back to success message format
 	var successResp struct {
 		Message string `json:"message"`
 	}

@@ -223,7 +223,7 @@ func (r *variableSetResource) Create(ctx context.Context, req resource.CreateReq
 		plan.Parents = types.ListValueMust(types.StringType, []attr.Value{})
 	}
 
-	// Ensure labels is set properly too
+	// Set labels - preserve original plan if API returns empty labels
 	if len(variableSet.Labels) > 0 {
 		labelList := make([]types.String, len(variableSet.Labels))
 		for i, label := range variableSet.Labels {
@@ -233,6 +233,7 @@ func (r *variableSetResource) Create(ctx context.Context, req resource.CreateReq
 	} else if plan.Labels.IsNull() || plan.Labels.IsUnknown() {
 		plan.Labels = types.ListValueMust(types.StringType, []attr.Value{})
 	}
+	// If API returns empty but plan had labels, keep the plan labels
 
 	diags = resp.State.Set(ctx, plan)
 	resp.Diagnostics.Append(diags...)
@@ -393,7 +394,7 @@ func (r *variableSetResource) Update(ctx context.Context, req resource.UpdateReq
 		plan.Parents = types.ListValueMust(types.StringType, []attr.Value{})
 	}
 
-	// Ensure labels is set properly too
+	// Set labels - preserve original plan if API returns empty labels
 	if len(variableSet.Labels) > 0 {
 		labelList := make([]types.String, len(variableSet.Labels))
 		for i, label := range variableSet.Labels {
@@ -403,6 +404,7 @@ func (r *variableSetResource) Update(ctx context.Context, req resource.UpdateReq
 	} else if plan.Labels.IsNull() || plan.Labels.IsUnknown() {
 		plan.Labels = types.ListValueMust(types.StringType, []attr.Value{})
 	}
+	// If API returns empty but plan had labels, keep the plan labels
 
 	diags = resp.State.Set(ctx, plan)
 	resp.Diagnostics.Append(diags...)

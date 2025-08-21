@@ -102,7 +102,9 @@ func (r *projectResource) Schema(_ context.Context, _ resource.SchemaRequest, re
 				Description: "ID of the parent project (for nested projects)",
 				Optional:    true,
 				Computed:    true,
-				Default:     stringdefault.StaticString(""),
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"account_id": schema.StringAttribute{
 				Description: "ID of the account the project belongs to",
@@ -248,11 +250,34 @@ func (r *projectResource) Create(ctx context.Context, req resource.CreateRequest
 		return
 	}
 
-	// Map response to model
-	plan.ID = types.StringValue(project.ID)
-	plan.AccountID = types.StringValue(project.AccountID)
-	plan.MembersCount = types.Int64Value(int64(project.MembersCount))
-	plan.WorkspaceCount = types.Int64Value(int64(project.WorkspaceCount))
+	// Fetch the created project to get all computed fields
+	createdProject, err := r.client.Projects.GetProject(project.ID)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error Reading Project After Creation",
+			fmt.Sprintf("Could not read project after creation: %s", err),
+		)
+		return
+	}
+
+	// Map complete response to model
+	plan.ID = types.StringValue(createdProject.ID)
+	plan.AccountID = types.StringValue(createdProject.AccountID)
+	plan.MembersCount = types.Int64Value(int64(createdProject.MembersCount))
+	plan.WorkspaceCount = types.Int64Value(int64(createdProject.WorkspaceCount))
+	plan.ParentID = types.StringValue(createdProject.ParentID)
+
+	// Set labels - preserve original plan if API returns empty labels
+	if len(createdProject.Labels) > 0 {
+		labelList := make([]types.String, len(createdProject.Labels))
+		for i, label := range createdProject.Labels {
+			labelList[i] = types.StringValue(label)
+		}
+		plan.Labels = types.ListValueMust(types.StringType, labelListToValues(labelList))
+	} else if plan.Labels.IsNull() || plan.Labels.IsUnknown() {
+		plan.Labels = types.ListValueMust(types.StringType, []attr.Value{})
+	}
+	// If API returns empty but plan had labels, keep the plan labels
 
 	// Set state
 	diags = resp.State.Set(ctx, plan)
@@ -375,7 +400,7 @@ func (r *projectResource) Update(ctx context.Context, req resource.UpdateRequest
 		"name": updateReq.Name,
 	})
 
-	project, err := r.client.Projects.UpdateProject(plan.ID.ValueString(), updateReq)
+	_, err := r.client.Projects.UpdateProject(plan.ID.ValueString(), updateReq)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Updating Project",
@@ -384,10 +409,33 @@ func (r *projectResource) Update(ctx context.Context, req resource.UpdateRequest
 		return
 	}
 
-	// Map response to model
-	plan.AccountID = types.StringValue(project.AccountID)
-	plan.MembersCount = types.Int64Value(int64(project.MembersCount))
-	plan.WorkspaceCount = types.Int64Value(int64(project.WorkspaceCount))
+	// Fetch the updated project to get all computed fields
+	updatedProject, err := r.client.Projects.GetProject(plan.ID.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error Reading Project After Update",
+			fmt.Sprintf("Could not read project after update: %s", err),
+		)
+		return
+	}
+
+	// Map complete response to model, including all computed fields
+	plan.AccountID = types.StringValue(updatedProject.AccountID)
+	plan.MembersCount = types.Int64Value(int64(updatedProject.MembersCount))
+	plan.WorkspaceCount = types.Int64Value(int64(updatedProject.WorkspaceCount))
+	plan.ParentID = types.StringValue(updatedProject.ParentID)
+
+	// Set labels - preserve original plan if API returns empty labels
+	if len(updatedProject.Labels) > 0 {
+		labelList := make([]types.String, len(updatedProject.Labels))
+		for i, label := range updatedProject.Labels {
+			labelList[i] = types.StringValue(label)
+		}
+		plan.Labels = types.ListValueMust(types.StringType, labelListToValues(labelList))
+	} else if plan.Labels.IsNull() || plan.Labels.IsUnknown() {
+		plan.Labels = types.ListValueMust(types.StringType, []attr.Value{})
+	}
+	// If API returns empty but plan had labels, keep the plan labels
 
 	// Set state
 	diags = resp.State.Set(ctx, plan)
