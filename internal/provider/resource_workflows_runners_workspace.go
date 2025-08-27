@@ -295,7 +295,7 @@ func (r *runnersWorkspaceResource) Create(ctx context.Context, req resource.Crea
 
 	// Create the workspace
 	createReq := client.CreateRunnersWorkspaceRequest{
-		RunnerType:           "firefly_runners",
+		RunnerType:           "firefly",
 		IacType:              plan.IacType.ValueString(),
 		WorkspaceName:        plan.Name.ValueString(),
 		Description:          plan.Description.ValueString(),
