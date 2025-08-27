@@ -3,6 +3,8 @@ package provider
 import (
 	"context"
 	"fmt"
+	"regexp"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -11,16 +13,68 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/gofireflyio/terraform-provider-firefly/internal/client"
 )
+
+// workspaceNameValidator validates that workspace names don't contain spaces
+type workspaceNameValidator struct{}
+
+func (v workspaceNameValidator) Description(_ context.Context) string {
+	return "workspace name must not contain spaces or invalid characters"
+}
+
+func (v workspaceNameValidator) MarkdownDescription(ctx context.Context) string {
+	return v.Description(ctx)
+}
+
+func (v workspaceNameValidator) ValidateString(ctx context.Context, req validator.StringRequest, resp *validator.StringResponse) {
+	if req.ConfigValue.IsNull() || req.ConfigValue.IsUnknown() {
+		return
+	}
+
+	name := req.ConfigValue.ValueString()
+	
+	// Check for spaces
+	if strings.Contains(name, " ") {
+		resp.Diagnostics.AddAttributeError(
+			req.Path,
+			"Invalid Workspace Name",
+			"Workspace name cannot contain spaces. Use hyphens (-) or underscores (_) instead.",
+		)
+		return
+	}
+	
+	// Check for valid characters (alphanumeric, hyphens, underscores)
+	validName := regexp.MustCompile(`^[a-zA-Z0-9_-]+$`)
+	if !validName.MatchString(name) {
+		resp.Diagnostics.AddAttributeError(
+			req.Path,
+			"Invalid Workspace Name", 
+			"Workspace name can only contain letters, numbers, hyphens (-), and underscores (_).",
+		)
+		return
+	}
+	
+	// Check minimum length
+	if len(name) < 1 {
+		resp.Diagnostics.AddAttributeError(
+			req.Path,
+			"Invalid Workspace Name",
+			"Workspace name cannot be empty.",
+		)
+		return
+	}
+}
 
 // Ensure the implementation satisfies the expected interfaces
 var (
 	_ resource.Resource                = &runnersWorkspaceResource{}
 	_ resource.ResourceWithConfigure   = &runnersWorkspaceResource{}
 	_ resource.ResourceWithImportState = &runnersWorkspaceResource{}
+	_ validator.String                 = workspaceNameValidator{}
 )
 
 // NewRunnersWorkspaceResource is a helper function to simplify the provider implementation
@@ -79,8 +133,11 @@ func (r *runnersWorkspaceResource) Schema(_ context.Context, _ resource.SchemaRe
 				},
 			},
 			"name": schema.StringAttribute{
-				Description: "The name of the workspace",
+				Description: "The name of the workspace (cannot contain spaces)",
 				Required:    true,
+				Validators: []validator.String{
+					workspaceNameValidator{},
+				},
 			},
 			"description": schema.StringAttribute{
 				Description: "The description of the workspace",
