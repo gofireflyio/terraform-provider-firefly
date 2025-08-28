@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -388,6 +389,11 @@ func (r *runnersWorkspaceResource) Create(ctx context.Context, req resource.Crea
 	// Map response to model
 	plan.ID = types.StringValue(workspace.ID)
 	plan.AccountID = types.StringValue(workspace.AccountID)
+	
+	// Set consumed_variable_sets to empty list if not provided
+	if plan.ConsumedVariableSets.IsNull() || plan.ConsumedVariableSets.IsUnknown() {
+		plan.ConsumedVariableSets = types.ListValueMust(types.StringType, []attr.Value{})
+	}
 
 	// Set state
 	diags = resp.State.Set(ctx, plan)
@@ -407,6 +413,15 @@ func (r *runnersWorkspaceResource) Read(ctx context.Context, req resource.ReadRe
 	// Get workspace from API
 	workspace, err := r.client.RunnersWorkspaces.GetRunnersWorkspace(state.ID.ValueString())
 	if err != nil {
+		// Check if the error is a 404, meaning the workspace was deleted outside Terraform
+		if strings.Contains(err.Error(), "404") || strings.Contains(err.Error(), "not found") || strings.Contains(err.Error(), "no records matched") {
+			tflog.Warn(ctx, "Runners workspace not found, removing from state", map[string]interface{}{
+				"id": state.ID.ValueString(),
+			})
+			resp.State.RemoveResource(ctx)
+			return
+		}
+		
 		resp.Diagnostics.AddError(
 			"Error Reading Runners Workspace",
 			fmt.Sprintf("Could not read runners workspace ID %s: %s", state.ID.ValueString(), err),
@@ -438,6 +453,12 @@ func (r *runnersWorkspaceResource) Read(ctx context.Context, req resource.ReadRe
 			labelList[i] = types.StringValue(label)
 		}
 		state.Labels = types.ListValueMust(types.StringType, labelListToValues(labelList))
+	}
+	
+	// Set consumed_variable_sets to empty list if not provided
+	// The API doesn't return this field, so we preserve the state value if it exists
+	if state.ConsumedVariableSets.IsNull() || state.ConsumedVariableSets.IsUnknown() {
+		state.ConsumedVariableSets = types.ListValueMust(types.StringType, []attr.Value{})
 	}
 
 	// Set refreshed state
@@ -529,6 +550,11 @@ func (r *runnersWorkspaceResource) Update(ctx context.Context, req resource.Upda
 
 	// Map response to model
 	plan.AccountID = types.StringValue(workspace.AccountID)
+	
+	// Set consumed_variable_sets to empty list if not provided
+	if plan.ConsumedVariableSets.IsNull() || plan.ConsumedVariableSets.IsUnknown() {
+		plan.ConsumedVariableSets = types.ListValueMust(types.StringType, []attr.Value{})
+	}
 
 	// Set state
 	diags = resp.State.Set(ctx, plan)
