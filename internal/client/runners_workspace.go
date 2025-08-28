@@ -76,6 +76,7 @@ type RunnersWorkspace struct {
 	CronExecutionPattern string          `json:"cronExecutionPattern"`
 	IacProvisioner       *IacProvisioner `json:"iacProvisioner"`
 	Labels               []string        `json:"labels"`
+	ProjectID            string          `json:"projectId,omitempty"`  // Added missing project ID field
 }
 
 // TaskResponse represents the response from a task operation

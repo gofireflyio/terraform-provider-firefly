@@ -413,8 +413,8 @@ func (r *runnersWorkspaceResource) Read(ctx context.Context, req resource.ReadRe
 	// Get workspace from API
 	workspace, err := r.client.RunnersWorkspaces.GetRunnersWorkspace(state.ID.ValueString())
 	if err != nil {
-		// Check if the error is a 404, meaning the workspace was deleted outside Terraform
-		if strings.Contains(err.Error(), "404") || strings.Contains(err.Error(), "not found") || strings.Contains(err.Error(), "no records matched") {
+		// Check if the error is a genuine 404 (workspace deleted)
+		if strings.Contains(err.Error(), "404") || strings.Contains(err.Error(), "not found") {
 			tflog.Warn(ctx, "Runners workspace not found, removing from state", map[string]interface{}{
 				"id": state.ID.ValueString(),
 			})
@@ -422,6 +422,8 @@ func (r *runnersWorkspaceResource) Read(ctx context.Context, req resource.ReadRe
 			return
 		}
 		
+		// For "no records matched" errors, this suggests a backend data integrity issue
+		// The workspace likely exists but has broken relationships - treat as an error
 		resp.Diagnostics.AddError(
 			"Error Reading Runners Workspace",
 			fmt.Sprintf("Could not read runners workspace ID %s: %s", state.ID.ValueString(), err),
@@ -460,6 +462,13 @@ func (r *runnersWorkspaceResource) Read(ctx context.Context, req resource.ReadRe
 	if state.ConsumedVariableSets.IsNull() || state.ConsumedVariableSets.IsUnknown() {
 		state.ConsumedVariableSets = types.ListValueMust(types.StringType, []attr.Value{})
 	}
+
+	// Handle project ID
+	if workspace.ProjectID != "" {
+		state.ProjectID = types.StringValue(workspace.ProjectID)
+	}
+	// If API doesn't return projectId, preserve the existing value from state
+	// This prevents losing the project relationship that was set during creation
 
 	// Set refreshed state
 	diags = resp.State.Set(ctx, state)
