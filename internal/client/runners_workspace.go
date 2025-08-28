@@ -195,8 +195,8 @@ func (s *RunnersWorkspaceService) DeleteRunnersWorkspace(id string) error {
 	}
 	defer resp.Body.Close()
 
-	// Handle non-204 responses
-	if resp.StatusCode != http.StatusNoContent {
+	// Handle non-success responses (accept both 200 and 204)
+	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusNoContent {
 		bodyBytes, _ := io.ReadAll(resp.Body)
 		return fmt.Errorf("failed to delete runners workspace: %s (status code: %d)", string(bodyBytes), resp.StatusCode)
 	}
