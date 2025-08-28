@@ -133,7 +133,7 @@ The provider has been tested successfully with these resources:
 - ✅ `firefly_workflows_project` - Creates projects (verified working)
 - ✅ `firefly_project_membership` - Manages project member assignments (NEW)
 - ✅ `firefly_workflows_variable_set` - Manages variable sets  
-- ⚠️ `firefly_workflows_runners_workspace` - **API LIMITATION**: Creation endpoint returns empty response
+- ✅ `firefly_workflows_runners_workspace` - Manages runner workspaces (fixed 2025-08-27)
 - ✅ `firefly_workflows_guardrail` - Manages governance rules
 - ✅ Data sources for all above resources
 
@@ -178,34 +178,26 @@ go test ./internal/provider -v
 - ✅ Professional project structure established
 - ⏳ Terraform Registry publication pending
 
-## Known API Issues
+## Recently Fixed Issues
 
-### Runners Workspace Creation Limitation (Discovered 2025-08-27)
-**Issue**: The `/v2/runners/workspaces` POST endpoint has a critical limitation that prevents proper Terraform resource management.
+### Runners Workspace Creation (Fixed 2025-08-27)
+**Previous Issue**: The `/v2/runners/workspaces` POST endpoint was returning an empty response instead of the created workspace object.
 
-**Details**:
-- ✅ Workspace creation succeeds (HTTP 201 status)
-- ❌ API returns `""` (empty JSON string) instead of the created workspace object
-- ❌ No workspace ID available for Terraform state management
-- ❌ No Location header or other way to obtain the workspace ID
+**Resolution**: 
+- ✅ API now properly returns the complete workspace object including ID
+- ✅ Terraform can fully manage runners workspaces (create, read, update, delete)
+- ✅ Full state management is working correctly
 
-**Impact**: 
-- Workspaces get created in Firefly but cannot be managed by Terraform
-- Provider fails with clear error message explaining the API limitation
-- This affects only runners workspace creation; other resources work correctly
-
-**Root Cause**: API implementation issue in Firefly's `/v2/runners/workspaces` endpoint
-
-**Recommended Fix**: Firefly API team should modify the POST endpoint to return the created workspace object like other resource creation endpoints do.
-
-**Workaround**: None available. Manual workspace creation required until API is fixed.
+**Additional Improvements**:
+- ✅ Added workspace name validation to prevent spaces and invalid characters
+- ✅ Fixed runner type from "firefly_runners" to "firefly"
 
 ## Recent Major Updates
-- **2025-08-27**: **CRITICAL DISCOVERY**: Identified API limitation in runners workspace creation endpoint
+- **2025-08-27**: **RESOLVED**: Fixed all runners workspace creation issues
   - Fixed "invalid runner type" error by changing `"firefly_runners"` to `"firefly"` 
-  - Discovered `/v2/runners/workspaces` POST returns empty response instead of created workspace
-  - Documented API limitation with clear error messages and recommended fixes
-  - This prevents full Terraform support for runners workspaces until API is fixed
+  - Added comprehensive workspace name validation (no spaces, valid characters only)
+  - API team fixed the `/v2/runners/workspaces` POST endpoint to return workspace object
+  - Full Terraform support for runners workspaces now working
 - **2025-08-19**: Added `firefly_project_membership` resource for managing project member assignments
   - New resource allows adding users to projects with specific roles (admin, member, viewer)
   - Enables projects created via Terraform to be visible in the UI by assigning members

@@ -110,21 +110,10 @@ func (s *RunnersWorkspaceService) CreateRunnersWorkspace(req CreateRunnersWorksp
 		return nil, fmt.Errorf("failed to create runners workspace: %s (status code: %d)", string(bodyBytes), resp.StatusCode)
 	}
 
-	// Read the response body for debugging
-	bodyBytes, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("error reading response body: %w", err)
-	}
-
-	// Handle API limitation: the /v2/runners/workspaces POST endpoint returns "" instead of the created workspace
-	if len(bodyBytes) == 0 || string(bodyBytes) == "" || string(bodyBytes) == "\"\"" {
-		return nil, fmt.Errorf("API limitation: Firefly's /v2/runners/workspaces endpoint returns empty response after successful creation. The workspace was created but cannot be managed by Terraform due to missing workspace ID. This is a known issue with the Firefly API that needs to be addressed by the Firefly team.")
-	}
-
 	// Parse the response
 	var workspace RunnersWorkspace
-	if err := json.Unmarshal(bodyBytes, &workspace); err != nil {
-		return nil, fmt.Errorf("error decoding response (body: %s): %w", string(bodyBytes), err)
+	if err := json.NewDecoder(resp.Body).Decode(&workspace); err != nil {
+		return nil, fmt.Errorf("error decoding response: %w", err)
 	}
 
 	return &workspace, nil
