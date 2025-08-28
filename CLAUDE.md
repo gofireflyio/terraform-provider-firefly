@@ -193,6 +193,15 @@ go test ./internal/provider -v
 - ✅ Fixed runner type from "firefly_runners" to "firefly"
 
 ## Recent Major Updates
+- **2025-08-28**: **CRITICAL FIXES**: Resolved workspace-project relationship and deletion issues
+  - ✅ Fixed "storage failed to get project id from workspace id: no records matched" error
+  - ✅ Fixed "unknown value for consumed_variable_sets" after apply
+  - ✅ Fixed workspace deletion failing due to incorrect status code handling
+  - ✅ Added missing ProjectID field to RunnersWorkspace API response struct
+  - ✅ Enhanced Read function to preserve project relationships from state
+  - ✅ Provider now accepts both 200 and 204 status codes for successful deletion
+  - **Root Cause**: API response was missing projectId field, causing state inconsistency
+  - **Testing**: Comprehensively tested with real Firefly API using full create/read/update/delete lifecycle
 - **2025-08-27**: **RESOLVED**: Fixed all runners workspace creation issues
   - Fixed "invalid runner type" error by changing `"firefly_runners"` to `"firefly"` 
   - Added comprehensive workspace name validation (no spaces, valid characters only)

@@ -20,9 +20,12 @@ A comprehensive Terraform Provider for managing [Firefly](https://gofirefly.io) 
 
 ✅ **What Works**:
 - All resources and data sources are implemented and tested
-- Full CRUD operations for all Firefly resources
+- Full CRUD operations for all Firefly resources (create, read, update, delete)
+- Workspace-project relationships and state management
+- Variable sets and consumed variable sets handling
 - Comprehensive test coverage (49 test scenarios)
 - Complete documentation and examples
+- **Recently Fixed**: Critical workspace read/delete issues resolved (Aug 2025)
 
 🔄 **Next Steps**:
 - Terraform Registry publication pending
