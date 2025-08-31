@@ -85,14 +85,31 @@ func (r *guardrailResource) planToAPIGuardrail(ctx context.Context, plan Guardra
 		guardrail.NotificationID = plan.NotificationID.ValueString()
 	}
 
-	// Convert scope if it exists
-	if plan.Scope != nil {
-		guardrail.Scope = &client.GuardrailScope{}
+	// Always initialize scope with defaults - API requires it
+	guardrail.Scope = &client.GuardrailScope{
+		// Set defaults for all scope fields
+		Branches: &client.IncludeExcludeWildcard{
+			Include: []string{"*"},
+			Exclude: []string{},
+		},
+		Workspaces: &client.IncludeExcludeWildcard{
+			Include: []string{"*"},
+			Exclude: []string{},
+		},
+		Labels: &client.IncludeExcludeWildcard{
+			Include: []string{"*"},
+			Exclude: []string{},
+		},
+		Repositories: &client.IncludeExcludeWildcard{
+			Include: []string{"*"},
+			Exclude: []string{},
+		},
+	}
 
+	// Override defaults with user-provided values if they exist
+	if plan.Scope != nil {
 		// Workspaces
 		if plan.Scope.Workspaces != nil {
-			guardrail.Scope.Workspaces = &client.IncludeExcludeWildcard{}
-
 			if !plan.Scope.Workspaces.Include.IsNull() {
 				var include []string
 				plan.Scope.Workspaces.Include.ElementsAs(ctx, &include, false)
@@ -108,8 +125,6 @@ func (r *guardrailResource) planToAPIGuardrail(ctx context.Context, plan Guardra
 
 		// Repositories
 		if plan.Scope.Repositories != nil {
-			guardrail.Scope.Repositories = &client.IncludeExcludeWildcard{}
-
 			if !plan.Scope.Repositories.Include.IsNull() {
 				var include []string
 				plan.Scope.Repositories.Include.ElementsAs(ctx, &include, false)
@@ -125,8 +140,6 @@ func (r *guardrailResource) planToAPIGuardrail(ctx context.Context, plan Guardra
 
 		// Branches
 		if plan.Scope.Branches != nil {
-			guardrail.Scope.Branches = &client.IncludeExcludeWildcard{}
-
 			if !plan.Scope.Branches.Include.IsNull() {
 				var include []string
 				plan.Scope.Branches.Include.ElementsAs(ctx, &include, false)
@@ -142,8 +155,6 @@ func (r *guardrailResource) planToAPIGuardrail(ctx context.Context, plan Guardra
 
 		// Labels
 		if plan.Scope.Labels != nil {
-			guardrail.Scope.Labels = &client.IncludeExcludeWildcard{}
-
 			if !plan.Scope.Labels.Include.IsNull() {
 				var include []string
 				plan.Scope.Labels.Include.ElementsAs(ctx, &include, false)
@@ -313,68 +324,49 @@ func (r *guardrailResource) apiGuardrailToPlan(ctx context.Context, apiGuardrail
 		plan.UpdatedAt = types.StringValue(apiGuardrail.UpdatedAt)
 	}
 
-	// Convert scope if it exists
-	if apiGuardrail.Scope != nil {
-		if plan.Scope == nil {
-			plan.Scope = &GuardrailScopeModel{}
-		}
-
+	// Convert scope if it exists and was originally in the plan
+	// Only update scope if it was originally provided by the user
+	if apiGuardrail.Scope != nil && plan.Scope != nil {
 		// Workspaces
-		if apiGuardrail.Scope.Workspaces != nil {
-			if plan.Scope.Workspaces == nil {
-				plan.Scope.Workspaces = &IncludeExcludeWildcardModel{}
-			}
-
-			if apiGuardrail.Scope.Workspaces.Include != nil {
+		if apiGuardrail.Scope.Workspaces != nil && plan.Scope.Workspaces != nil {
+			if apiGuardrail.Scope.Workspaces.Include != nil && len(apiGuardrail.Scope.Workspaces.Include) > 0 {
 				plan.Scope.Workspaces.Include = types.ListValueMust(types.StringType, listToValues(apiGuardrail.Scope.Workspaces.Include))
 			}
 
-			if apiGuardrail.Scope.Workspaces.Exclude != nil {
+			if apiGuardrail.Scope.Workspaces.Exclude != nil && len(apiGuardrail.Scope.Workspaces.Exclude) > 0 {
 				plan.Scope.Workspaces.Exclude = types.ListValueMust(types.StringType, listToValues(apiGuardrail.Scope.Workspaces.Exclude))
 			}
 		}
 
 		// Repositories
-		if apiGuardrail.Scope.Repositories != nil {
-			if plan.Scope.Repositories == nil {
-				plan.Scope.Repositories = &IncludeExcludeWildcardModel{}
-			}
-
-			if apiGuardrail.Scope.Repositories.Include != nil {
+		if apiGuardrail.Scope.Repositories != nil && plan.Scope.Repositories != nil {
+			if apiGuardrail.Scope.Repositories.Include != nil && len(apiGuardrail.Scope.Repositories.Include) > 0 {
 				plan.Scope.Repositories.Include = types.ListValueMust(types.StringType, listToValues(apiGuardrail.Scope.Repositories.Include))
 			}
 
-			if apiGuardrail.Scope.Repositories.Exclude != nil {
+			if apiGuardrail.Scope.Repositories.Exclude != nil && len(apiGuardrail.Scope.Repositories.Exclude) > 0 {
 				plan.Scope.Repositories.Exclude = types.ListValueMust(types.StringType, listToValues(apiGuardrail.Scope.Repositories.Exclude))
 			}
 		}
 
 		// Branches
-		if apiGuardrail.Scope.Branches != nil {
-			if plan.Scope.Branches == nil {
-				plan.Scope.Branches = &IncludeExcludeWildcardModel{}
-			}
-
-			if apiGuardrail.Scope.Branches.Include != nil {
+		if apiGuardrail.Scope.Branches != nil && plan.Scope.Branches != nil {
+			if apiGuardrail.Scope.Branches.Include != nil && len(apiGuardrail.Scope.Branches.Include) > 0 {
 				plan.Scope.Branches.Include = types.ListValueMust(types.StringType, listToValues(apiGuardrail.Scope.Branches.Include))
 			}
 
-			if apiGuardrail.Scope.Branches.Exclude != nil {
+			if apiGuardrail.Scope.Branches.Exclude != nil && len(apiGuardrail.Scope.Branches.Exclude) > 0 {
 				plan.Scope.Branches.Exclude = types.ListValueMust(types.StringType, listToValues(apiGuardrail.Scope.Branches.Exclude))
 			}
 		}
 
 		// Labels
-		if apiGuardrail.Scope.Labels != nil {
-			if plan.Scope.Labels == nil {
-				plan.Scope.Labels = &IncludeExcludeWildcardModel{}
-			}
-
-			if apiGuardrail.Scope.Labels.Include != nil {
+		if apiGuardrail.Scope.Labels != nil && plan.Scope.Labels != nil {
+			if apiGuardrail.Scope.Labels.Include != nil && len(apiGuardrail.Scope.Labels.Include) > 0 {
 				plan.Scope.Labels.Include = types.ListValueMust(types.StringType, listToValues(apiGuardrail.Scope.Labels.Include))
 			}
 
-			if apiGuardrail.Scope.Labels.Exclude != nil {
+			if apiGuardrail.Scope.Labels.Exclude != nil && len(apiGuardrail.Scope.Labels.Exclude) > 0 {
 				plan.Scope.Labels.Exclude = types.ListValueMust(types.StringType, listToValues(apiGuardrail.Scope.Labels.Exclude))
 			}
 		}

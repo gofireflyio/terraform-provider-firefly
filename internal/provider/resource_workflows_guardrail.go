@@ -96,7 +96,7 @@ func (r *guardrailResource) Create(ctx context.Context, req resource.CreateReque
 		plan.NotificationID = types.StringValue("")
 	}
 
-	// Fetch the created guardrail to get all of its properties
+	// Fetch the created guardrail to get computed properties only
 	createdGuardrail, err := r.client.Guardrails.GetGuardrail(createResp.RuleID)
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -106,14 +106,13 @@ func (r *guardrailResource) Create(ctx context.Context, req resource.CreateReque
 		return
 	}
 
-	// Map created guardrail to plan
-	err = r.apiGuardrailToPlan(ctx, *createdGuardrail, &plan)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error Converting API Response",
-			fmt.Sprintf("Could not convert API response to plan: %s", err),
-		)
-		return
+	// Update only computed fields from the API response
+	// Don't overwrite user-provided scope with API defaults
+	if createdGuardrail.CreatedAt != "" {
+		plan.CreatedAt = types.StringValue(createdGuardrail.CreatedAt)
+	}
+	if createdGuardrail.UpdatedAt != "" {
+		plan.UpdatedAt = types.StringValue(createdGuardrail.UpdatedAt)
 	}
 
 	// Set state to fully populated plan
@@ -144,14 +143,63 @@ func (r *guardrailResource) Read(ctx context.Context, req resource.ReadRequest, 
 		return
 	}
 
-	// Map response to state
-	err = r.apiGuardrailToPlan(ctx, *guardrail, &state)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error Converting API Response",
-			fmt.Sprintf("Could not convert API response to state: %s", err),
-		)
-		return
+	// Update only the basic fields - preserve original scope structure
+	state.ID = types.StringValue(guardrail.ID)
+	state.Name = types.StringValue(guardrail.Name)
+	state.Type = types.StringValue(guardrail.Type)
+	state.IsEnabled = types.BoolValue(guardrail.IsEnabled)
+	state.Severity = types.Int64Value(int64(guardrail.Severity))
+
+	if guardrail.NotificationID != "" {
+		state.NotificationID = types.StringValue(guardrail.NotificationID)
+	}
+
+	if guardrail.CreatedAt != "" {
+		state.CreatedAt = types.StringValue(guardrail.CreatedAt)
+	}
+
+	if guardrail.UpdatedAt != "" {
+		state.UpdatedAt = types.StringValue(guardrail.UpdatedAt)
+	}
+
+	// Only update scope fields that were explicitly configured in the original state
+	if state.Scope != nil && guardrail.Scope != nil {
+		// Update user-provided scope values based on what they originally configured
+		if state.Scope.Workspaces != nil && guardrail.Scope.Workspaces != nil {
+			if !state.Scope.Workspaces.Include.IsNull() && guardrail.Scope.Workspaces.Include != nil {
+				state.Scope.Workspaces.Include = types.ListValueMust(types.StringType, listToValues(guardrail.Scope.Workspaces.Include))
+			}
+			if !state.Scope.Workspaces.Exclude.IsNull() && guardrail.Scope.Workspaces.Exclude != nil {
+				state.Scope.Workspaces.Exclude = types.ListValueMust(types.StringType, listToValues(guardrail.Scope.Workspaces.Exclude))
+			}
+		}
+		
+		if state.Scope.Repositories != nil && guardrail.Scope.Repositories != nil {
+			if !state.Scope.Repositories.Include.IsNull() && guardrail.Scope.Repositories.Include != nil {
+				state.Scope.Repositories.Include = types.ListValueMust(types.StringType, listToValues(guardrail.Scope.Repositories.Include))
+			}
+			if !state.Scope.Repositories.Exclude.IsNull() && guardrail.Scope.Repositories.Exclude != nil {
+				state.Scope.Repositories.Exclude = types.ListValueMust(types.StringType, listToValues(guardrail.Scope.Repositories.Exclude))
+			}
+		}
+		
+		if state.Scope.Branches != nil && guardrail.Scope.Branches != nil {
+			if !state.Scope.Branches.Include.IsNull() && guardrail.Scope.Branches.Include != nil {
+				state.Scope.Branches.Include = types.ListValueMust(types.StringType, listToValues(guardrail.Scope.Branches.Include))
+			}
+			if !state.Scope.Branches.Exclude.IsNull() && guardrail.Scope.Branches.Exclude != nil {
+				state.Scope.Branches.Exclude = types.ListValueMust(types.StringType, listToValues(guardrail.Scope.Branches.Exclude))
+			}
+		}
+		
+		if state.Scope.Labels != nil && guardrail.Scope.Labels != nil {
+			if !state.Scope.Labels.Include.IsNull() && guardrail.Scope.Labels.Include != nil {
+				state.Scope.Labels.Include = types.ListValueMust(types.StringType, listToValues(guardrail.Scope.Labels.Include))
+			}
+			if !state.Scope.Labels.Exclude.IsNull() && guardrail.Scope.Labels.Exclude != nil {
+				state.Scope.Labels.Exclude = types.ListValueMust(types.StringType, listToValues(guardrail.Scope.Labels.Exclude))
+			}
+		}
 	}
 
 	// Set refreshed state
