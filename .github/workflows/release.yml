@@ -32,11 +32,3 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GPG_FINGERPRINT: ${{ steps.import_gpg.outputs.fingerprint }}
-      
-      - name: Publish to Terraform Registry
-        uses: hashicorp/terraform-registry-publish-action@v1
-        with:
-          registry-token: ${{ secrets.TF_REGISTRY_TOKEN }}
-          provider-namespace: gofireflyio
-          provider-name: firefly
-          version: ${{ github.ref_name }}
