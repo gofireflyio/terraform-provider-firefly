@@ -8,7 +8,8 @@ The Firefly provider allows you to manage infrastructure workflows and governanc
 terraform {
   required_providers {
     firefly = {
-      source = "firefly/firefly"
+      source = "gofireflyio/firefly"
+      version = "~> 1.0"
     }
   }
 }
