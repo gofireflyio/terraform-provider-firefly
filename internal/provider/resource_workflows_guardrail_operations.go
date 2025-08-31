@@ -51,14 +51,60 @@ func (r *guardrailResource) Update(ctx context.Context, req resource.UpdateReque
 		return
 	}
 
-	// Map response to state
-	err = r.apiGuardrailToPlan(ctx, *updatedGuardrail, &plan)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error Converting API Response",
-			fmt.Sprintf("Could not convert API response to plan: %s", err),
-		)
-		return
+	// Update computed fields from the API response
+	// Don't overwrite user-provided scope with API defaults
+	if updatedGuardrail.CreatedAt != "" {
+		plan.CreatedAt = types.StringValue(updatedGuardrail.CreatedAt)
+	}
+	if updatedGuardrail.UpdatedAt != "" {
+		plan.UpdatedAt = types.StringValue(updatedGuardrail.UpdatedAt)
+	}
+	
+	// Always set notification_id to a known value
+	if updatedGuardrail.NotificationID != "" {
+		plan.NotificationID = types.StringValue(updatedGuardrail.NotificationID)
+	} else {
+		// If no notification_id from API, set to empty string (known value)
+		plan.NotificationID = types.StringValue("")
+	}
+
+	// Update scope fields that were provided in the plan
+	if plan.Scope != nil && updatedGuardrail.Scope != nil {
+		if plan.Scope.Workspaces != nil && updatedGuardrail.Scope.Workspaces != nil {
+			if !plan.Scope.Workspaces.Include.IsNull() && updatedGuardrail.Scope.Workspaces.Include != nil {
+				plan.Scope.Workspaces.Include = types.ListValueMust(types.StringType, listToValues(updatedGuardrail.Scope.Workspaces.Include))
+			}
+			if !plan.Scope.Workspaces.Exclude.IsNull() && updatedGuardrail.Scope.Workspaces.Exclude != nil {
+				plan.Scope.Workspaces.Exclude = types.ListValueMust(types.StringType, listToValues(updatedGuardrail.Scope.Workspaces.Exclude))
+			}
+		}
+		
+		if plan.Scope.Repositories != nil && updatedGuardrail.Scope.Repositories != nil {
+			if !plan.Scope.Repositories.Include.IsNull() && updatedGuardrail.Scope.Repositories.Include != nil {
+				plan.Scope.Repositories.Include = types.ListValueMust(types.StringType, listToValues(updatedGuardrail.Scope.Repositories.Include))
+			}
+			if !plan.Scope.Repositories.Exclude.IsNull() && updatedGuardrail.Scope.Repositories.Exclude != nil {
+				plan.Scope.Repositories.Exclude = types.ListValueMust(types.StringType, listToValues(updatedGuardrail.Scope.Repositories.Exclude))
+			}
+		}
+		
+		if plan.Scope.Branches != nil && updatedGuardrail.Scope.Branches != nil {
+			if !plan.Scope.Branches.Include.IsNull() && updatedGuardrail.Scope.Branches.Include != nil {
+				plan.Scope.Branches.Include = types.ListValueMust(types.StringType, listToValues(updatedGuardrail.Scope.Branches.Include))
+			}
+			if !plan.Scope.Branches.Exclude.IsNull() && updatedGuardrail.Scope.Branches.Exclude != nil {
+				plan.Scope.Branches.Exclude = types.ListValueMust(types.StringType, listToValues(updatedGuardrail.Scope.Branches.Exclude))
+			}
+		}
+		
+		if plan.Scope.Labels != nil && updatedGuardrail.Scope.Labels != nil {
+			if !plan.Scope.Labels.Include.IsNull() && updatedGuardrail.Scope.Labels.Include != nil {
+				plan.Scope.Labels.Include = types.ListValueMust(types.StringType, listToValues(updatedGuardrail.Scope.Labels.Include))
+			}
+			if !plan.Scope.Labels.Exclude.IsNull() && updatedGuardrail.Scope.Labels.Exclude != nil {
+				plan.Scope.Labels.Exclude = types.ListValueMust(types.StringType, listToValues(updatedGuardrail.Scope.Labels.Exclude))
+			}
+		}
 	}
 
 	// Set state to fully populated plan
