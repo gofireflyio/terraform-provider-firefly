@@ -12,7 +12,7 @@ resource "firefly_workflows_guardrail" "cost_limit" {
   name       = "Monthly Cost Threshold"
   type       = "cost"
   is_enabled = true
-  severity   = "Strict"
+  severity   = "strict"
   
   scope {
     workspaces {
@@ -33,7 +33,7 @@ resource "firefly_workflows_guardrail" "security_policy" {
   name       = "Security Policy Enforcement"
   type       = "policy"
   is_enabled = true
-  severity   = "Flexible"
+  severity   = "flexible"
   
   scope {
     workspaces {
@@ -53,7 +53,7 @@ resource "firefly_workflows_guardrail" "resource_control" {
   name       = "Prevent Production Deletions"
   type       = "resource"
   is_enabled = true
-  severity   = "Flexible"
+  severity   = "flexible"
   
   scope {
     workspaces {
@@ -78,7 +78,7 @@ resource "firefly_workflows_guardrail" "invalid_multiple_criteria" {
   name       = "Invalid Example"
   type       = "cost"
   is_enabled = true
-  severity   = "Strict"
+  severity   = "strict"
   
   scope {
     workspaces {
@@ -101,7 +101,7 @@ resource "firefly_workflows_guardrail" "tag_policy" {
   name       = "Required Tags Policy"
   type       = "tag"
   is_enabled = true
-  severity   = "Warning"
+  severity   = "warning"
   
   scope {
     workspaces {
@@ -125,7 +125,7 @@ resource "firefly_workflows_guardrail" "tag_policy" {
 - `name` (String) - The name of the guardrail
 - `type` (String) - Type of guardrail. Valid values: `cost`, `policy`, `resource`, `tag`
 - `is_enabled` (Boolean) - Whether the guardrail is enabled
-- `severity` (String) - Severity level. Valid values: `Flexible`, `Strict`, `Warning`
+- `severity` (String) - Severity level. Valid values: `flexible`, `strict`, `warning`
 - `scope` (Block) - Scope configuration (see [below for nested schema](#nestedblock--scope))
 - `criteria` (Block) - Criteria configuration (see [below for nested schema](#nestedblock--criteria))
 

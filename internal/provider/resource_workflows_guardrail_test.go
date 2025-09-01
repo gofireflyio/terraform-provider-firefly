@@ -14,12 +14,12 @@ func TestAccGuardrailResource_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config: testAccGuardrailResourceConfig("test-guardrail", "cost", "Strict"),
+				Config: testAccGuardrailResourceConfig("test-guardrail", "cost", "strict"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("firefly_workflows_guardrail.test", "name", "test-guardrail"),
 					resource.TestCheckResourceAttr("firefly_workflows_guardrail.test", "type", "cost"),
 					resource.TestCheckResourceAttr("firefly_workflows_guardrail.test", "is_enabled", "true"),
-					resource.TestCheckResourceAttr("firefly_workflows_guardrail.test", "severity", "Strict"),
+					resource.TestCheckResourceAttr("firefly_workflows_guardrail.test", "severity", "strict"),
 					resource.TestCheckResourceAttrSet("firefly_workflows_guardrail.test", "id"),
 				),
 			},
@@ -31,10 +31,10 @@ func TestAccGuardrailResource_basic(t *testing.T) {
 			},
 			// Update and Read testing
 			{
-				Config: testAccGuardrailResourceConfig("test-guardrail-updated", "cost", "Flexible"),
+				Config: testAccGuardrailResourceConfig("test-guardrail-updated", "cost", "flexible"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("firefly_workflows_guardrail.test", "name", "test-guardrail-updated"),
-					resource.TestCheckResourceAttr("firefly_workflows_guardrail.test", "severity", "Flexible"),
+					resource.TestCheckResourceAttr("firefly_workflows_guardrail.test", "severity", "flexible"),
 				),
 			},
 			// Delete testing automatically occurs in TestCase
@@ -116,7 +116,7 @@ resource "firefly_workflows_guardrail" "cost" {
   name       = "Cost Threshold Guardrail"
   type       = "cost"
   is_enabled = true
-  severity   = "Strict"
+  severity   = "strict"
   
   criteria {
     cost {
@@ -133,7 +133,7 @@ resource "firefly_workflows_guardrail" "tag" {
   name       = "Tag Policy Guardrail"
   type       = "tag"
   is_enabled = true
-  severity   = "Warning"
+  severity   = "warning"
   
   criteria {
     tag {
@@ -151,7 +151,7 @@ resource "firefly_workflows_guardrail" "scoped" {
   name       = "Scoped Guardrail"
   type       = "cost"
   is_enabled = true
-  severity   = "Flexible"
+  severity   = "flexible"
   
   scope {
     workspaces {

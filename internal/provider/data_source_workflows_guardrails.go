@@ -112,10 +112,10 @@ func (d *guardrailsDataSource) Schema(_ context.Context, _ datasource.SchemaRequ
 							Computed:    true,
 						},
 						"severity": schema.StringAttribute{
-							Description: "Severity level of the guardrail rule. Allowed values: Flexible, Strict, Warning.",
+							Description: "Severity level of the guardrail rule. Allowed values: flexible, strict, warning.",
 							Computed:    true,
 							Validators: []validator.String{
-								stringvalidator.OneOf("Flexible", "Strict", "Warning"),
+								stringvalidator.OneOf("flexible", "strict", "warning"),
 							},
 						},
 					},
