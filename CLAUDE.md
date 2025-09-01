@@ -93,6 +93,17 @@ Environment variables supported:
 - Comprehensive testing suite with 49 total tests (21 unit + 28 acceptance tests)
 - All compilation issues resolved and production-ready as of 2025-08-18
 
+### Branch Management Workflow
+When working on new features:
+1. **Always checkout a new branch** when starting work (avoid working directly on main)
+2. **Create meaningful branch names** (e.g., `feature/project-path-lookup`, `fix/guardrail-validation`)
+3. **After completing work**: Create a Pull Request for review
+4. **After PR is merged**: Switch back to main and pull latest changes
+   ```bash
+   git checkout main
+   git pull origin main
+   ```
+
 ## Testing the Provider (Local Development)
 
 Since the provider is not yet in the Terraform Registry, use this workflow:
