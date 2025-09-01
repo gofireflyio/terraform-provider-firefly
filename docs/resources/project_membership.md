@@ -31,7 +31,7 @@ The following arguments are supported:
 
 * `project_id` - (Required) The ID of the project. Changing this forces a new resource to be created.
 * `user_id` - (Required) The ID of the user to add to the project. Changing this forces a new resource to be created.
-* `email` - (Required) The email address of the user.
+* `email` - (Optional) The email address of the user. If not provided, will be fetched from the user information.
 * `role` - (Required) The role of the user in the project (e.g., 'admin', 'member', 'viewer').
 
 ## Attribute Reference

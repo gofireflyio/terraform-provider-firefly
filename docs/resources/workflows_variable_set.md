@@ -67,8 +67,11 @@ resource "firefly_workflows_variable_set" "production_config" {
 
 - `key` (String) - The variable key/name
 - `value` (String) - The variable value
-- `sensitivity` (String) - Variable sensitivity level. Valid values: `string`, `secret`
-- `destination` (String) - Where the variable is used. Valid values: `env`, `iac`
+
+#### Optional
+
+- `sensitivity` (String) - The sensitivity of the variable (string or secret). Defaults to `string`
+- `destination` (String) - The destination of the variable (env or iac). Defaults to `env`
 
 ## Import
 

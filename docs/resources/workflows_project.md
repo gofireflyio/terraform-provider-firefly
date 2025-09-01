@@ -66,8 +66,11 @@ resource "firefly_workflows_project" "child" {
 
 - `key` (String) - The variable key/name
 - `value` (String) - The variable value
-- `sensitivity` (String) - Variable sensitivity level. Valid values: `string`, `secret`
-- `destination` (String) - Where the variable is used. Valid values: `env`, `iac`
+
+#### Optional
+
+- `sensitivity` (String) - Variable sensitivity level. Valid values: `string`, `secret`. Defaults to `string`
+- `destination` (String) - Where the variable is used. Valid values: `env`, `iac`. Defaults to `env`
 
 ## Import
 

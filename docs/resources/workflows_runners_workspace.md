@@ -47,7 +47,7 @@ resource "firefly_workflows_runners_workspace" "opentofu_example" {
   default_branch    = "main"
   
   iac_type          = "opentofu"
-  opentofu_version  = "1.6.0"
+  terraform_version = "1.6.0"  # Note: still use terraform_version even for OpenTofu
   apply_rule        = "auto"
   triggers          = ["push", "merge"]
   
@@ -59,29 +59,30 @@ resource "firefly_workflows_runners_workspace" "opentofu_example" {
 
 ### Required
 
-- `name` (String) - The name of the workspace
-- `project_id` (String) - ID of the project this workspace belongs to
-- `repository` (String) - Repository name in format "org/repo"
+- `name` (String) - The name of the workspace (cannot contain spaces)
+- `repository` (String) - Repository URL or name
 - `vcs_integration_id` (String) - ID of the VCS integration to use
-- `vcs_type` (String) - Type of VCS. Valid values: `github`, `gitlab`, `bitbucket`, `azure_devops`
-- `iac_type` (String) - Infrastructure as Code type. Valid values: `terraform`, `opentofu`
+- `vcs_type` (String) - Type of VCS (e.g., github, gitlab)
+- `default_branch` (String) - Default branch for the workspace
 
 ### Optional
 
-- `description` (String) - The description of the workspace
+- `description` (String) - The description of the workspace. Defaults to empty string
+- `working_directory` (String) - Working directory within the repository. Defaults to empty string
+- `cron_execution_pattern` (String) - Cron pattern for scheduled executions. Defaults to empty string
+- `iac_type` (String) - Infrastructure as Code type (terraform, opentofu). Defaults to `terraform`
+- `terraform_version` (String) - Terraform version to use. Defaults to `1.5.7`
+- `apply_rule` (String) - Apply rule (manual or auto). Defaults to `manual`
+- `project_id` (String) - Project ID for workspace assignment. Defaults to empty string
+- `triggers` (List of String) - List of triggers for the workspace
 - `labels` (List of String) - Labels to assign to the workspace
-- `default_branch` (String) - Default branch to use. Defaults to `main`
-- `working_directory` (String) - Working directory within the repository
-- `terraform_version` (String) - Terraform version to use (required if iac_type is "terraform")
-- `opentofu_version` (String) - OpenTofu version to use (required if iac_type is "opentofu")
-- `apply_rule` (String) - When to apply changes. Valid values: `manual`, `auto`. Defaults to `manual`
-- `triggers` (List of String) - Events that trigger runs. Valid values: `push`, `merge`, `pull_request`
-- `consumed_variable_sets` (List of String) - List of variable set IDs to consume
-- `variables` (Block Set) - Workspace-specific variables (see [below for nested schema](#nestedblock--variables))
+- `consumed_variable_sets` (List of String) - List of variable set IDs that this workspace consumes
+- `variables` (Block Set) - Variables associated with the workspace (see [below for nested schema](#nestedblock--variables))
 
 ### Read-Only
 
 - `id` (String) - The unique identifier of the workspace
+- `account_id` (String) - Account ID that the workspace belongs to
 
 <a id="nestedblock--variables"></a>
 ### Nested Schema for `variables`
@@ -90,8 +91,11 @@ resource "firefly_workflows_runners_workspace" "opentofu_example" {
 
 - `key` (String) - The variable key/name
 - `value` (String) - The variable value
-- `sensitivity` (String) - Variable sensitivity level. Valid values: `string`, `secret`
-- `destination` (String) - Where the variable is used. Valid values: `env`, `iac`
+
+#### Optional
+
+- `sensitivity` (String) - The sensitivity of the variable (string or secret). Defaults to `string`
+- `destination` (String) - The destination of the variable (env or iac). Defaults to `env`
 
 ## Import
 
