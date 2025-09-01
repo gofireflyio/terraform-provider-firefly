@@ -2,6 +2,7 @@ package provider
 
 import (
 	"context"
+	"fmt"
 	"github.com/gofireflyio/terraform-provider-firefly/internal/client"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -171,6 +172,28 @@ func (r *guardrailResource) planToAPIGuardrail(ctx context.Context, plan Guardra
 
 	// Convert criteria if it exists
 	if plan.Criteria != nil {
+		// Validate that only one criteria type is specified
+		criteriaCount := 0
+		if plan.Criteria.Cost != nil {
+			criteriaCount++
+		}
+		if plan.Criteria.Policy != nil {
+			criteriaCount++
+		}
+		if plan.Criteria.Resource != nil {
+			criteriaCount++
+		}
+		if plan.Criteria.Tag != nil {
+			criteriaCount++
+		}
+
+		if criteriaCount == 0 {
+			return nil, fmt.Errorf("at least one criteria type must be specified")
+		}
+		if criteriaCount > 1 {
+			return nil, fmt.Errorf("only one criteria type can be specified per guardrail (found %d)", criteriaCount)
+		}
+
 		guardrail.Criteria = &client.GuardrailCriteria{}
 
 		// Cost criteria
