@@ -9,7 +9,7 @@ terraform {
   required_providers {
     firefly = {
       source = "gofireflyio/firefly"
-      version = "~> 1.0"
+      version = "~> 0.0.2"
     }
   }
 }

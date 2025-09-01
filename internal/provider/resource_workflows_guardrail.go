@@ -4,11 +4,11 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/gofireflyio/terraform-provider-firefly/internal/client"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/gofireflyio/terraform-provider-firefly/internal/client"
 )
 
 // Ensure the implementation satisfies the expected interfaces
@@ -88,7 +88,7 @@ func (r *guardrailResource) Create(ctx context.Context, req resource.CreateReque
 
 	// Set ID from response
 	plan.ID = types.StringValue(createResp.RuleID)
-	
+
 	// Set notification ID from response or empty string if none
 	if createResp.NotificationID != "" {
 		plan.NotificationID = types.StringValue(createResp.NotificationID)
@@ -148,7 +148,7 @@ func (r *guardrailResource) Read(ctx context.Context, req resource.ReadRequest, 
 	state.Name = types.StringValue(guardrail.Name)
 	state.Type = types.StringValue(guardrail.Type)
 	state.IsEnabled = types.BoolValue(guardrail.IsEnabled)
-	state.Severity = types.Int64Value(int64(guardrail.Severity))
+	state.Severity = types.StringValue(client.SeverityToString(guardrail.Severity))
 
 	if guardrail.NotificationID != "" {
 		state.NotificationID = types.StringValue(guardrail.NotificationID)
@@ -173,7 +173,7 @@ func (r *guardrailResource) Read(ctx context.Context, req resource.ReadRequest, 
 				state.Scope.Workspaces.Exclude = types.ListValueMust(types.StringType, listToValues(guardrail.Scope.Workspaces.Exclude))
 			}
 		}
-		
+
 		if state.Scope.Repositories != nil && guardrail.Scope.Repositories != nil {
 			if !state.Scope.Repositories.Include.IsNull() && guardrail.Scope.Repositories.Include != nil {
 				state.Scope.Repositories.Include = types.ListValueMust(types.StringType, listToValues(guardrail.Scope.Repositories.Include))
@@ -182,7 +182,7 @@ func (r *guardrailResource) Read(ctx context.Context, req resource.ReadRequest, 
 				state.Scope.Repositories.Exclude = types.ListValueMust(types.StringType, listToValues(guardrail.Scope.Repositories.Exclude))
 			}
 		}
-		
+
 		if state.Scope.Branches != nil && guardrail.Scope.Branches != nil {
 			if !state.Scope.Branches.Include.IsNull() && guardrail.Scope.Branches.Include != nil {
 				state.Scope.Branches.Include = types.ListValueMust(types.StringType, listToValues(guardrail.Scope.Branches.Include))
@@ -191,7 +191,7 @@ func (r *guardrailResource) Read(ctx context.Context, req resource.ReadRequest, 
 				state.Scope.Branches.Exclude = types.ListValueMust(types.StringType, listToValues(guardrail.Scope.Branches.Exclude))
 			}
 		}
-		
+
 		if state.Scope.Labels != nil && guardrail.Scope.Labels != nil {
 			if !state.Scope.Labels.Include.IsNull() && guardrail.Scope.Labels.Include != nil {
 				state.Scope.Labels.Include = types.ListValueMust(types.StringType, listToValues(guardrail.Scope.Labels.Include))

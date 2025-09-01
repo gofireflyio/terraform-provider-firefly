@@ -14,12 +14,12 @@ func TestAccGuardrailResource_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config: testAccGuardrailResourceConfig("test-guardrail", "cost", 2),
+				Config: testAccGuardrailResourceConfig("test-guardrail", "cost", "Strict"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("firefly_workflows_guardrail.test", "name", "test-guardrail"),
 					resource.TestCheckResourceAttr("firefly_workflows_guardrail.test", "type", "cost"),
 					resource.TestCheckResourceAttr("firefly_workflows_guardrail.test", "is_enabled", "true"),
-					resource.TestCheckResourceAttr("firefly_workflows_guardrail.test", "severity", "2"),
+					resource.TestCheckResourceAttr("firefly_workflows_guardrail.test", "severity", "Strict"),
 					resource.TestCheckResourceAttrSet("firefly_workflows_guardrail.test", "id"),
 				),
 			},
@@ -31,10 +31,10 @@ func TestAccGuardrailResource_basic(t *testing.T) {
 			},
 			// Update and Read testing
 			{
-				Config: testAccGuardrailResourceConfig("test-guardrail-updated", "cost", 1),
+				Config: testAccGuardrailResourceConfig("test-guardrail-updated", "cost", "Flexible"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("firefly_workflows_guardrail.test", "name", "test-guardrail-updated"),
-					resource.TestCheckResourceAttr("firefly_workflows_guardrail.test", "severity", "1"),
+					resource.TestCheckResourceAttr("firefly_workflows_guardrail.test", "severity", "Flexible"),
 				),
 			},
 			// Delete testing automatically occurs in TestCase
@@ -99,13 +99,13 @@ func TestAccGuardrailResource_withScope(t *testing.T) {
 	})
 }
 
-func testAccGuardrailResourceConfig(name, guardrailType string, severity int) string {
+func testAccGuardrailResourceConfig(name, guardrailType string, severity string) string {
 	return fmt.Sprintf(`
 resource "firefly_workflows_guardrail" "test" {
   name       = %[1]q
   type       = %[2]q
   is_enabled = true
-  severity   = %[3]d
+  severity   = "%[3]s"
 }
 `, name, guardrailType, severity)
 }
@@ -116,7 +116,7 @@ resource "firefly_workflows_guardrail" "cost" {
   name       = "Cost Threshold Guardrail"
   type       = "cost"
   is_enabled = true
-  severity   = 2
+  severity   = "Strict"
   
   criteria {
     cost {
@@ -133,7 +133,7 @@ resource "firefly_workflows_guardrail" "tag" {
   name       = "Tag Policy Guardrail"
   type       = "tag"
   is_enabled = true
-  severity   = 3
+  severity   = "Warning"
   
   criteria {
     tag {
@@ -151,7 +151,7 @@ resource "firefly_workflows_guardrail" "scoped" {
   name       = "Scoped Guardrail"
   type       = "cost"
   is_enabled = true
-  severity   = 1
+  severity   = "Flexible"
   
   scope {
     workspaces {

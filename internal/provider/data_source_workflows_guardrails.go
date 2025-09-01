@@ -4,11 +4,13 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/gofireflyio/terraform-provider-firefly/internal/client"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/gofireflyio/terraform-provider-firefly/internal/client"
 )
 
 // Ensure the implementation satisfies the expected interfaces
@@ -29,33 +31,33 @@ type guardrailsDataSource struct {
 
 // GuardrailFiltersModel describes the guardrail filters
 type GuardrailFiltersModel struct {
-	CreatedBy    types.List   `tfsdk:"created_by"`
-	Type         types.List   `tfsdk:"type"`
-	Labels       types.List   `tfsdk:"labels"`
-	Repositories types.List   `tfsdk:"repositories"`
-	Workspaces   types.List   `tfsdk:"workspaces"`
-	Branches     types.List   `tfsdk:"branches"`
+	CreatedBy    types.List `tfsdk:"created_by"`
+	Type         types.List `tfsdk:"type"`
+	Labels       types.List `tfsdk:"labels"`
+	Repositories types.List `tfsdk:"repositories"`
+	Workspaces   types.List `tfsdk:"workspaces"`
+	Branches     types.List `tfsdk:"branches"`
 }
 
 // GuardrailDataModel describes a single guardrail rule
 type GuardrailDataModel struct {
-	ID            types.String `tfsdk:"id"`
-	AccountID     types.String `tfsdk:"account_id"`
-	CreatedBy     types.String `tfsdk:"created_by"`
-	Name          types.String `tfsdk:"name"`
-	Type          types.String `tfsdk:"type"`
-	IsEnabled     types.Bool   `tfsdk:"is_enabled"`
-	CreatedAt     types.String `tfsdk:"created_at"`
-	UpdatedAt     types.String `tfsdk:"updated_at"`
+	ID             types.String `tfsdk:"id"`
+	AccountID      types.String `tfsdk:"account_id"`
+	CreatedBy      types.String `tfsdk:"created_by"`
+	Name           types.String `tfsdk:"name"`
+	Type           types.String `tfsdk:"type"`
+	IsEnabled      types.Bool   `tfsdk:"is_enabled"`
+	CreatedAt      types.String `tfsdk:"created_at"`
+	UpdatedAt      types.String `tfsdk:"updated_at"`
 	NotificationID types.String `tfsdk:"notification_id"`
-	Severity      types.Int64  `tfsdk:"severity"`
+	Severity       types.String `tfsdk:"severity"`
 }
 
 // GuardrailsDataSourceModel describes the data source data model
 type GuardrailsDataSourceModel struct {
-	Guardrails   types.List          `tfsdk:"guardrails"`
-	Filters      *GuardrailFiltersModel `tfsdk:"filters"`
-	SearchValue  types.String        `tfsdk:"search_value"`
+	Guardrails  types.List             `tfsdk:"guardrails"`
+	Filters     *GuardrailFiltersModel `tfsdk:"filters"`
+	SearchValue types.String           `tfsdk:"search_value"`
 }
 
 // Metadata returns the data source type name
@@ -109,9 +111,12 @@ func (d *guardrailsDataSource) Schema(_ context.Context, _ datasource.SchemaRequ
 							Description: "ID of the associated notification",
 							Computed:    true,
 						},
-						"severity": schema.Int64Attribute{
-							Description: "Severity level of the guardrail rule",
+						"severity": schema.StringAttribute{
+							Description: "Severity level of the guardrail rule. Allowed values: Flexible, Strict, Warning.",
 							Computed:    true,
+							Validators: []validator.String{
+								stringvalidator.OneOf("Flexible", "Strict", "Warning"),
+							},
 						},
 					},
 				},
@@ -190,16 +195,16 @@ func (d *guardrailsDataSource) Read(ctx context.Context, req datasource.ReadRequ
 
 	// Prepare the request with filters
 	request := &client.ListGuardrailsRequest{}
-	
+
 	// Add search value if provided
 	if !data.SearchValue.IsNull() {
 		request.SearchValue = data.SearchValue.ValueString()
 	}
-	
+
 	// Add filters if provided
 	if data.Filters != nil {
 		filters := &client.GuardrailFilters{}
-		
+
 		// Add created by filter
 		if !data.Filters.CreatedBy.IsNull() {
 			var createdBy []string
@@ -209,7 +214,7 @@ func (d *guardrailsDataSource) Read(ctx context.Context, req datasource.ReadRequ
 				filters.CreatedBy = createdBy
 			}
 		}
-		
+
 		// Add type filter
 		if !data.Filters.Type.IsNull() {
 			var types []string
@@ -219,7 +224,7 @@ func (d *guardrailsDataSource) Read(ctx context.Context, req datasource.ReadRequ
 				filters.Type = types
 			}
 		}
-		
+
 		// Add labels filter
 		if !data.Filters.Labels.IsNull() {
 			var labels []string
@@ -229,7 +234,7 @@ func (d *guardrailsDataSource) Read(ctx context.Context, req datasource.ReadRequ
 				filters.Labels = labels
 			}
 		}
-		
+
 		// Add repositories filter
 		if !data.Filters.Repositories.IsNull() {
 			var repositories []string
@@ -239,7 +244,7 @@ func (d *guardrailsDataSource) Read(ctx context.Context, req datasource.ReadRequ
 				filters.Repositories = repositories
 			}
 		}
-		
+
 		// Add workspaces filter
 		if !data.Filters.Workspaces.IsNull() {
 			var workspaces []string
@@ -249,7 +254,7 @@ func (d *guardrailsDataSource) Read(ctx context.Context, req datasource.ReadRequ
 				filters.Workspaces = workspaces
 			}
 		}
-		
+
 		// Add branches filter
 		if !data.Filters.Branches.IsNull() {
 			var branches []string
@@ -259,10 +264,10 @@ func (d *guardrailsDataSource) Read(ctx context.Context, req datasource.ReadRequ
 				filters.Branches = branches
 			}
 		}
-		
+
 		request.Filters = filters
 	}
-	
+
 	// Get guardrails from API
 	guardrails, err := d.client.Guardrails.ListGuardrails(request, 0, 100)
 	if err != nil {
@@ -272,7 +277,7 @@ func (d *guardrailsDataSource) Read(ctx context.Context, req datasource.ReadRequ
 		)
 		return
 	}
-	
+
 	// Map response to model
 	var guardrailModels []GuardrailDataModel
 	for _, guardrail := range guardrails {
@@ -286,12 +291,12 @@ func (d *guardrailsDataSource) Read(ctx context.Context, req datasource.ReadRequ
 			CreatedAt:      types.StringValue(guardrail.CreatedAt),
 			UpdatedAt:      types.StringValue(guardrail.UpdatedAt),
 			NotificationID: types.StringValue(guardrail.NotificationID),
-			Severity:       types.Int64Value(int64(guardrail.Severity)),
+			Severity:       types.StringValue(client.SeverityToString(guardrail.Severity)),
 		}
-		
+
 		guardrailModels = append(guardrailModels, guardrailModel)
 	}
-	
+
 	// Set guardrails in the data model
 	guardrailsList, diags := types.ListValueFrom(ctx, types.ObjectType{
 		AttrTypes: map[string]attr.Type{
@@ -304,16 +309,16 @@ func (d *guardrailsDataSource) Read(ctx context.Context, req datasource.ReadRequ
 			"created_at":      types.StringType,
 			"updated_at":      types.StringType,
 			"notification_id": types.StringType,
-			"severity":        types.Int64Type,
+			"severity":        types.StringType,
 		},
 	}, guardrailModels)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	
+
 	data.Guardrails = guardrailsList
-	
+
 	// Set state
 	diags = resp.State.Set(ctx, &data)
 	resp.Diagnostics.Append(diags...)

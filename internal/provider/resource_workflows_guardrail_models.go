@@ -3,6 +3,7 @@ package provider
 import (
 	"context"
 	"fmt"
+
 	"github.com/gofireflyio/terraform-provider-firefly/internal/client"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -25,29 +26,29 @@ type GuardrailScopeModel struct {
 
 // CostCriteriaModel defines criteria for cost-based guardrails
 type CostCriteriaModel struct {
-	ThresholdAmount    types.Float64 `tfsdk:"threshold_amount"`
+	ThresholdAmount     types.Float64 `tfsdk:"threshold_amount"`
 	ThresholdPercentage types.Float64 `tfsdk:"threshold_percentage"`
 }
 
 // PolicyCriteriaModel defines criteria for policy-based guardrails
 type PolicyCriteriaModel struct {
-	Severity types.String                `tfsdk:"severity"`
+	Severity types.String                 `tfsdk:"severity"`
 	Policies *IncludeExcludeWildcardModel `tfsdk:"policies"`
 }
 
 // ResourceCriteriaModel defines criteria for resource-based guardrails
 type ResourceCriteriaModel struct {
-	Actions          types.List                 `tfsdk:"actions"`
-	Regions          *IncludeExcludeWildcardModel `tfsdk:"regions"`
-	AssetTypes       *IncludeExcludeWildcardModel `tfsdk:"asset_types"`
-	SpecificResources types.List                 `tfsdk:"specific_resources"`
+	Actions           types.List                   `tfsdk:"actions"`
+	Regions           *IncludeExcludeWildcardModel `tfsdk:"regions"`
+	AssetTypes        *IncludeExcludeWildcardModel `tfsdk:"asset_types"`
+	SpecificResources types.List                   `tfsdk:"specific_resources"`
 }
 
 // TagCriteriaModel defines criteria for tag-based guardrails
 type TagCriteriaModel struct {
-	TagEnforcementMode types.String  `tfsdk:"tag_enforcement_mode"`
-	RequiredTags       types.List    `tfsdk:"required_tags"`
-	RequiredValues     types.Map     `tfsdk:"required_values"`
+	TagEnforcementMode types.String `tfsdk:"tag_enforcement_mode"`
+	RequiredTags       types.List   `tfsdk:"required_tags"`
+	RequiredValues     types.Map    `tfsdk:"required_values"`
 }
 
 // GuardrailCriteriaModel defines the criteria for a guardrail rule
@@ -60,16 +61,16 @@ type GuardrailCriteriaModel struct {
 
 // GuardrailResourceModel describes the guardrail resource data model
 type GuardrailResourceModel struct {
-	ID            types.String           `tfsdk:"id"`
-	Name          types.String           `tfsdk:"name"`
-	Type          types.String           `tfsdk:"type"`
-	Scope         *GuardrailScopeModel   `tfsdk:"scope"`
-	Criteria      *GuardrailCriteriaModel `tfsdk:"criteria"`
-	IsEnabled     types.Bool             `tfsdk:"is_enabled"`
-	CreatedAt     types.String           `tfsdk:"created_at"`
-	UpdatedAt     types.String           `tfsdk:"updated_at"`
-	NotificationID types.String           `tfsdk:"notification_id"`
-	Severity      types.Int64            `tfsdk:"severity"`
+	ID             types.String            `tfsdk:"id"`
+	Name           types.String            `tfsdk:"name"`
+	Type           types.String            `tfsdk:"type"`
+	Scope          *GuardrailScopeModel    `tfsdk:"scope"`
+	Criteria       *GuardrailCriteriaModel `tfsdk:"criteria"`
+	IsEnabled      types.Bool              `tfsdk:"is_enabled"`
+	CreatedAt      types.String            `tfsdk:"created_at"`
+	UpdatedAt      types.String            `tfsdk:"updated_at"`
+	NotificationID types.String            `tfsdk:"notification_id"`
+	Severity       types.String            `tfsdk:"severity"`
 }
 
 // planToAPIGuardrail converts the Terraform plan to a client.GuardrailRule
@@ -78,7 +79,7 @@ func (r *guardrailResource) planToAPIGuardrail(ctx context.Context, plan Guardra
 		Name:      plan.Name.ValueString(),
 		Type:      plan.Type.ValueString(),
 		IsEnabled: plan.IsEnabled.ValueBool(),
-		Severity:  int(plan.Severity.ValueInt64()),
+		Severity:  client.SeverityToInt(plan.Severity.ValueString()),
 		CreatedBy: "terraform-provider", // Auto-populate required field
 	}
 
@@ -333,7 +334,7 @@ func (r *guardrailResource) apiGuardrailToPlan(ctx context.Context, apiGuardrail
 	plan.Name = types.StringValue(apiGuardrail.Name)
 	plan.Type = types.StringValue(apiGuardrail.Type)
 	plan.IsEnabled = types.BoolValue(apiGuardrail.IsEnabled)
-	plan.Severity = types.Int64Value(int64(apiGuardrail.Severity))
+	plan.Severity = types.StringValue(client.SeverityToString(apiGuardrail.Severity))
 
 	if apiGuardrail.NotificationID != "" {
 		plan.NotificationID = types.StringValue(apiGuardrail.NotificationID)
