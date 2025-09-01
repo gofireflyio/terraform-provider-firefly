@@ -69,7 +69,8 @@ func (r *ProjectMembershipResource) Schema(ctx context.Context, req resource.Sch
 				},
 			},
 			"email": schema.StringAttribute{
-				Required:            true,
+				Optional:            true,
+				Computed:            true,
 				MarkdownDescription: "The email address of the user",
 			},
 			"role": schema.StringAttribute{
@@ -113,8 +114,12 @@ func (r *ProjectMembershipResource) Create(ctx context.Context, req resource.Cre
 	// Create the member object
 	member := client.Member{
 		UserID: data.UserID.ValueString(),
-		Email:  data.Email.ValueString(),
 		Role:   data.Role.ValueString(),
+	}
+	
+	// Add email if provided
+	if !data.Email.IsNull() && data.Email.ValueString() != "" {
+		member.Email = data.Email.ValueString()
 	}
 
 	// Add member to project
@@ -187,8 +192,12 @@ func (r *ProjectMembershipResource) Update(ctx context.Context, req resource.Upd
 	// Create updated member object
 	member := client.Member{
 		UserID: data.UserID.ValueString(),
-		Email:  data.Email.ValueString(),
 		Role:   data.Role.ValueString(),
+	}
+	
+	// Add email if provided
+	if !data.Email.IsNull() && data.Email.ValueString() != "" {
+		member.Email = data.Email.ValueString()
 	}
 
 	// Update the member (remove and re-add with new role)
