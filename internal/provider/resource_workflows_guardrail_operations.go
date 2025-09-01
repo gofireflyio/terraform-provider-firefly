@@ -4,10 +4,12 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
@@ -59,7 +61,7 @@ func (r *guardrailResource) Update(ctx context.Context, req resource.UpdateReque
 	if updatedGuardrail.UpdatedAt != "" {
 		plan.UpdatedAt = types.StringValue(updatedGuardrail.UpdatedAt)
 	}
-	
+
 	// Always set notification_id to a known value
 	if updatedGuardrail.NotificationID != "" {
 		plan.NotificationID = types.StringValue(updatedGuardrail.NotificationID)
@@ -78,7 +80,7 @@ func (r *guardrailResource) Update(ctx context.Context, req resource.UpdateReque
 				plan.Scope.Workspaces.Exclude = types.ListValueMust(types.StringType, listToValues(updatedGuardrail.Scope.Workspaces.Exclude))
 			}
 		}
-		
+
 		if plan.Scope.Repositories != nil && updatedGuardrail.Scope.Repositories != nil {
 			if !plan.Scope.Repositories.Include.IsNull() && updatedGuardrail.Scope.Repositories.Include != nil {
 				plan.Scope.Repositories.Include = types.ListValueMust(types.StringType, listToValues(updatedGuardrail.Scope.Repositories.Include))
@@ -87,7 +89,7 @@ func (r *guardrailResource) Update(ctx context.Context, req resource.UpdateReque
 				plan.Scope.Repositories.Exclude = types.ListValueMust(types.StringType, listToValues(updatedGuardrail.Scope.Repositories.Exclude))
 			}
 		}
-		
+
 		if plan.Scope.Branches != nil && updatedGuardrail.Scope.Branches != nil {
 			if !plan.Scope.Branches.Include.IsNull() && updatedGuardrail.Scope.Branches.Include != nil {
 				plan.Scope.Branches.Include = types.ListValueMust(types.StringType, listToValues(updatedGuardrail.Scope.Branches.Include))
@@ -96,7 +98,7 @@ func (r *guardrailResource) Update(ctx context.Context, req resource.UpdateReque
 				plan.Scope.Branches.Exclude = types.ListValueMust(types.StringType, listToValues(updatedGuardrail.Scope.Branches.Exclude))
 			}
 		}
-		
+
 		if plan.Scope.Labels != nil && updatedGuardrail.Scope.Labels != nil {
 			if !plan.Scope.Labels.Include.IsNull() && updatedGuardrail.Scope.Labels.Include != nil {
 				plan.Scope.Labels.Include = types.ListValueMust(types.StringType, listToValues(updatedGuardrail.Scope.Labels.Include))
@@ -166,9 +168,12 @@ func (r *guardrailResource) Schema(_ context.Context, _ resource.SchemaRequest, 
 				Optional:    true,
 				Computed:    true,
 			},
-			"severity": schema.Int64Attribute{
-				Description: "Severity level of the guardrail rule (0-4)",
+			"severity": schema.StringAttribute{
+				Description: "Severity level of the guardrail rule. Allowed values: Flexible, Strict, Warning.",
 				Required:    true,
+				Validators: []validator.String{
+					stringvalidator.OneOf("Flexible", "Strict", "Warning"),
+				},
 			},
 			"created_at": schema.StringAttribute{
 				Description: "Timestamp when the guardrail rule was created",
@@ -260,7 +265,7 @@ func (r *guardrailResource) Schema(_ context.Context, _ resource.SchemaRequest, 
 								Optional:    true,
 							},
 						},
-							},
+					},
 					"policy": schema.SingleNestedBlock{
 						Description: "Policy criteria for the guardrail rule",
 						Attributes: map[string]schema.Attribute{
@@ -284,9 +289,9 @@ func (r *guardrailResource) Schema(_ context.Context, _ resource.SchemaRequest, 
 										Optional:    true,
 									},
 								},
-											},
-						},
 							},
+						},
+					},
 					"resource": schema.SingleNestedBlock{
 						Description: "Resource criteria for the guardrail rule",
 						Attributes: map[string]schema.Attribute{
@@ -316,7 +321,7 @@ func (r *guardrailResource) Schema(_ context.Context, _ resource.SchemaRequest, 
 										Optional:    true,
 									},
 								},
-											},
+							},
 							"asset_types": schema.SingleNestedBlock{
 								Description: "Asset type patterns to include or exclude",
 								Attributes: map[string]schema.Attribute{
@@ -331,9 +336,9 @@ func (r *guardrailResource) Schema(_ context.Context, _ resource.SchemaRequest, 
 										Optional:    true,
 									},
 								},
-											},
-						},
 							},
+						},
+					},
 					"tag": schema.SingleNestedBlock{
 						Description: "Tag criteria for the guardrail rule",
 						Attributes: map[string]schema.Attribute{
@@ -354,7 +359,7 @@ func (r *guardrailResource) Schema(_ context.Context, _ resource.SchemaRequest, 
 								Optional: true,
 							},
 						},
-							},
+					},
 				},
 			},
 		},

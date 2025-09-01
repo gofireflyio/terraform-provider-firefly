@@ -44,4 +44,4 @@ Read-Only:
 - `name` (String) - The name of the guardrail
 - `type` (String) - Type of guardrail
 - `is_enabled` (Boolean) - Whether the guardrail is enabled
-- `severity` (Number) - Severity level of the guardrail
+- `severity` (String) - Severity level of the guardrail (Flexible, Strict, Warning)
