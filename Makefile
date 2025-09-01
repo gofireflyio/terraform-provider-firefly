@@ -4,8 +4,8 @@ build:
 	go install
 
 dev: build
-	mkdir -p ~/.terraform.d/plugins/registry.terraform.io/firefly/firefly/1.0.0/darwin_arm64
-	cp $(GOPATH)/bin/terraform-provider-firefly ~/.terraform.d/plugins/registry.terraform.io/firefly/firefly/1.0.0/darwin_arm64/
+	mkdir -p ~/.terraform.d/plugins/registry.terraform.io/gofireflyio/firefly/1.0.0/darwin_arm64
+	cp $(GOPATH)/bin/terraform-provider-firefly ~/.terraform.d/plugins/registry.terraform.io/gofireflyio/firefly/1.0.0/darwin_arm64/
 
 # Run acceptance tests
 testacc:

@@ -5,9 +5,9 @@ import (
 	"flag"
 	"log"
 
+	"github.com/gofireflyio/terraform-provider-firefly/internal/provider"
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/gofireflyio/terraform-provider-firefly/internal/provider"
 )
 
 // Run "go generate" to format example terraform files and generate the docs for the registry/website
@@ -35,7 +35,7 @@ func main() {
 	ctx := context.Background()
 
 	opts := providerserver.ServeOpts{
-		Address: "registry.terraform.io/firefly/firefly",
+		Address: "registry.terraform.io/gofireflyio/firefly",
 		Debug:   debug,
 	}
 
