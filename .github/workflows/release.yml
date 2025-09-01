@@ -129,20 +129,23 @@ jobs:
           LATEST_TAG="${{ steps.get_latest_tag.outputs.latest_tag }}"
           NEW_VERSION="${{ steps.calc_version.outputs.new_version }}"
           
+          # Generate release notes to temp directory to avoid dirty git state
+          mkdir -p /tmp/release
+          
           # Generate release notes from commits
-          echo "# Release $NEW_VERSION" > release_notes.md
-          echo "" >> release_notes.md
-          echo "## What's Changed" >> release_notes.md
-          echo "" >> release_notes.md
+          echo "# Release $NEW_VERSION" > /tmp/release/release_notes.md
+          echo "" >> /tmp/release/release_notes.md
+          echo "## What's Changed" >> /tmp/release/release_notes.md
+          echo "" >> /tmp/release/release_notes.md
           
           if [[ "$LATEST_TAG" == "v0.0.0" ]]; then
-            git log --format="* %s (%h)" >> release_notes.md
+            git log --format="* %s (%h)" >> /tmp/release/release_notes.md
           else
-            git log ${LATEST_TAG}..HEAD --format="* %s (%h)" >> release_notes.md
+            git log ${LATEST_TAG}..HEAD --format="* %s (%h)" >> /tmp/release/release_notes.md
           fi
           
-          echo "" >> release_notes.md
-          echo "**Full Changelog**: https://github.com/${{ github.repository }}/compare/${LATEST_TAG}...${NEW_VERSION}" >> release_notes.md
+          echo "" >> /tmp/release/release_notes.md
+          echo "**Full Changelog**: https://github.com/${{ github.repository }}/compare/${LATEST_TAG}...${NEW_VERSION}" >> /tmp/release/release_notes.md
       
       - name: Create and push tag
         if: steps.check_skip.outputs.should_skip != 'true'
@@ -169,7 +172,7 @@ jobs:
         uses: goreleaser/goreleaser-action@v6
         with:
           version: latest
-          args: release --clean --release-notes=release_notes.md
+          args: release --clean --release-notes=/tmp/release/release_notes.md
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GPG_FINGERPRINT: ${{ steps.import_gpg.outputs.fingerprint }}
