@@ -27,6 +27,7 @@ type projectDataSource struct {
 
 type ProjectSingleDataSourceModel struct {
 	ID                   types.String `tfsdk:"id"`
+	Path                 types.String `tfsdk:"path"`
 	Name                 types.String `tfsdk:"name"`
 	Description          types.String `tfsdk:"description"`
 	Labels               types.List   `tfsdk:"labels"`
@@ -43,11 +44,17 @@ func (d *projectDataSource) Metadata(_ context.Context, req datasource.MetadataR
 
 func (d *projectDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: "Fetches a single Firefly project by ID",
+		Description: "Fetches a single Firefly project by ID or path",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Description: "The unique identifier of the project",
-				Required:    true,
+				Optional:    true,
+				Computed:    true,
+			},
+			"path": schema.StringAttribute{
+				Description: "The path of the project (alternative to id)",
+				Optional:    true,
+				Computed:    true,
 			},
 			"name": schema.StringAttribute{
 				Description: "The name of the project",
@@ -112,12 +119,64 @@ func (d *projectDataSource) Read(ctx context.Context, req datasource.ReadRequest
 		return
 	}
 
-	projectID := data.ID.ValueString()
-	tflog.Debug(ctx, "Reading project", map[string]interface{}{"id": projectID})
+	// Validate that either ID or path is provided, but not both
+	hasID := !data.ID.IsNull() && data.ID.ValueString() != ""
+	hasPath := !data.Path.IsNull() && data.Path.ValueString() != ""
 
-	project, err := d.client.Projects.GetProject(projectID)
+	if !hasID && !hasPath {
+		resp.Diagnostics.AddError(
+			"Missing Required Attribute",
+			"Either 'id' or 'path' must be specified to identify the project",
+		)
+		return
+	}
+
+	if hasID && hasPath {
+		resp.Diagnostics.AddError(
+			"Conflicting Attributes",
+			"Only one of 'id' or 'path' should be specified, not both",
+		)
+		return
+	}
+
+	var project *client.Project
+	var err error
+
+	if hasID {
+		projectID := data.ID.ValueString()
+		tflog.Debug(ctx, "Reading project by ID", map[string]interface{}{"id": projectID})
+		project, err = d.client.Projects.GetProject(projectID)
+	} else {
+		// Search for project by path (name)
+		projectPath := data.Path.ValueString()
+		tflog.Debug(ctx, "Reading project by path", map[string]interface{}{"path": projectPath})
+		
+		// Use ListProjects with search to find project by name/path
+		projects, err := d.client.Projects.ListProjects(100, 0, projectPath)
+		if err != nil {
+			resp.Diagnostics.AddError("Error Searching Projects", fmt.Sprintf("Could not search for project path %s: %s", projectPath, err))
+			return
+		}
+
+		// Find exact match by name
+		var foundProject *client.Project
+		for _, p := range projects.Data {
+			if p.Name == projectPath {
+				foundProject = &p
+				break
+			}
+		}
+
+		if foundProject == nil {
+			resp.Diagnostics.AddError("Project Not Found", fmt.Sprintf("Could not find project with path %s", projectPath))
+			return
+		}
+
+		project = foundProject
+	}
+
 	if err != nil {
-		resp.Diagnostics.AddError("Error Reading Project", fmt.Sprintf("Could not read project ID %s: %s", projectID, err))
+		resp.Diagnostics.AddError("Error Reading Project", fmt.Sprintf("Could not read project: %s", err))
 		return
 	}
 
@@ -133,6 +192,8 @@ func (d *projectDataSource) Read(ctx context.Context, req datasource.ReadRequest
 		labelsList = types.ListValueMust(types.StringType, []attr.Value{})
 	}
 
+	data.ID = types.StringValue(project.ID)
+	data.Path = types.StringValue(project.Name) // Path is the project name
 	data.Name = types.StringValue(project.Name)
 	data.Description = types.StringValue(project.Description)
 	data.Labels = labelsList
