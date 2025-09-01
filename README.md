@@ -471,6 +471,16 @@ To test the provider locally with Terraform:
 7. Commit your changes (`git commit -m 'Add amazing feature'`)
 8. Push to the branch (`git push origin feature/amazing-feature`)
 9. Open a Pull Request
+10. After PR is merged, switch back to main and pull latest changes:
+    ```bash
+    git checkout main
+    git pull origin main
+    ```
+
+### Branch Management
+- **Always work on feature branches** - avoid pushing directly to main
+- **Use descriptive branch names** - e.g., `feature/project-path-lookup`, `fix/email-schema`
+- **Main branch is protected** - all changes must go through Pull Requests
 
 ## License
 
