@@ -10,29 +10,29 @@ import (
 )
 
 // SeverityToString converts integer severity to string representation
-// Flexible = 1, Strict = 2, Warning = 3
+// flexible = 1, strict = 2, warning = 3
 func SeverityToString(severity int) string {
 	switch severity {
 	case 1:
-		return "Flexible"
+		return "flexible"
 	case 2:
-		return "Strict"
+		return "strict"
 	case 3:
-		return "Warning"
+		return "warning"
 	default:
 		return "Unknown"
 	}
 }
 
 // SeverityToInt converts string severity to integer representation
-// Flexible = 1, Strict = 2, Warning = 3
+// flexible = 1, strict = 2, warning = 3
 func SeverityToInt(severity string) int {
 	switch severity {
-	case "Flexible":
+	case "flexible":
 		return 1
-	case "Strict":
+	case "strict":
 		return 2
-	case "Warning":
+	case "warning":
 		return 3
 	default:
 		return 0 // Unknown/invalid severity
