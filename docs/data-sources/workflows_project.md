@@ -1,39 +1,50 @@
 # firefly_workflows_project (Data Source)
 
-Fetches a single Firefly project by ID.
+Fetches a single Firefly project by ID or path (name).
 
 ## Example Usage
 
 ```terraform
-data "firefly_workflows_project" "main" {
+# Fetch project by ID
+data "firefly_workflows_project" "by_id" {
   id = "existing-project-id"
+}
+
+# Fetch project by path (name)  
+data "firefly_workflows_project" "by_path" {
+  path = "Production Infrastructure"
 }
 
 # Use the project data
 resource "firefly_workflows_runners_workspace" "app" {
   name       = "new-app"
-  project_id = data.firefly_workflows_project.main.id
+  project_id = data.firefly_workflows_project.by_path.id
   # ... other configuration
 }
 
 # Output project information
 output "project_info" {
   value = {
-    name            = data.firefly_workflows_project.main.name
-    description     = data.firefly_workflows_project.main.description
-    workspace_count = data.firefly_workflows_project.main.workspace_count
+    id              = data.firefly_workflows_project.by_path.id
+    path            = data.firefly_workflows_project.by_path.path
+    name            = data.firefly_workflows_project.by_path.name
+    description     = data.firefly_workflows_project.by_path.description
+    workspace_count = data.firefly_workflows_project.by_path.workspace_count
   }
 }
 ```
 
 ## Schema
 
-### Required
+### Optional (exactly one required)
 
 - `id` (String) - The unique identifier of the project
+- `path` (String) - The path (name) of the project
 
 ### Read-Only
 
+- `id` (String) - The unique identifier of the project (computed when using path)
+- `path` (String) - The path (name) of the project (computed when using id)  
 - `name` (String) - The name of the project
 - `description` (String) - The description of the project
 - `labels` (List of String) - Labels assigned to the project
