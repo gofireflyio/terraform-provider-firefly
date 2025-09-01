@@ -2,39 +2,162 @@ name: Release
 
 on:
   push:
-    tags:
-      - 'v*'
+    branches:
+      - main
   workflow_dispatch:
     inputs:
-      version:
-        description: 'Version to release (e.g., v0.1.0)'
+      version_bump:
+        description: 'Version bump type'
         required: true
-        type: string
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+        default: patch
 
 permissions:
   contents: write
+  pull-requests: write
+  issues: write
 
 jobs:
-  goreleaser:
+  release:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
       
-      - name: Create and push tag (manual trigger only)
-        if: github.event_name == 'workflow_dispatch'
+      - name: Configure Git
         run: |
-          git config user.name github-actions
-          git config user.email github-actions@github.com
-          git tag -a ${{ github.event.inputs.version }} -m "Release ${{ github.event.inputs.version }}"
-          git push origin ${{ github.event.inputs.version }}
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+      
+      - name: Get latest tag
+        id: get_latest_tag
+        run: |
+          # Get the latest tag, or set to v0.0.0 if no tags exist
+          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+          echo "latest_tag=$LATEST_TAG" >> $GITHUB_OUTPUT
+          echo "Latest tag: $LATEST_TAG"
+      
+      - name: Check if release should be skipped
+        id: check_skip
+        if: github.event_name == 'push'
+        run: |
+          # Check if latest commit message contains skip patterns
+          LATEST_COMMIT=$(git log -1 --format=%s)
+          
+          if echo "$LATEST_COMMIT" | grep -qE "(skip-release|skip release|\[skip release\]|^wip|^WIP)"; then
+            echo "should_skip=true" >> $GITHUB_OUTPUT
+            echo "Skipping release due to commit message: $LATEST_COMMIT"
+          else
+            echo "should_skip=false" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Determine version bump
+        id: determine_bump
+        if: steps.check_skip.outputs.should_skip != 'true'
+        run: |
+          # For manual trigger, use the input
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            BUMP_TYPE="${{ github.event.inputs.version_bump }}"
+          else
+            # For push to main, analyze commit messages
+            # Default to patch, use minor for feat:, major for breaking change
+            BUMP_TYPE="patch"
+            
+            # Get commits since last tag
+            LATEST_TAG="${{ steps.get_latest_tag.outputs.latest_tag }}"
+            if [[ "$LATEST_TAG" == "v0.0.0" ]]; then
+              COMMITS=$(git log --format=%s)
+            else
+              COMMITS=$(git log ${LATEST_TAG}..HEAD --format=%s)
+            fi
+            
+            # Check for conventional commits
+            if echo "$COMMITS" | grep -qE "^(feat|feature)(\(.+\))?!?:"; then
+              BUMP_TYPE="minor"
+            fi
+            if echo "$COMMITS" | grep -qE "BREAKING CHANGE:|^[a-z]+(\(.+\))?!:"; then
+              BUMP_TYPE="major"
+            fi
+          fi
+          
+          echo "bump_type=$BUMP_TYPE" >> $GITHUB_OUTPUT
+          echo "Version bump type: $BUMP_TYPE"
+      
+      - name: Calculate new version
+        id: calc_version
+        if: steps.check_skip.outputs.should_skip != 'true'
+        run: |
+          LATEST_TAG="${{ steps.get_latest_tag.outputs.latest_tag }}"
+          BUMP_TYPE="${{ steps.determine_bump.outputs.bump_type }}"
+          
+          # Remove 'v' prefix for calculation
+          VERSION=${LATEST_TAG#v}
+          
+          # Split into major.minor.patch
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
+          
+          # Increment based on bump type
+          case $BUMP_TYPE in
+            major)
+              MAJOR=$((MAJOR + 1))
+              MINOR=0
+              PATCH=0
+              ;;
+            minor)
+              MINOR=$((MINOR + 1))
+              PATCH=0
+              ;;
+            patch)
+              PATCH=$((PATCH + 1))
+              ;;
+          esac
+          
+          NEW_VERSION="v${MAJOR}.${MINOR}.${PATCH}"
+          echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "New version: $NEW_VERSION"
+      
+      - name: Generate release notes
+        id: release_notes
+        if: steps.check_skip.outputs.should_skip != 'true'
+        run: |
+          LATEST_TAG="${{ steps.get_latest_tag.outputs.latest_tag }}"
+          NEW_VERSION="${{ steps.calc_version.outputs.new_version }}"
+          
+          # Generate release notes from commits
+          echo "# Release $NEW_VERSION" > release_notes.md
+          echo "" >> release_notes.md
+          echo "## What's Changed" >> release_notes.md
+          echo "" >> release_notes.md
+          
+          if [[ "$LATEST_TAG" == "v0.0.0" ]]; then
+            git log --format="* %s (%h)" >> release_notes.md
+          else
+            git log ${LATEST_TAG}..HEAD --format="* %s (%h)" >> release_notes.md
+          fi
+          
+          echo "" >> release_notes.md
+          echo "**Full Changelog**: https://github.com/${{ github.repository }}/compare/${LATEST_TAG}...${NEW_VERSION}" >> release_notes.md
+      
+      - name: Create and push tag
+        if: steps.check_skip.outputs.should_skip != 'true'
+        run: |
+          NEW_VERSION="${{ steps.calc_version.outputs.new_version }}"
+          git tag -a $NEW_VERSION -m "Release $NEW_VERSION"
+          git push origin $NEW_VERSION
       
       - uses: actions/setup-go@v5
+        if: steps.check_skip.outputs.should_skip != 'true'
         with:
           go-version-file: 'go.mod'
       
       - name: Import GPG key
+        if: steps.check_skip.outputs.should_skip != 'true'
         uses: crazy-max/ghaction-import-gpg@v6
         id: import_gpg
         with:
@@ -42,10 +165,11 @@ jobs:
           passphrase: ${{ secrets.PASSPHRASE }}
       
       - name: Run GoReleaser
+        if: steps.check_skip.outputs.should_skip != 'true'
         uses: goreleaser/goreleaser-action@v6
         with:
           version: latest
-          args: release --clean
+          args: release --clean --release-notes=release_notes.md
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GPG_FINGERPRINT: ${{ steps.import_gpg.outputs.fingerprint }}

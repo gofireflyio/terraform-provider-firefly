@@ -1,0 +1,32 @@
+# Release configuration
+# This file controls automatic release behavior
+
+# Automatic release triggers
+# Set to false to disable automatic releases on push to main
+auto_release: true
+
+# Commit types that trigger version bumps
+version_bumps:
+  major:
+    - "BREAKING CHANGE"
+    - "breaking"
+  minor:
+    - "feat"
+    - "feature"
+  patch:
+    - "fix"
+    - "docs"
+    - "style"
+    - "refactor"
+    - "perf"
+    - "test"
+    - "chore"
+    - "ci"
+
+# Skip release for these commit patterns
+skip_patterns:
+  - "skip-release"
+  - "skip release"
+  - "[skip release]"
+  - "wip"
+  - "WIP"
