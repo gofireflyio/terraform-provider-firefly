@@ -139,9 +139,19 @@ func (r *ProjectMembershipResource) Create(ctx context.Context, req resource.Cre
 	// Generate composite ID
 	data.ID = types.StringValue(fmt.Sprintf("%s:%s", data.ProjectID.ValueString(), data.UserID.ValueString()))
 	
-	// Update data from response
-	data.Email = types.StringValue(addedMember.Email)
+	// Update role from response
 	data.Role = types.StringValue(addedMember.Role)
+	
+	// Only update email if the API returns a non-empty value
+	if addedMember.Email != "" {
+		data.Email = types.StringValue(addedMember.Email)
+	} else if !data.Email.IsNull() && data.Email.ValueString() != "" {
+		// Preserve the user-configured email if API returns empty
+		// data.Email already contains the user's value
+	} else {
+		// If no email was configured and API returns empty, set to null
+		data.Email = types.StringNull()
+	}
 
 	tflog.Trace(ctx, "Created project membership resource")
 
@@ -171,9 +181,18 @@ func (r *ProjectMembershipResource) Read(ctx context.Context, req resource.ReadR
 		return
 	}
 
-	// Update the model with the latest data
-	data.Email = types.StringValue(member.Email)
+	// Update the role from API
 	data.Role = types.StringValue(member.Role)
+	
+	// Only update email if the API returns a non-empty value
+	// This preserves the user-configured email when the API doesn't return it
+	if member.Email != "" {
+		data.Email = types.StringValue(member.Email)
+	} else if data.Email.IsNull() {
+		// If email was not configured and API returns empty, keep it as null
+		data.Email = types.StringNull()
+	}
+	// Otherwise, preserve the existing email value from state
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -213,9 +232,19 @@ func (r *ProjectMembershipResource) Update(ctx context.Context, req resource.Upd
 		return
 	}
 
-	// Update data from response
-	data.Email = types.StringValue(updatedMember.Email)
+	// Update role from response
 	data.Role = types.StringValue(updatedMember.Role)
+	
+	// Only update email if the API returns a non-empty value
+	if updatedMember.Email != "" {
+		data.Email = types.StringValue(updatedMember.Email)
+	} else if !data.Email.IsNull() && data.Email.ValueString() != "" {
+		// Preserve the user-configured email if API returns empty
+		// data.Email already contains the user's value
+	} else {
+		// If no email was configured and API returns empty, set to null
+		data.Email = types.StringNull()
+	}
 
 	tflog.Trace(ctx, "Updated project membership resource")
 
