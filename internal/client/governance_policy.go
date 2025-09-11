@@ -9,13 +9,13 @@ import (
 	"net/url"
 )
 
-// GovernanceInsightService provides access to the governance insights API methods
-type GovernanceInsightService struct {
+// GovernancePolicyService provides access to the governance policy API methods
+type GovernancePolicyService struct {
 	client *Client
 }
 
-// GovernanceInsight represents a governance insight
-type GovernanceInsight struct {
+// GovernancePolicy represents a governance policy
+type GovernancePolicy struct {
 	ID          string   `json:"id,omitempty"`
 	Name        string   `json:"name"`
 	Description string   `json:"description,omitempty"`
@@ -28,16 +28,16 @@ type GovernanceInsight struct {
 	Frameworks  []string `json:"frameworks,omitempty"`
 }
 
-// GovernanceInsightsResponse represents the response from the insights list endpoint
-type GovernanceInsightsResponse struct {
-	Data     []GovernanceInsight `json:"data"`
+// GovernancePoliciesResponse represents the response from the policies list endpoint
+type GovernancePoliciesResponse struct {
+	Data     []GovernancePolicy `json:"data"`
 	Total    int                 `json:"total"`
 	Page     int                 `json:"page"`
 	PageSize int                 `json:"page_size"`
 }
 
-// GovernanceInsightListRequest represents the request body for listing insights
-type GovernanceInsightListRequest struct {
+// GovernancePolicyListRequest represents the request body for listing policies
+type GovernancePolicyListRequest struct {
 	Query                 string   `json:"query,omitempty"`
 	Labels                []string `json:"labels,omitempty"`
 	Frameworks            []string `json:"frameworks,omitempty"`
@@ -60,8 +60,8 @@ type GovernanceInsightListRequest struct {
 	ProvidersAccounts     []string `json:"providersAcoounts,omitempty"`
 }
 
-// List retrieves governance insights
-func (s *GovernanceInsightService) List(request *GovernanceInsightListRequest) (*GovernanceInsightsResponse, error) {
+// List retrieves governance policies
+func (s *GovernancePolicyService) List(request *GovernancePolicyListRequest) (*GovernancePoliciesResponse, error) {
 	endpoint := "/governance/insights"
 	
 	// Set default values if not provided
@@ -93,7 +93,7 @@ func (s *GovernanceInsightService) List(request *GovernanceInsightListRequest) (
 		return nil, fmt.Errorf("API request failed with status %d: %s", resp.StatusCode, string(body))
 	}
 	
-	var result GovernanceInsightsResponse
+	var result GovernancePoliciesResponse
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return nil, fmt.Errorf("error decoding response: %w", err)
 	}
@@ -101,10 +101,10 @@ func (s *GovernanceInsightService) List(request *GovernanceInsightListRequest) (
 	return &result, nil
 }
 
-// Get retrieves a specific governance insight by ID
-func (s *GovernanceInsightService) Get(id string) (*GovernanceInsight, error) {
-	// Use the List endpoint with specific ID filter to get a single insight
-	request := &GovernanceInsightListRequest{
+// Get retrieves a specific governance policy by ID
+func (s *GovernancePolicyService) Get(id string) (*GovernancePolicy, error) {
+	// Use the List endpoint with specific ID filter to get a single policy
+	request := &GovernancePolicyListRequest{
 		ID:       []string{id},
 		PageSize: 1,
 	}
@@ -115,19 +115,19 @@ func (s *GovernanceInsightService) Get(id string) (*GovernanceInsight, error) {
 	}
 	
 	if len(response.Data) == 0 {
-		return nil, fmt.Errorf("insight not found: %s", id)
+		return nil, fmt.Errorf("policy not found: %s", id)
 	}
 	
 	return &response.Data[0], nil
 }
 
-// Create creates a new governance insight
-func (s *GovernanceInsightService) Create(insight *GovernanceInsight) (*GovernanceInsight, error) {
+// Create creates a new governance policy
+func (s *GovernancePolicyService) Create(policy *GovernancePolicy) (*GovernancePolicy, error) {
 	endpoint := "/governance/insights/create"
 	
-	data, err := json.Marshal(insight)
+	data, err := json.Marshal(policy)
 	if err != nil {
-		return nil, fmt.Errorf("error marshaling insight: %w", err)
+		return nil, fmt.Errorf("error marshaling policy: %w", err)
 	}
 	
 	req, err := s.client.newRequest("POST", endpoint, bytes.NewReader(data))
@@ -146,7 +146,7 @@ func (s *GovernanceInsightService) Create(insight *GovernanceInsight) (*Governan
 		return nil, fmt.Errorf("API request failed with status %d: %s", resp.StatusCode, string(body))
 	}
 	
-	var result GovernanceInsight
+	var result GovernancePolicy
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return nil, fmt.Errorf("error decoding response: %w", err)
 	}
@@ -154,13 +154,13 @@ func (s *GovernanceInsightService) Create(insight *GovernanceInsight) (*Governan
 	return &result, nil
 }
 
-// Update updates an existing governance insight
-func (s *GovernanceInsightService) Update(id string, insight *GovernanceInsight) (*GovernanceInsight, error) {
+// Update updates an existing governance policy
+func (s *GovernancePolicyService) Update(id string, policy *GovernancePolicy) (*GovernancePolicy, error) {
 	endpoint := fmt.Sprintf("/governance/insights/%s", url.PathEscape(id))
 	
-	data, err := json.Marshal(insight)
+	data, err := json.Marshal(policy)
 	if err != nil {
-		return nil, fmt.Errorf("error marshaling insight: %w", err)
+		return nil, fmt.Errorf("error marshaling policy: %w", err)
 	}
 	
 	req, err := s.client.newRequest("PUT", endpoint, bytes.NewReader(data))
@@ -179,7 +179,7 @@ func (s *GovernanceInsightService) Update(id string, insight *GovernanceInsight)
 		return nil, fmt.Errorf("API request failed with status %d: %s", resp.StatusCode, string(body))
 	}
 	
-	var result GovernanceInsight
+	var result GovernancePolicy
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return nil, fmt.Errorf("error decoding response: %w", err)
 	}
@@ -187,8 +187,8 @@ func (s *GovernanceInsightService) Update(id string, insight *GovernanceInsight)
 	return &result, nil
 }
 
-// Delete deletes a governance insight
-func (s *GovernanceInsightService) Delete(id string) error {
+// Delete deletes a governance policy
+func (s *GovernancePolicyService) Delete(id string) error {
 	endpoint := fmt.Sprintf("/governance/insights/%s", url.PathEscape(id))
 	
 	req, err := s.client.newRequest("DELETE", endpoint, nil)

@@ -4,8 +4,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
-// GovernanceInsightResourceModel represents the resource model for a governance insight
-type GovernanceInsightResourceModel struct {
+// GovernancePolicyResourceModel represents the resource model for a governance policy
+type GovernancePolicyResourceModel struct {
 	ID          types.String `tfsdk:"id"`
 	Name        types.String `tfsdk:"name"`
 	Description types.String `tfsdk:"description"`
@@ -18,8 +18,8 @@ type GovernanceInsightResourceModel struct {
 	Frameworks  types.List   `tfsdk:"frameworks"`
 }
 
-// GovernanceInsightDataSourceModel represents the data source model for a governance insight
-type GovernanceInsightDataSourceModel struct {
+// GovernancePolicyDataSourceModel represents the data source model for a governance policy
+type GovernancePolicyDataSourceModel struct {
 	ID          types.String `tfsdk:"id"`
 	Name        types.String `tfsdk:"name"`
 	Description types.String `tfsdk:"description"`
@@ -32,11 +32,11 @@ type GovernanceInsightDataSourceModel struct {
 	Frameworks  types.List   `tfsdk:"frameworks"`
 }
 
-// GovernanceInsightsDataSourceModel represents the data source model for listing governance insights
-type GovernanceInsightsDataSourceModel struct {
-	ID       types.String                        `tfsdk:"id"`
-	Query    types.String                        `tfsdk:"query"`
-	Labels   types.List                          `tfsdk:"labels"`
-	Category types.String                        `tfsdk:"category"`
-	Insights []GovernanceInsightDataSourceModel `tfsdk:"insights"`
+// GovernancePoliciesDataSourceModel represents the data source model for listing governance policies
+type GovernancePoliciesDataSourceModel struct {
+	ID       types.String                       `tfsdk:"id"`
+	Query    types.String                       `tfsdk:"query"`
+	Labels   types.List                         `tfsdk:"labels"`
+	Category types.String                       `tfsdk:"category"`
+	Policies []GovernancePolicyDataSourceModel `tfsdk:"policies"`
 }

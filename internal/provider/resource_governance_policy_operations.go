@@ -9,36 +9,36 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
-// mapGovernanceInsightToModel maps API response to Terraform model
-func mapGovernanceInsightToModel(insight *client.GovernanceInsight, model *GovernanceInsightResourceModel) error {
-	model.ID = types.StringValue(insight.ID)
-	model.Name = types.StringValue(insight.Name)
+// mapGovernancePolicyToModel maps API response to Terraform model
+func mapGovernancePolicyToModel(policy *client.GovernancePolicy, model *GovernancePolicyResourceModel) error {
+	model.ID = types.StringValue(policy.ID)
+	model.Name = types.StringValue(policy.Name)
 	
-	if insight.Description != "" {
-		model.Description = types.StringValue(insight.Description)
+	if policy.Description != "" {
+		model.Description = types.StringValue(policy.Description)
 	} else {
 		model.Description = types.StringNull()
 	}
 	
-	model.Code = types.StringValue(insight.Code)
+	model.Code = types.StringValue(policy.Code)
 	
 	// Convert Type array to list
-	typeList, diags := types.ListValueFrom(context.Background(), types.StringType, insight.Type)
+	typeList, diags := types.ListValueFrom(context.Background(), types.StringType, policy.Type)
 	if diags.HasError() {
 		return fmt.Errorf("error converting type list: %v", diags)
 	}
 	model.Type = typeList
 	
 	// Convert ProviderIDs array to list
-	providerList, diags := types.ListValueFrom(context.Background(), types.StringType, insight.ProviderIDs)
+	providerList, diags := types.ListValueFrom(context.Background(), types.StringType, policy.ProviderIDs)
 	if diags.HasError() {
 		return fmt.Errorf("error converting provider IDs list: %v", diags)
 	}
 	model.ProviderIDs = providerList
 	
 	// Convert Labels array to list
-	if len(insight.Labels) > 0 {
-		labelsList, diags := types.ListValueFrom(context.Background(), types.StringType, insight.Labels)
+	if len(policy.Labels) > 0 {
+		labelsList, diags := types.ListValueFrom(context.Background(), types.StringType, policy.Labels)
 		if diags.HasError() {
 			return fmt.Errorf("error converting labels list: %v", diags)
 		}
@@ -48,21 +48,21 @@ func mapGovernanceInsightToModel(insight *client.GovernanceInsight, model *Gover
 	}
 	
 	// Convert severity integer to string
-	if insight.Severity > 0 {
-		model.Severity = types.StringValue(client.SeverityToString(insight.Severity))
+	if policy.Severity > 0 {
+		model.Severity = types.StringValue(client.SeverityToString(policy.Severity))
 	} else {
 		model.Severity = types.StringNull()
 	}
 	
-	if insight.Category != "" {
-		model.Category = types.StringValue(insight.Category)
+	if policy.Category != "" {
+		model.Category = types.StringValue(policy.Category)
 	} else {
 		model.Category = types.StringNull()
 	}
 	
 	// Convert Frameworks array to list
-	if len(insight.Frameworks) > 0 {
-		frameworksList, diags := types.ListValueFrom(context.Background(), types.StringType, insight.Frameworks)
+	if len(policy.Frameworks) > 0 {
+		frameworksList, diags := types.ListValueFrom(context.Background(), types.StringType, policy.Frameworks)
 		if diags.HasError() {
 			return fmt.Errorf("error converting frameworks list: %v", diags)
 		}
@@ -74,19 +74,19 @@ func mapGovernanceInsightToModel(insight *client.GovernanceInsight, model *Gover
 	return nil
 }
 
-// mapModelToGovernanceInsight maps Terraform model to API request
-func mapModelToGovernanceInsight(model *GovernanceInsightResourceModel) (*client.GovernanceInsight, error) {
-	insight := &client.GovernanceInsight{
+// mapModelToGovernancePolicy maps Terraform model to API request
+func mapModelToGovernancePolicy(model *GovernancePolicyResourceModel) (*client.GovernancePolicy, error) {
+	policy := &client.GovernancePolicy{
 		Name: model.Name.ValueString(),
 		Code: model.Code.ValueString(),
 	}
 	
 	if !model.ID.IsNull() && !model.ID.IsUnknown() {
-		insight.ID = model.ID.ValueString()
+		policy.ID = model.ID.ValueString()
 	}
 	
 	if !model.Description.IsNull() && !model.Description.IsUnknown() {
-		insight.Description = model.Description.ValueString()
+		policy.Description = model.Description.ValueString()
 	}
 	
 	// Convert Type list to array
@@ -95,7 +95,7 @@ func mapModelToGovernanceInsight(model *GovernanceInsightResourceModel) (*client
 	if diags.HasError() {
 		return nil, fmt.Errorf("error converting type list: %v", diags)
 	}
-	insight.Type = typeArray
+	policy.Type = typeArray
 	
 	// Convert ProviderIDs list to array
 	var providerArray []string
@@ -103,7 +103,7 @@ func mapModelToGovernanceInsight(model *GovernanceInsightResourceModel) (*client
 	if diags.HasError() {
 		return nil, fmt.Errorf("error converting provider IDs list: %v", diags)
 	}
-	insight.ProviderIDs = providerArray
+	policy.ProviderIDs = providerArray
 	
 	// Convert Labels list to array
 	if !model.Labels.IsNull() && !model.Labels.IsUnknown() {
@@ -112,16 +112,16 @@ func mapModelToGovernanceInsight(model *GovernanceInsightResourceModel) (*client
 		if diags.HasError() {
 			return nil, fmt.Errorf("error converting labels list: %v", diags)
 		}
-		insight.Labels = labelsArray
+		policy.Labels = labelsArray
 	}
 	
 	// Convert severity string to integer
 	if !model.Severity.IsNull() && !model.Severity.IsUnknown() {
-		insight.Severity = client.SeverityToInt(model.Severity.ValueString())
+		policy.Severity = client.SeverityToInt(model.Severity.ValueString())
 	}
 	
 	if !model.Category.IsNull() && !model.Category.IsUnknown() {
-		insight.Category = model.Category.ValueString()
+		policy.Category = model.Category.ValueString()
 	}
 	
 	// Convert Frameworks list to array
@@ -131,15 +131,15 @@ func mapModelToGovernanceInsight(model *GovernanceInsightResourceModel) (*client
 		if diags.HasError() {
 			return nil, fmt.Errorf("error converting frameworks list: %v", diags)
 		}
-		insight.Frameworks = frameworksArray
+		policy.Frameworks = frameworksArray
 	}
 	
-	return insight, nil
+	return policy, nil
 }
 
-// parseGovernanceInsightImportID parses the import ID for a governance insight
-func parseGovernanceInsightImportID(id string) (string, error) {
-	// For governance insights, the import ID is just the insight ID
+// parseGovernancePolicyImportID parses the import ID for a governance policy
+func parseGovernancePolicyImportID(id string) (string, error) {
+	// For governance policies, the import ID is just the policy ID
 	id = strings.TrimSpace(id)
 	if id == "" {
 		return "", fmt.Errorf("invalid import ID: empty string")

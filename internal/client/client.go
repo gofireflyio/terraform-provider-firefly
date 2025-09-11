@@ -41,7 +41,7 @@ type Client struct {
 	Projects           *ProjectService
 	RunnersWorkspaces  *RunnersWorkspaceService
 	VariableSets       *VariableSetService
-	GovernanceInsights *GovernanceInsightService
+	GovernancePolicies *GovernancePolicyService
 }
 
 // AuthResponse represents the response from the login endpoint
@@ -92,7 +92,7 @@ func NewClient(config Config) (*Client, error) {
 	c.Projects = &ProjectService{client: c}
 	c.RunnersWorkspaces = &RunnersWorkspaceService{client: c}
 	c.VariableSets = &VariableSetService{client: c}
-	c.GovernanceInsights = &GovernanceInsightService{client: c}
+	c.GovernancePolicies = &GovernancePolicyService{client: c}
 	
 	return c, nil
 }
