@@ -325,7 +325,7 @@ func (r *runnersWorkspaceResource) Create(ctx context.Context, req resource.Crea
 	}
 
 	// Convert variables to API format
-	var variables []client.Variable
+	variables := make([]client.Variable, 0)
 	if !plan.Variables.IsNull() && !plan.Variables.IsUnknown() {
 		var varModels []ProjectVariableModel
 		diags = plan.Variables.ElementsAs(ctx, &varModels, false)
