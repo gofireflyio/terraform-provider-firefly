@@ -315,6 +315,78 @@ resource "firefly_workflows_runners_workspace" "staging_app" {
   }
 }
 
+# Governance policies for infrastructure compliance
+resource "firefly_governance_policy" "s3_encryption" {
+  name        = "S3 Bucket Encryption Policy"
+  description = "Enforces that all S3 buckets have server-side encryption enabled"
+
+  code = <<-EOT
+    package firefly
+    
+    import rego.v1
+    
+    default allow := false
+    
+    allow if {
+        input.resource_type == "aws_s3_bucket"
+        input.configuration.server_side_encryption_configuration
+        count(input.configuration.server_side_encryption_configuration) > 0
+    }
+    
+    deny[msg] if {
+        input.resource_type == "aws_s3_bucket"
+        not input.configuration.server_side_encryption_configuration
+        msg := "S3 bucket must have server-side encryption enabled"
+    }
+  EOT
+
+  type         = ["aws_s3_bucket"]
+  provider_ids = ["aws_all"]
+  severity     = "strict"
+  category     = "Security"
+  labels       = ["aws", "s3", "encryption", "security"]
+  frameworks   = ["SOC2", "ISO27001"]
+}
+
+resource "firefly_governance_policy" "required_tags" {
+  name        = "Required Resource Tags"
+  description = "Ensures production resources have required tags"
+
+  code = <<-EOT
+    package firefly
+    
+    import rego.v1
+    
+    required_tags := ["Environment", "Owner", "CostCenter"]
+    
+    default allow := false
+    
+    allow if {
+        input.resource_type in ["aws_instance", "aws_db_instance"]
+        tags := object.get(input.configuration, "tags", {})
+        every tag in required_tags {
+            tags[tag]
+            tags[tag] != ""
+        }
+    }
+    
+    deny[msg] if {
+        input.resource_type in ["aws_instance", "aws_db_instance"]
+        tags := object.get(input.configuration, "tags", {})
+        some tag in required_tags
+        not tags[tag]
+        msg := sprintf("Resource missing required tag: %s", [tag])
+    }
+  EOT
+
+  type         = ["aws_instance", "aws_db_instance"]
+  provider_ids = ["aws_all"]
+  severity     = "flexible"
+  category     = "Governance"
+  labels       = ["aws", "tagging", "governance"]
+  frameworks   = ["SOC2"]
+}
+
 # Data sources for existing resources
 data "firefly_workflows_projects" "all_projects" {
   search_query = "infrastructure"
@@ -322,6 +394,10 @@ data "firefly_workflows_projects" "all_projects" {
 
 data "firefly_workflows_variable_sets" "shared_sets" {
   search_query = "shared"
+}
+
+data "firefly_governance_policies" "security_policies" {
+  category = "Security"
 }
 
 # Outputs
@@ -354,5 +430,29 @@ output "variable_set_info" {
       id      = firefly_workflows_variable_set.production_config.id
       version = firefly_workflows_variable_set.production_config.version
     }
+  }
+}
+
+output "governance_policy_info" {
+  description = "Governance policy information"
+  value = {
+    s3_encryption = {
+      id       = firefly_governance_policy.s3_encryption.id
+      name     = firefly_governance_policy.s3_encryption.name
+      severity = firefly_governance_policy.s3_encryption.severity
+    }
+    required_tags = {
+      id       = firefly_governance_policy.required_tags.id
+      name     = firefly_governance_policy.required_tags.name
+      severity = firefly_governance_policy.required_tags.severity
+    }
+  }
+}
+
+output "security_policies_summary" {
+  description = "Summary of security policies"
+  value = {
+    count = length(data.firefly_governance_policies.security_policies.policies)
+    names = [for policy in data.firefly_governance_policies.security_policies.policies : policy.name]
   }
 }
