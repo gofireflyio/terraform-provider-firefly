@@ -159,5 +159,6 @@ func (p *FireflyProvider) Resources(_ context.Context) []func() resource.Resourc
 		NewProjectMembershipResource,
 		NewRunnersWorkspaceResource,
 		NewVariableSetResource,
+		NewGovernancePolicyResource,
 	}
 }
