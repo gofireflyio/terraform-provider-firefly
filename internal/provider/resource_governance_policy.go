@@ -94,12 +94,12 @@ func (r *GovernancePolicyResource) Schema(ctx context.Context, req resource.Sche
 				Default:             listdefault.StaticValue(types.ListValueMust(types.StringType, []attr.Value{})),
 			},
 			"severity": schema.StringAttribute{
-				MarkdownDescription: "The severity level of the policy (low, medium, high, critical, or legacy: flexible, strict, warning)",
+				MarkdownDescription: "The severity level of the policy (trace, info, low, medium, high, critical)",
 				Optional:            true,
 				Computed:            true,
 				Default:             stringdefault.StaticString("low"),
 				Validators: []validator.String{
-					stringvalidator.OneOf("low", "medium", "high", "critical", "flexible", "strict", "warning"),
+					stringvalidator.OneOf("trace", "info", "low", "medium", "high", "critical"),
 				},
 			},
 			"category": schema.StringAttribute{
