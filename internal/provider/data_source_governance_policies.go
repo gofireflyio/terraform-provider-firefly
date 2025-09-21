@@ -2,6 +2,7 @@ package provider
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 
 	"github.com/gofireflyio/terraform-provider-firefly/internal/client"
@@ -195,7 +196,14 @@ func (d *GovernancePoliciesDataSource) Read(ctx context.Context, req datasource.
 			policyModel.Description = types.StringNull()
 		}
 		
-		policyModel.Code = types.StringValue(policy.Code)
+		// Decode the base64 encoded Rego code from the API
+		decodedCode, err := base64.StdEncoding.DecodeString(policy.Code)
+		if err != nil {
+			// If decoding fails, assume it's already plain text (for backward compatibility)
+			policyModel.Code = types.StringValue(policy.Code)
+		} else {
+			policyModel.Code = types.StringValue(string(decodedCode))
+		}
 		
 		// Convert arrays to lists
 		typeList, diags := types.ListValueFrom(ctx, types.StringType, policy.Type)
