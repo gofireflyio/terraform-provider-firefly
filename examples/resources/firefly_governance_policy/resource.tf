@@ -36,7 +36,7 @@ resource "firefly_governance_policy" "s3_encryption" {
 
   type         = ["aws_s3_bucket"]
   provider_ids = ["aws_all"]
-  severity     = "strict"
+  severity     = "high"
   category     = "Security"
   labels       = ["aws", "s3", "encryption", "security"]
   frameworks   = ["SOC2", "ISO27001", "PCI-DSS"]
@@ -86,7 +86,7 @@ resource "firefly_governance_policy" "cloudwatch_events" {
 
   type         = ["aws_cloudwatch_event_rule"]
   provider_ids = ["aws_all"]
-  severity     = "warning"
+  severity     = "low"
   category     = "Misconfiguration"
   labels       = ["aws", "cloudwatch", "events", "monitoring"]
   frameworks   = ["SOC2"]
@@ -138,7 +138,7 @@ resource "firefly_governance_policy" "required_tags" {
 
   type         = ["aws_instance", "aws_db_instance"]
   provider_ids = ["123456789012"] # Replace with your AWS account ID
-  severity     = "flexible"
+  severity     = "medium"
   category     = "Governance"
   labels       = ["aws", "tagging", "governance", "ec2", "rds"]
   frameworks   = ["SOC2"]
