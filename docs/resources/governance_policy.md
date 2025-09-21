@@ -32,7 +32,7 @@ resource "firefly_governance_policy" "cloudwatch_rule" {
   
   type         = ["aws_cloudwatch_event_rule"]
   provider_ids = ["aws_all"]
-  severity     = "warning"
+  severity     = "low"
   category     = "Misconfiguration"
   labels       = ["aws", "cloudwatch", "monitoring"]
   frameworks   = ["SOC2"]
@@ -64,7 +64,7 @@ resource "firefly_governance_policy" "s3_encryption" {
   
   type         = ["aws_s3_bucket"]
   provider_ids = ["aws_all"]
-  severity     = "strict"
+  severity     = "high"
   category     = "Security"
   labels       = ["aws", "s3", "encryption", "security"]
   frameworks   = ["SOC2", "ISO27001", "PCI-DSS"]
@@ -103,7 +103,7 @@ resource "firefly_governance_policy" "production_tagging" {
   
   type         = ["aws_instance", "aws_db_instance", "aws_s3_bucket"]
   provider_ids = ["123456789012"]  # Specific AWS account ID
-  severity     = "flexible"
+  severity     = "medium"
   category     = "Governance"
   labels       = ["aws", "tagging", "governance"]
   frameworks   = ["SOC2"]
@@ -131,7 +131,7 @@ resource "firefly_governance_policy" "encoded_policy" {
   
   type         = ["aws_instance"]
   provider_ids = ["aws_all"]
-  severity     = "warning"
+  severity     = "low"
   category     = "Configuration"
 }
 ```
@@ -149,7 +149,7 @@ resource "firefly_governance_policy" "encoded_policy" {
 
 - `description` (String) - The description of the governance policy. Defaults to empty string.
 - `labels` (List of String) - List of labels for categorizing the policy. Defaults to empty list.
-- `severity` (String) - The severity level of the policy. Valid values: `flexible`, `strict`, `warning`. Defaults to `warning`.
+- `severity` (String) - The severity level of the policy. Valid values: `low`, `medium`, `high`, `critical` (or legacy values: `flexible`, `strict`, `warning`). Defaults to `low`.
 - `category` (String) - The category of the policy (e.g., `Misconfiguration`, `Security`, `Governance`). Defaults to empty string.
 - `frameworks` (List of String) - List of compliance frameworks this policy relates to (e.g., `SOC2`, `ISO27001`, `PCI-DSS`). Defaults to empty list.
 
@@ -200,9 +200,14 @@ The `input` object contains:
 2. Use meaningful violation messages in `deny` rules
 3. Test your Rego code before deploying policies
 4. Use appropriate severity levels:
-   - `strict`: Blocks deployments
-   - `flexible`: Allows override with justification
-   - `warning`: Shows warnings but doesn't block
+   - `low`: Minor issues that should be noted
+   - `medium`: Issues that require attention
+   - `high`: Serious issues that should be addressed promptly
+   - `critical`: Critical issues that must be resolved immediately
+   - Legacy severity levels (for backward compatibility):
+     - `strict`: Blocks deployments
+     - `flexible`: Allows override with justification
+     - `warning`: Shows warnings but doesn't block
 
 ## Import
 
