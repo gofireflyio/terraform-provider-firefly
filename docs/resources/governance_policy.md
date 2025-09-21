@@ -11,23 +11,11 @@ resource "firefly_governance_policy" "cloudwatch_rule" {
   description = "Ensures CloudWatch event rules have proper configuration"
   
   code = <<-EOT
-    package firefly
-    
-    import rego.v1
-    
-    default allow := false
-    
-    allow if {
-        input.resource_type == "aws_cloudwatch_event_rule"
-        input.configuration.state == "ENABLED"
-        input.configuration.name != ""
-    }
-    
-    deny[msg] if {
-        input.resource_type == "aws_cloudwatch_event_rule"
-        input.configuration.state != "ENABLED"
-        msg := "CloudWatch event rule must be enabled"
-    }
+firefly {
+    input.resource_type == "aws_cloudwatch_event_rule"
+    input.configuration.state == "ENABLED"
+    input.configuration.name != ""
+}
   EOT
   
   type         = ["aws_cloudwatch_event_rule"]
@@ -44,22 +32,10 @@ resource "firefly_governance_policy" "s3_encryption" {
   description = "Enforces encryption on S3 buckets"
   
   code = <<-EOT
-    package firefly
-    
-    import rego.v1
-    
-    default allow := false
-    
-    allow if {
-        input.resource_type == "aws_s3_bucket"
-        input.configuration.server_side_encryption_configuration
-    }
-    
-    deny[msg] if {
-        input.resource_type == "aws_s3_bucket"
-        not input.configuration.server_side_encryption_configuration
-        msg := "S3 bucket must have server-side encryption enabled"
-    }
+firefly {
+    input.resource_type == "aws_s3_bucket"
+    input.configuration.server_side_encryption_configuration
+}
   EOT
   
   type         = ["aws_s3_bucket"]
@@ -76,29 +52,12 @@ resource "firefly_governance_policy" "production_tagging" {
   description = "Ensures production resources have required tags"
   
   code = <<-EOT
-    package firefly
-    
-    import rego.v1
-    
-    required_tags := ["Environment", "Owner", "CostCenter"]
-    
-    default allow := false
-    
-    allow if {
-        input.resource_type in ["aws_instance", "aws_db_instance", "aws_s3_bucket"]
-        tags := object.get(input.configuration, "tags", {})
-        every tag in required_tags {
-            tags[tag]
-        }
-    }
-    
-    deny[msg] if {
-        input.resource_type in ["aws_instance", "aws_db_instance", "aws_s3_bucket"]
-        tags := object.get(input.configuration, "tags", {})
-        some tag in required_tags
-        not tags[tag]
-        msg := sprintf("Resource missing required tag: %s", [tag])
-    }
+firefly {
+    input.resource_type in ["aws_instance", "aws_db_instance", "aws_s3_bucket"]
+    input.configuration.tags.Environment
+    input.configuration.tags.Owner
+    input.configuration.tags.CostCenter
+}
   EOT
   
   type         = ["aws_instance", "aws_db_instance", "aws_s3_bucket"]
@@ -149,29 +108,16 @@ resource "firefly_governance_policy" "encoded_policy" {
 ## Rego Policy Guidelines
 
 ### Policy Structure
-Your Rego policies should follow this structure:
+Your Rego policies should follow this simple structure:
 
 ```rego
-package firefly
-
-import rego.v1
-
-# Default decision
-default allow := false
-
-# Allow conditions
-allow if {
+firefly {
     input.resource_type == "aws_s3_bucket"
-    # Your allow conditions here
-}
-
-# Deny conditions with messages
-deny[msg] if {
-    input.resource_type == "aws_s3_bucket"
-    # Your deny conditions here
-    msg := "Your violation message here"
+    # Your conditions here
 }
 ```
+
+**Important**: Do not include `package` declarations or `import` statements. The Firefly API expects simple rule definitions.
 
 ### Available Input Data
 The `input` object contains:
@@ -185,10 +131,9 @@ The `input` object contains:
 - Multiple provider IDs can be specified in the list
 
 ### Best Practices
-1. Always include `import rego.v1` for modern Rego syntax
-2. Use meaningful violation messages in `deny` rules
-3. Test your Rego code before deploying policies
-4. Use appropriate severity levels:
+1. Use the simple `firefly { ... }` rule format (no package or import statements)
+2. Test your Rego code before deploying policies
+3. Use appropriate severity levels:
    - `trace`: Detailed diagnostic information
    - `info`: Informational messages
    - `low`: Minor issues that should be noted
