@@ -62,7 +62,7 @@ type GovernancePolicyListRequest struct {
 
 // List retrieves governance policies
 func (s *GovernancePolicyService) List(request *GovernancePolicyListRequest) (*GovernancePoliciesResponse, error) {
-	endpoint := "/governance/insights"
+	endpoint := "/v2/governance/insights"
 	
 	// Set default values if not provided
 	if request.Page == 0 {
@@ -123,7 +123,7 @@ func (s *GovernancePolicyService) Get(id string) (*GovernancePolicy, error) {
 
 // Create creates a new governance policy
 func (s *GovernancePolicyService) Create(policy *GovernancePolicy) (*GovernancePolicy, error) {
-	endpoint := "/governance/insights/create"
+	endpoint := "/v2/governance/insights/create"
 	
 	data, err := json.Marshal(policy)
 	if err != nil {
@@ -156,7 +156,7 @@ func (s *GovernancePolicyService) Create(policy *GovernancePolicy) (*GovernanceP
 
 // Update updates an existing governance policy
 func (s *GovernancePolicyService) Update(id string, policy *GovernancePolicy) (*GovernancePolicy, error) {
-	endpoint := fmt.Sprintf("/governance/insights/%s", url.PathEscape(id))
+	endpoint := fmt.Sprintf("/v2/governance/insights/%s", url.PathEscape(id))
 	
 	data, err := json.Marshal(policy)
 	if err != nil {
@@ -189,7 +189,7 @@ func (s *GovernancePolicyService) Update(id string, policy *GovernancePolicy) (*
 
 // Delete deletes a governance policy
 func (s *GovernancePolicyService) Delete(id string) error {
-	endpoint := fmt.Sprintf("/governance/insights/%s", url.PathEscape(id))
+	endpoint := fmt.Sprintf("/v2/governance/insights/%s", url.PathEscape(id))
 	
 	req, err := s.client.newRequest("DELETE", endpoint, nil)
 	if err != nil {
