@@ -1,7 +1,6 @@
 package client
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -14,9 +13,8 @@ type GovernancePolicyService struct {
 	client *Client
 }
 
-// GovernancePolicy represents a governance policy
-type GovernancePolicy struct {
-	ID          string   `json:"id,omitempty"`
+// GovernancePolicyRequest represents a governance policy for API requests
+type GovernancePolicyRequest struct {
 	Name        string   `json:"name"`
 	Description string   `json:"description,omitempty"`
 	Code        string   `json:"code"`
@@ -28,9 +26,48 @@ type GovernancePolicy struct {
 	Frameworks  []string `json:"frameworks,omitempty"`
 }
 
+// GovernancePolicy represents a governance policy from API responses
+type GovernancePolicy struct {
+	ID          string              `json:"_id,omitempty"`
+	Name        string              `json:"name"`
+	Description string              `json:"description,omitempty"`
+	Code        string              `json:"rego"` // API returns "rego" field
+	Type        []string            `json:"type"`
+	ProviderIDs []string            `json:"providerIds"`
+	Labels      FlexibleStringArray `json:"labels,omitempty"`
+	Severity    int                 `json:"severity,omitempty"`
+	Category    string              `json:"category,omitempty"`
+	Frameworks  []string            `json:"frameworks,omitempty"`
+}
+
+// FlexibleStringArray handles both string and []string JSON formats
+type FlexibleStringArray []string
+
+func (f *FlexibleStringArray) UnmarshalJSON(data []byte) error {
+	// Try to unmarshal as array first
+	var arr []string
+	if err := json.Unmarshal(data, &arr); err == nil {
+		*f = FlexibleStringArray(arr)
+		return nil
+	}
+	
+	// If that fails, try as string
+	var str string
+	if err := json.Unmarshal(data, &str); err == nil {
+		if str == "" {
+			*f = FlexibleStringArray([]string{})
+		} else {
+			*f = FlexibleStringArray([]string{str})
+		}
+		return nil
+	}
+	
+	return fmt.Errorf("cannot unmarshal labels field")
+}
+
 // GovernancePoliciesResponse represents the response from the policies list endpoint
 type GovernancePoliciesResponse struct {
-	Data     []GovernancePolicy `json:"data"`
+	Hits     []GovernancePolicy `json:"hits"`
 	Total    int                 `json:"total"`
 	Page     int                 `json:"page"`
 	PageSize int                 `json:"page_size"`
@@ -72,12 +109,7 @@ func (s *GovernancePolicyService) List(request *GovernancePolicyListRequest) (*G
 		request.PageSize = 50
 	}
 	
-	data, err := json.Marshal(request)
-	if err != nil {
-		return nil, fmt.Errorf("error marshaling request: %w", err)
-	}
-	
-	req, err := s.client.newRequest("POST", endpoint, bytes.NewReader(data))
+	req, err := s.client.newRequest("POST", endpoint, request)
 	if err != nil {
 		return nil, err
 	}
@@ -114,23 +146,31 @@ func (s *GovernancePolicyService) Get(id string) (*GovernancePolicy, error) {
 		return nil, err
 	}
 	
-	if len(response.Data) == 0 {
+	if len(response.Hits) == 0 {
 		return nil, fmt.Errorf("policy not found: %s", id)
 	}
 	
-	return &response.Data[0], nil
+	return &response.Hits[0], nil
 }
 
 // Create creates a new governance policy
 func (s *GovernancePolicyService) Create(policy *GovernancePolicy) (*GovernancePolicy, error) {
 	endpoint := "/v2/governance/insights/create"
 	
-	data, err := json.Marshal(policy)
-	if err != nil {
-		return nil, fmt.Errorf("error marshaling policy: %w", err)
+	// Convert to request struct
+	request := &GovernancePolicyRequest{
+		Name:        policy.Name,
+		Description: policy.Description,
+		Code:        policy.Code,
+		Type:        policy.Type,
+		ProviderIDs: policy.ProviderIDs,
+		Labels:      []string(policy.Labels), // Convert FlexibleStringArray to []string
+		Severity:    policy.Severity,
+		Category:    policy.Category,
+		Frameworks:  policy.Frameworks,
 	}
 	
-	req, err := s.client.newRequest("POST", endpoint, bytes.NewReader(data))
+	req, err := s.client.newRequest("POST", endpoint, request)
 	if err != nil {
 		return nil, err
 	}
@@ -158,12 +198,20 @@ func (s *GovernancePolicyService) Create(policy *GovernancePolicy) (*GovernanceP
 func (s *GovernancePolicyService) Update(id string, policy *GovernancePolicy) (*GovernancePolicy, error) {
 	endpoint := fmt.Sprintf("/v2/governance/insights/%s", url.PathEscape(id))
 	
-	data, err := json.Marshal(policy)
-	if err != nil {
-		return nil, fmt.Errorf("error marshaling policy: %w", err)
+	// Convert to request struct
+	request := &GovernancePolicyRequest{
+		Name:        policy.Name,
+		Description: policy.Description,
+		Code:        policy.Code,
+		Type:        policy.Type,
+		ProviderIDs: policy.ProviderIDs,
+		Labels:      []string(policy.Labels), // Convert FlexibleStringArray to []string
+		Severity:    policy.Severity,
+		Category:    policy.Category,
+		Frameworks:  policy.Frameworks,
 	}
 	
-	req, err := s.client.newRequest("PUT", endpoint, bytes.NewReader(data))
+	req, err := s.client.newRequest("PUT", endpoint, request)
 	if err != nil {
 		return nil, err
 	}

@@ -182,8 +182,8 @@ func (d *GovernancePoliciesDataSource) Read(ctx context.Context, req datasource.
 	}
 	
 	// Map policies to data source model
-	data.Policies = make([]GovernancePolicyDataSourceModel, len(policiesResp.Data))
-	for i, policy := range policiesResp.Data {
+	data.Policies = make([]GovernancePolicyDataSourceModel, len(policiesResp.Hits))
+	for i, policy := range policiesResp.Hits {
 		policyModel := &GovernancePolicyDataSourceModel{}
 		
 		// Map each policy
@@ -220,8 +220,9 @@ func (d *GovernancePoliciesDataSource) Read(ctx context.Context, req datasource.
 		}
 		policyModel.ProviderIDs = providerList
 		
-		if len(policy.Labels) > 0 {
-			labelsList, diags := types.ListValueFrom(ctx, types.StringType, policy.Labels)
+		labelsSlice := []string(policy.Labels)
+		if len(labelsSlice) > 0 {
+			labelsList, diags := types.ListValueFrom(ctx, types.StringType, labelsSlice)
 			if diags.HasError() {
 				resp.Diagnostics.Append(diags...)
 				return
