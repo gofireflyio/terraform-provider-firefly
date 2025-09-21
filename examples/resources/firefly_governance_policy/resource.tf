@@ -144,6 +144,41 @@ resource "firefly_governance_policy" "required_tags" {
   frameworks   = ["SOC2"]
 }
 
+# Example with base64 encoded Rego code (the provider automatically detects and handles both formats)
+resource "firefly_governance_policy" "base64_example" {
+  name        = "Base64 Encoded Policy Example"
+  description = "Example showing base64 encoded Rego code support"
+
+  # This is the same Rego code as above, but base64 encoded
+  # The provider automatically detects this is base64 and uses it as-is
+  code = "CgpmaXJlZmx5IHsKICAgIGlucHV0Lmluc3RhbmNlX3N0YXRlID09ICJzdG9wcGVkIgp9Cgo="
+
+  type         = ["aws_instance"]
+  provider_ids = ["aws_all"]
+  severity     = "critical"
+  category     = "Security"
+  labels       = ["base64", "encoding", "example"]
+  frameworks   = ["ISO27001"]
+}
+
+# Example showing all available severity levels
+resource "firefly_governance_policy" "severity_example" {
+  name        = "Severity Levels Example"
+  description = "Example showing all available severity levels: trace, info, low, medium, high, critical"
+
+  code = <<-EOT
+    firefly {
+      input.instance_state == "stopped"
+    }
+  EOT
+
+  type         = ["aws_instance"]
+  provider_ids = ["aws_all"]
+  severity     = "trace"  # Available: trace, info, low, medium, high, critical
+  category     = "Example"
+  labels       = ["severity", "example"]
+}
+
 # Output policy IDs for reference
 output "s3_encryption_policy_id" {
   description = "ID of the S3 encryption policy"
@@ -158,4 +193,14 @@ output "cloudwatch_events_policy_id" {
 output "required_tags_policy_id" {
   description = "ID of the required tags policy"
   value       = firefly_governance_policy.required_tags.id
+}
+
+output "base64_example_policy_id" {
+  description = "ID of the base64 example policy"
+  value       = firefly_governance_policy.base64_example.id
+}
+
+output "severity_example_policy_id" {
+  description = "ID of the severity example policy"
+  value       = firefly_governance_policy.severity_example.id
 }

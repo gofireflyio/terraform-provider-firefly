@@ -65,7 +65,7 @@ output "security_policy_ids" {
 - `type` (List of String) - List of resource types this policy applies to
 - `provider_ids` (List of String) - List of provider IDs this policy applies to
 - `labels` (List of String) - List of labels associated with the policy
-- `severity` (String) - The severity level of the policy (`flexible`, `strict`, `warning`)
+- `severity` (String) - The severity level of the policy (`trace`, `info`, `low`, `medium`, `high`, `critical`)
 - `category` (String) - The category of the policy
 - `frameworks` (List of String) - List of compliance frameworks this policy relates to
 

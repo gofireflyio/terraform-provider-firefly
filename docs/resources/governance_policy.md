@@ -112,27 +112,16 @@ resource "firefly_governance_policy" "production_tagging" {
 # Base64 encoded policy (alternative format)
 resource "firefly_governance_policy" "encoded_policy" {
   name        = "Base64 Encoded Policy"
-  description = "Example using base64 encoded Rego code"
+  description = "Example using base64 encoded Rego code - provider auto-detects format"
   
-  # This is the same Rego code as above, but base64 encoded
-  code = base64encode(<<-EOT
-    package firefly
-    
-    import rego.v1
-    
-    default allow := false
-    
-    allow if {
-        input.resource_type == "aws_instance"
-        input.configuration.instance_type
-    }
-  EOT
-  )
+  # This is base64 encoded Rego code - the provider automatically detects and handles it
+  # You can use either plain text or base64 encoded code
+  code = "CgpmaXJlZmx5IHsKICAgIGlucHV0Lmluc3RhbmNlX3N0YXRlID09ICJzdG9wcGVkIgp9Cgo="
   
   type         = ["aws_instance"]
   provider_ids = ["aws_all"]
-  severity     = "low"
-  category     = "Configuration"
+  severity     = "critical"
+  category     = "Security"
 }
 ```
 
@@ -141,7 +130,7 @@ resource "firefly_governance_policy" "encoded_policy" {
 ### Required
 
 - `name` (String) - The name of the governance policy
-- `code` (String) - The Rego code for the policy rule (can be base64 encoded)
+- `code` (String) - The Rego code for the policy rule. Can be provided as plain text or base64 encoded - the provider automatically detects and handles both formats.
 - `type` (List of String) - List of resource types this policy applies to (e.g., `aws_cloudwatch_event_target`, `aws_s3_bucket`)
 - `provider_ids` (List of String) - List of provider IDs this policy applies to (e.g., `aws_all`, specific account IDs like `123456789012`)
 
