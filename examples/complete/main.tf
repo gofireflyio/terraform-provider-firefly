@@ -321,23 +321,10 @@ resource "firefly_governance_policy" "s3_encryption" {
   description = "Enforces that all S3 buckets have server-side encryption enabled"
 
   code = <<-EOT
-    package firefly
-    
-    import rego.v1
-    
-    default allow := false
-    
-    allow if {
-        input.resource_type == "aws_s3_bucket"
-        input.configuration.server_side_encryption_configuration
-        count(input.configuration.server_side_encryption_configuration) > 0
-    }
-    
-    deny[msg] if {
-        input.resource_type == "aws_s3_bucket"
-        not input.configuration.server_side_encryption_configuration
-        msg := "S3 bucket must have server-side encryption enabled"
-    }
+firefly {
+    input.resource_type == "aws_s3_bucket"
+    input.configuration.server_side_encryption_configuration
+}
   EOT
 
   type         = ["aws_s3_bucket"]
@@ -353,30 +340,12 @@ resource "firefly_governance_policy" "required_tags" {
   description = "Ensures production resources have required tags"
 
   code = <<-EOT
-    package firefly
-    
-    import rego.v1
-    
-    required_tags := ["Environment", "Owner", "CostCenter"]
-    
-    default allow := false
-    
-    allow if {
-        input.resource_type in ["aws_instance", "aws_db_instance"]
-        tags := object.get(input.configuration, "tags", {})
-        every tag in required_tags {
-            tags[tag]
-            tags[tag] != ""
-        }
-    }
-    
-    deny[msg] if {
-        input.resource_type in ["aws_instance", "aws_db_instance"]
-        tags := object.get(input.configuration, "tags", {})
-        some tag in required_tags
-        not tags[tag]
-        msg := sprintf("Resource missing required tag: %s", [tag])
-    }
+firefly {
+    input.resource_type in ["aws_instance", "aws_db_instance"]
+    input.configuration.tags.Environment
+    input.configuration.tags.Owner
+    input.configuration.tags.CostCenter
+}
   EOT
 
   type         = ["aws_instance", "aws_db_instance"]

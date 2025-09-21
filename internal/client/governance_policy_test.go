@@ -157,7 +157,7 @@ func TestGovernancePolicyService_ListPolicies(t *testing.T) {
 		}
 
 		response := GovernancePoliciesResponse{
-			Data:     policies,
+			Hits:     policies,
 			Total:    2,
 			Page:     1,
 			PageSize: 50,
@@ -193,12 +193,12 @@ func TestGovernancePolicyService_ListPolicies(t *testing.T) {
 		t.Errorf("Expected total 2, got %d", response.Total)
 	}
 
-	if len(response.Data) != 2 {
-		t.Errorf("Expected 2 policies, got %d", len(response.Data))
+	if len(response.Hits) != 2 {
+		t.Errorf("Expected 2 policies, got %d", len(response.Hits))
 	}
 
-	if response.Data[0].ID != "policy-1" {
-		t.Errorf("Expected first policy ID 'policy-1', got '%s'", response.Data[0].ID)
+	if response.Hits[0].ID != "policy-1" {
+		t.Errorf("Expected first policy ID 'policy-1', got '%s'", response.Hits[0].ID)
 	}
 }
 
@@ -231,7 +231,7 @@ func TestGovernancePolicyService_GetPolicy(t *testing.T) {
 			}
 
 			response := GovernancePoliciesResponse{
-				Data:     []GovernancePolicy{policy},
+				Hits:     []GovernancePolicy{policy},
 				Total:    1,
 				Page:     1,
 				PageSize: 1,
@@ -241,7 +241,7 @@ func TestGovernancePolicyService_GetPolicy(t *testing.T) {
 			json.NewEncoder(w).Encode(response)
 		} else {
 			response := GovernancePoliciesResponse{
-				Data:     []GovernancePolicy{},
+				Hits:     []GovernancePolicy{},
 				Total:    0,
 				Page:     1,
 				PageSize: 1,
