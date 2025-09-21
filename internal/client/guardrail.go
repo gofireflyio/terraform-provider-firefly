@@ -13,51 +13,41 @@ import (
 // flexible = 1, strict = 2, warning = 3
 func SeverityToString(severity int) string {
 	switch severity {
-	case 0:
-		return "low"
 	case 1:
-		return "medium"
+		return "trace"
 	case 2:
-		return "high"
+		return "info"
 	case 3:
+		return "low"
+	case 4:
+		return "medium"
+	case 5:
+		return "high"
+	case 6:
 		return "critical"
 	default:
-		// Legacy mapping for backward compatibility
-		switch severity {
-		case 10:
-			return "flexible"
-		case 20:
-			return "strict"
-		case 30:
-			return "warning"
-		default:
-			return "low" // Default to low for unknown values
-		}
+		return "low" // Default to low for unknown values
 	}
 }
 
 // SeverityToInt converts string severity to integer representation
-// low = 0, medium = 1, high = 2, critical = 3
-// Legacy: flexible = 10, strict = 20, warning = 30
+// 1=Trace, 2=Info, 3=Low, 4=Medium, 5=High, 6=Critical
 func SeverityToInt(severity string) int {
 	switch severity {
-	case "low":
-		return 0
-	case "medium":
+	case "trace":
 		return 1
-	case "high":
+	case "info":
 		return 2
-	case "critical":
+	case "low":
 		return 3
-	// Legacy mappings for backward compatibility
-	case "flexible":
-		return 10
-	case "strict":
-		return 20
-	case "warning":
-		return 30
+	case "medium":
+		return 4
+	case "high":
+		return 5
+	case "critical":
+		return 6
 	default:
-		return 0 // Default to low for unknown values
+		return 3 // Default to low for unknown values
 	}
 }
 

@@ -149,7 +149,7 @@ resource "firefly_governance_policy" "encoded_policy" {
 
 - `description` (String) - The description of the governance policy. Defaults to empty string.
 - `labels` (List of String) - List of labels for categorizing the policy. Defaults to empty list.
-- `severity` (String) - The severity level of the policy. Valid values: `low`, `medium`, `high`, `critical` (or legacy values: `flexible`, `strict`, `warning`). Defaults to `low`.
+- `severity` (String) - The severity level of the policy. Valid values: `trace`, `info`, `low`, `medium`, `high`, `critical`. Defaults to `low`.
 - `category` (String) - The category of the policy (e.g., `Misconfiguration`, `Security`, `Governance`). Defaults to empty string.
 - `frameworks` (List of String) - List of compliance frameworks this policy relates to (e.g., `SOC2`, `ISO27001`, `PCI-DSS`). Defaults to empty list.
 
@@ -200,14 +200,12 @@ The `input` object contains:
 2. Use meaningful violation messages in `deny` rules
 3. Test your Rego code before deploying policies
 4. Use appropriate severity levels:
+   - `trace`: Detailed diagnostic information
+   - `info`: Informational messages
    - `low`: Minor issues that should be noted
    - `medium`: Issues that require attention
    - `high`: Serious issues that should be addressed promptly
    - `critical`: Critical issues that must be resolved immediately
-   - Legacy severity levels (for backward compatibility):
-     - `strict`: Blocks deployments
-     - `flexible`: Allows override with justification
-     - `warning`: Shows warnings but doesn't block
 
 ## Import
 
