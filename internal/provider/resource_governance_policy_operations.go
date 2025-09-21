@@ -16,13 +16,11 @@ func mapGovernancePolicyToModel(policy *client.GovernancePolicy, model *Governan
 	model.ID = types.StringValue(policy.ID)
 	model.Name = types.StringValue(policy.Name)
 	
-	if policy.Description != "" {
-		model.Description = types.StringValue(policy.Description)
-	} else {
-		model.Description = types.StringNull()
-	}
+	// Handle description - use empty string instead of null for consistency
+	model.Description = types.StringValue(policy.Description)
 	
-	// Decode the base64 encoded Rego code from the API
+	// Decode the base64 encoded Rego code from the API (returned in "rego" field)
+	// This ensures users see their original plain text code in state
 	decodedCode, err := base64.StdEncoding.DecodeString(policy.Code)
 	if err != nil {
 		// If decoding fails, assume it's already plain text (for backward compatibility)
@@ -46,8 +44,9 @@ func mapGovernancePolicyToModel(policy *client.GovernancePolicy, model *Governan
 	model.ProviderIDs = providerList
 	
 	// Convert Labels array to list
-	if len(policy.Labels) > 0 {
-		labelsList, diags := types.ListValueFrom(context.Background(), types.StringType, policy.Labels)
+	labelsSlice := []string(policy.Labels)
+	if len(labelsSlice) > 0 {
+		labelsList, diags := types.ListValueFrom(context.Background(), types.StringType, labelsSlice)
 		if diags.HasError() {
 			return fmt.Errorf("error converting labels list: %v", diags)
 		}
@@ -69,16 +68,12 @@ func mapGovernancePolicyToModel(policy *client.GovernancePolicy, model *Governan
 		model.Category = types.StringNull()
 	}
 	
-	// Convert Frameworks array to list
-	if len(policy.Frameworks) > 0 {
-		frameworksList, diags := types.ListValueFrom(context.Background(), types.StringType, policy.Frameworks)
-		if diags.HasError() {
-			return fmt.Errorf("error converting frameworks list: %v", diags)
-		}
-		model.Frameworks = frameworksList
-	} else {
-		model.Frameworks = types.ListNull(types.StringType)
+	// Convert Frameworks array to list - use empty list instead of null for consistency
+	frameworksList, diags := types.ListValueFrom(context.Background(), types.StringType, policy.Frameworks)
+	if diags.HasError() {
+		return fmt.Errorf("error converting frameworks list: %v", diags)
 	}
+	model.Frameworks = frameworksList
 	
 	return nil
 }
