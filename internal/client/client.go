@@ -74,7 +74,7 @@ func NewClient(config Config) (*Client, error) {
 	httpClient := config.HTTPClient
 	if httpClient == nil {
 		httpClient = &http.Client{
-			Timeout: time.Second * 30,
+			Timeout: time.Second * 120, // Increased from 30s to 120s for governance policy operations
 		}
 	}
 	
