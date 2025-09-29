@@ -36,11 +36,12 @@ type Client struct {
 	expiresAt  time.Time
 	
 	// Services
-	Workspaces        *WorkspaceService
-	Guardrails        *GuardrailService
-	Projects          *ProjectService
-	RunnersWorkspaces *RunnersWorkspaceService
-	VariableSets      *VariableSetService
+	Workspaces         *WorkspaceService
+	Guardrails         *GuardrailService
+	Projects           *ProjectService
+	RunnersWorkspaces  *RunnersWorkspaceService
+	VariableSets       *VariableSetService
+	GovernancePolicies *GovernancePolicyService
 }
 
 // AuthResponse represents the response from the login endpoint
@@ -73,7 +74,7 @@ func NewClient(config Config) (*Client, error) {
 	httpClient := config.HTTPClient
 	if httpClient == nil {
 		httpClient = &http.Client{
-			Timeout: time.Second * 30,
+			Timeout: time.Second * 120, // Increased from 30s to 120s for governance policy operations
 		}
 	}
 	
@@ -91,6 +92,7 @@ func NewClient(config Config) (*Client, error) {
 	c.Projects = &ProjectService{client: c}
 	c.RunnersWorkspaces = &RunnersWorkspaceService{client: c}
 	c.VariableSets = &VariableSetService{client: c}
+	c.GovernancePolicies = &GovernancePolicyService{client: c}
 	
 	return c, nil
 }
