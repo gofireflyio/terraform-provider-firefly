@@ -3,6 +3,7 @@ package provider
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/gofireflyio/terraform-provider-firefly/internal/client"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
@@ -209,6 +210,23 @@ func (r *GovernancePolicyResource) Read(ctx context.Context, req resource.ReadRe
 	// Get the policy
 	policy, err := r.client.GovernancePolicies.Get(data.ID.ValueString())
 	if err != nil {
+		// Check if the error indicates the policy was not found (deleted outside Terraform)
+		errorMsg := err.Error()
+		if strings.Contains(errorMsg, "policy not found") || 
+		   strings.Contains(errorMsg, "not found") ||
+		   strings.Contains(errorMsg, "status 404") ||
+		   strings.Contains(errorMsg, "status 500") {
+			// Policy was deleted outside of Terraform or there's a server error
+			// In either case, remove it from state to allow Terraform to continue
+			tflog.Info(ctx, "Governance policy not found or server error, removing from state", map[string]interface{}{
+				"id": data.ID.ValueString(),
+				"error": errorMsg,
+			})
+			resp.State.RemoveResource(ctx)
+			return
+		}
+		
+		// For other errors, return the error
 		resp.Diagnostics.AddError(
 			"Error reading governance policy",
 			fmt.Sprintf("Could not read governance policy: %s", err),
