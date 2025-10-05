@@ -265,6 +265,12 @@ func (r *GovernancePolicyResource) Update(ctx context.Context, req resource.Upda
 		return
 	}
 	
+	// Preserve the ID if the API response doesn't include it
+	// This ensures consistent state management even when the API has inconsistent response formats
+	if updatedPolicy.ID == "" {
+		updatedPolicy.ID = data.ID.ValueString()
+	}
+	
 	tflog.Debug(ctx, "Updated governance policy", map[string]interface{}{
 		"id":   updatedPolicy.ID,
 		"name": updatedPolicy.Name,

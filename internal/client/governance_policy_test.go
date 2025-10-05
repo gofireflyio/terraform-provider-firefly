@@ -403,6 +403,133 @@ func TestGovernancePolicyService_DeletePolicy(t *testing.T) {
 	}
 }
 
+func TestGovernancePolicyService_UpdatePolicyWithFrameworkChange(t *testing.T) {
+	mockServer := NewMockServer()
+	defer mockServer.Close()
+
+	// Mock login
+	mockServer.AddHandler("/v2/login", func(w http.ResponseWriter, r *http.Request) {
+		authResp := AuthResponse{AccessToken: "test-token", ExpiresAt: time.Now().Add(time.Hour).Unix()}
+		json.NewEncoder(w).Encode(authResp)
+	})
+
+	// Mock update governance policy - simulate API not returning ID or changed frameworks
+	mockServer.AddHandler("/v2/governance/insights/", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPut {
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
+		policyID := r.URL.Path[len("/v2/governance/insights/"):]
+		if policyID != "68d926e57e33bb411adcb37a" {
+			http.Error(w, "Not found", http.StatusNotFound)
+			return
+		}
+
+		var updateReq GovernancePolicyRequest
+		if err := json.NewDecoder(r.Body).Decode(&updateReq); err != nil {
+			http.Error(w, "Invalid JSON", http.StatusBadRequest)
+			return
+		}
+
+		// Simulate API bug: return empty ID and different framework
+		updateResp := GovernancePolicy{
+			ID:          "", // Simulate missing ID
+			Name:        updateReq.Name,
+			Description: updateReq.Description,
+			Code:        updateReq.Code,
+			Type:        updateReq.Type,
+			ProviderIDs: updateReq.ProviderIDs,
+			Labels:      FlexibleStringArray(updateReq.Labels),
+			Severity:    updateReq.Severity,
+			Category:    updateReq.Category,
+			Frameworks:  []string{"devops"}, // Return different framework than requested
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(updateResp)
+	})
+
+	// Mock list (used by Get to fetch correct state)
+	mockServer.AddHandler("/v2/governance/insights", func(w http.ResponseWriter, r *http.Request) {
+		var listReq GovernancePolicyListRequest
+		json.NewDecoder(r.Body).Decode(&listReq)
+
+		// Return policy with correct frameworks
+		if len(listReq.ID) > 0 && listReq.ID[0] == "68d926e57e33bb411adcb37a" {
+			policy := GovernancePolicy{
+				ID:          "68d926e57e33bb411adcb37a",
+				Name:        "EJR-Test-Required-Labels",
+				Description: "TF test - EJR-Test-Required-Labels",
+				Code:        base64.StdEncoding.EncodeToString([]byte("import future.keywords\nfirefly { labels_exist }")),
+				Type:        []string{"gcpobjects"},
+				ProviderIDs: []string{"gcp_all"},
+				Labels:      FlexibleStringArray{"terraform-test"},
+				Severity:    3, // low
+				Category:    "Optimization",
+				Frameworks:  []string{"tagging_policies"}, // Correct framework
+			}
+
+			response := GovernancePoliciesResponse{
+				Hits:     []GovernancePolicy{policy},
+				Total:    1,
+				Page:     1,
+				PageSize: 1,
+			}
+
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(response)
+		}
+	})
+
+	client, err := NewClient(Config{
+		AccessKey: "test-access",
+		SecretKey: "test-secret",
+		APIURL:    mockServer.URL(),
+	})
+
+	if err != nil {
+		t.Fatalf("Failed to create client: %v", err)
+	}
+
+	// Test updating with framework change
+	policy := &GovernancePolicy{
+		Name:        "EJR-Test-Required-Labels",
+		Description: "TF test - EJR-Test-Required-Labels",
+		Code:        base64.StdEncoding.EncodeToString([]byte("import future.keywords\nfirefly { labels_exist }")),
+		Type:        []string{"gcpobjects"},
+		ProviderIDs: []string{"gcp_all"},
+		Labels:      FlexibleStringArray{"terraform-test"},
+		Severity:    3, // low
+		Category:    "Optimization",
+		Frameworks:  []string{"tagging_policies"}, // Change from devops to tagging_policies
+	}
+
+	response, err := client.GovernancePolicies.Update("68d926e57e33bb411adcb37a", policy)
+	if err != nil {
+		t.Fatalf("Update failed: %v", err)
+	}
+
+	// Even though API returned empty ID, client should preserve it
+	if response.ID != "" {
+		t.Errorf("Expected empty ID from update response (simulating bug), got '%s'", response.ID)
+	}
+
+	// The refetch should get the correct data
+	correctPolicy, err := client.GovernancePolicies.Get("68d926e57e33bb411adcb37a")
+	if err != nil {
+		t.Fatalf("Get after update failed: %v", err)
+	}
+
+	if correctPolicy.ID != "68d926e57e33bb411adcb37a" {
+		t.Errorf("Expected policy ID '68d926e57e33bb411adcb37a', got '%s'", correctPolicy.ID)
+	}
+
+	if len(correctPolicy.Frameworks) != 1 || correctPolicy.Frameworks[0] != "tagging_policies" {
+		t.Errorf("Expected framework 'tagging_policies', got %v", correctPolicy.Frameworks)
+	}
+}
+
 func TestSeverityConversion(t *testing.T) {
 	// Test SeverityToString
 	tests := []struct {
