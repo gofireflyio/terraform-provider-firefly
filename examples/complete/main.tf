@@ -356,6 +356,46 @@ firefly {
   frameworks   = ["SOC2"]
 }
 
+# Backup & DR policies
+resource "firefly_backup_and_dr_application" "production_backup" {
+  policy_name    = "production-daily-backup"
+  description    = "Daily backup of production AWS infrastructure"
+  integration_id = "aws-integration-id"
+  region         = "us-west-2"
+  provider_type  = "aws"
+
+  schedule {
+    frequency = "Daily"
+    hour      = 2
+    minute    = 0
+  }
+
+  scope {
+    type  = "tags"
+    value = ["env:production", "backup:enabled"]
+  }
+}
+
+resource "firefly_backup_and_dr_application" "staging_backup" {
+  policy_name    = "staging-weekly-backup"
+  description    = "Weekly backup of staging environment"
+  integration_id = "aws-integration-id"
+  region         = "us-west-2"
+  provider_type  = "aws"
+
+  schedule {
+    frequency    = "Weekly"
+    hour         = 4
+    minute       = 0
+    days_of_week = ["Saturday"]
+  }
+
+  scope {
+    type  = "tags"
+    value = ["env:staging"]
+  }
+}
+
 # Data sources for existing resources
 data "firefly_workflows_projects" "all_projects" {
   search_query = "infrastructure"
@@ -368,6 +408,8 @@ data "firefly_workflows_variable_sets" "shared_sets" {
 data "firefly_governance_policies" "security_policies" {
   category = "Security"
 }
+
+data "firefly_backup_and_dr_applications" "all_backups" {}
 
 # Outputs
 output "production_project_info" {
@@ -424,4 +466,27 @@ output "security_policies_summary" {
     count = length(data.firefly_governance_policies.security_policies.policies)
     names = [for policy in data.firefly_governance_policies.security_policies.policies : policy.name]
   }
+}
+
+output "backup_policy_info" {
+  description = "Backup & DR policy information"
+  value = {
+    production = {
+      id     = firefly_backup_and_dr_application.production_backup.id
+      status = firefly_backup_and_dr_application.production_backup.status
+    }
+    staging = {
+      id     = firefly_backup_and_dr_application.staging_backup.id
+      status = firefly_backup_and_dr_application.staging_backup.status
+    }
+  }
+}
+
+output "all_backup_policies" {
+  description = "All backup policies"
+  value = [for app in data.firefly_backup_and_dr_applications.all_backups.applications : {
+    name   = app.policy_name
+    region = app.region
+    status = app.status
+  }]
 }
