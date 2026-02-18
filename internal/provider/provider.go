@@ -148,6 +148,7 @@ func (p *FireflyProvider) DataSources(_ context.Context) []func() datasource.Dat
 		NewVariableSetsDataSource,
 		NewVariableSetDataSource,
 		NewGovernancePoliciesDataSource,
+		NewBackupAndDrApplicationsDataSource,
 	}
 }
 
@@ -161,5 +162,6 @@ func (p *FireflyProvider) Resources(_ context.Context) []func() resource.Resourc
 		NewRunnersWorkspaceResource,
 		NewVariableSetResource,
 		NewGovernancePolicyResource,
+		NewBackupAndDrApplicationResource,
 	}
 }

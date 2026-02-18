@@ -28,13 +28,13 @@ type Client struct {
 	baseURL    *url.URL
 	userAgent  string
 	httpClient *http.Client
-	
+
 	// Authentication
-	accessKey  string
-	secretKey  string
-	authToken  string
-	expiresAt  time.Time
-	
+	accessKey string
+	secretKey string
+	authToken string
+	expiresAt time.Time
+
 	// Services
 	Workspaces         *WorkspaceService
 	Guardrails         *GuardrailService
@@ -42,6 +42,7 @@ type Client struct {
 	RunnersWorkspaces  *RunnersWorkspaceService
 	VariableSets       *VariableSetService
 	GovernancePolicies *GovernancePolicyService
+	BackupAndDr        *BackupAndDrService
 }
 
 // AuthResponse represents the response from the login endpoint
@@ -56,28 +57,28 @@ func NewClient(config Config) (*Client, error) {
 	if config.AccessKey == "" {
 		return nil, fmt.Errorf("access key is required")
 	}
-	
+
 	if config.SecretKey == "" {
 		return nil, fmt.Errorf("secret key is required")
 	}
-	
+
 	baseURL := defaultBaseURL
 	if config.APIURL != "" {
 		baseURL = config.APIURL
 	}
-	
+
 	parsedBaseURL, err := url.Parse(baseURL)
 	if err != nil {
 		return nil, fmt.Errorf("invalid API URL: %s", err)
 	}
-	
+
 	httpClient := config.HTTPClient
 	if httpClient == nil {
 		httpClient = &http.Client{
 			Timeout: time.Second * 120, // Increased from 30s to 120s for governance policy operations
 		}
 	}
-	
+
 	c := &Client{
 		baseURL:    parsedBaseURL,
 		userAgent:  defaultUserAgent,
@@ -85,7 +86,7 @@ func NewClient(config Config) (*Client, error) {
 		accessKey:  config.AccessKey,
 		secretKey:  config.SecretKey,
 	}
-	
+
 	// Create service endpoints
 	c.Workspaces = &WorkspaceService{client: c}
 	c.Guardrails = &GuardrailService{client: c}
@@ -93,7 +94,8 @@ func NewClient(config Config) (*Client, error) {
 	c.RunnersWorkspaces = &RunnersWorkspaceService{client: c}
 	c.VariableSets = &VariableSetService{client: c}
 	c.GovernancePolicies = &GovernancePolicyService{client: c}
-	
+	c.BackupAndDr = &BackupAndDrService{client: c}
+
 	return c, nil
 }
 
@@ -103,7 +105,7 @@ func (c *Client) ensureAuthenticated() error {
 	if c.authToken != "" && time.Now().Before(c.expiresAt) {
 		return nil
 	}
-	
+
 	// Otherwise, we need to authenticate
 	reqBody, err := json.Marshal(map[string]string{
 		"accessKey": c.accessKey,
@@ -112,34 +114,34 @@ func (c *Client) ensureAuthenticated() error {
 	if err != nil {
 		return fmt.Errorf("error encoding login request: %s", err)
 	}
-	
+
 	req, err := http.NewRequest(http.MethodPost, fmt.Sprintf("%s/v2/login", c.baseURL), bytes.NewBuffer(reqBody))
 	if err != nil {
 		return fmt.Errorf("error creating login request: %s", err)
 	}
-	
+
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("User-Agent", c.userAgent)
-	
+
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return fmt.Errorf("error executing login request: %s", err)
 	}
 	defer resp.Body.Close()
-	
+
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
 		return fmt.Errorf("login failed with status %d: %s", resp.StatusCode, string(body))
 	}
-	
+
 	var authResp AuthResponse
 	if err := json.NewDecoder(resp.Body).Decode(&authResp); err != nil {
 		return fmt.Errorf("error decoding login response: %s", err)
 	}
-	
+
 	c.authToken = authResp.AccessToken
 	c.expiresAt = time.Unix(authResp.ExpiresAt, 0)
-	
+
 	return nil
 }
 
@@ -149,11 +151,11 @@ func (c *Client) doRequest(req *http.Request) (*http.Response, error) {
 	if err := c.ensureAuthenticated(); err != nil {
 		return nil, err
 	}
-	
+
 	// Set common headers
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", c.authToken))
 	req.Header.Set("User-Agent", c.userAgent)
-	
+
 	// Execute the request
 	return c.httpClient.Do(req)
 }
@@ -164,7 +166,7 @@ func (c *Client) newRequest(method, path string, body interface{}) (*http.Reques
 	if err != nil {
 		return nil, err
 	}
-	
+
 	var buf io.ReadWriter
 	if body != nil {
 		buf = new(bytes.Buffer)
@@ -173,15 +175,15 @@ func (c *Client) newRequest(method, path string, body interface{}) (*http.Reques
 			return nil, err
 		}
 	}
-	
+
 	req, err := http.NewRequest(method, u.String(), buf)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	if body != nil {
 		req.Header.Set("Content-Type", "application/json")
 	}
-	
+
 	return req, nil
 }
