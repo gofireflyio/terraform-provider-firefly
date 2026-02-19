@@ -231,47 +231,19 @@ func (d *BackupAndDrApplicationsDataSource) Read(ctx context.Context, req dataso
 		}
 
 		// Optional string fields
-		if policy.Description != "" {
-			policyModel.Description = types.StringValue(policy.Description)
-		} else {
-			policyModel.Description = types.StringNull()
-		}
+		policyModel.Description = StringValueOrNull(policy.Description)
 
-		if policy.NotificationID != "" {
-			policyModel.NotificationID = types.StringValue(policy.NotificationID)
-		} else {
-			policyModel.NotificationID = types.StringNull()
-		}
+		policyModel.NotificationID = StringValueOrNull(policy.NotificationID)
 
-		if policy.RestoreInstructions != "" {
-			policyModel.RestoreInstructions = types.StringValue(policy.RestoreInstructions)
-		} else {
-			policyModel.RestoreInstructions = types.StringNull()
-		}
+		policyModel.RestoreInstructions = StringValueOrNull(policy.RestoreInstructions)
 
-		if policy.LastBackupSnapshotID != "" {
-			policyModel.LastBackupSnapshotID = types.StringValue(policy.LastBackupSnapshotID)
-		} else {
-			policyModel.LastBackupSnapshotID = types.StringNull()
-		}
+		policyModel.LastBackupSnapshotID = StringValueOrNull(policy.LastBackupSnapshotID)
 
-		if policy.LastBackupTime != "" {
-			policyModel.LastBackupTime = types.StringValue(policy.LastBackupTime)
-		} else {
-			policyModel.LastBackupTime = types.StringNull()
-		}
+		policyModel.LastBackupTime = StringValueOrNull(policy.LastBackupTime)
 
-		if policy.LastBackupStatus != "" {
-			policyModel.LastBackupStatus = types.StringValue(policy.LastBackupStatus)
-		} else {
-			policyModel.LastBackupStatus = types.StringNull()
-		}
+		policyModel.LastBackupStatus = StringValueOrNull(policy.LastBackupStatus)
 
-		if policy.NextBackupTime != "" {
-			policyModel.NextBackupTime = types.StringValue(policy.NextBackupTime)
-		} else {
-			policyModel.NextBackupTime = types.StringNull()
-		}
+		policyModel.NextBackupTime = StringValueOrNull(policy.NextBackupTime)
 
 		data.Policies[i] = policyModel
 	}

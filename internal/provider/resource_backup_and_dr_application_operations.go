@@ -9,6 +9,15 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
+// StringValueOrNull returns a types.String with a value if the input is non-empty,
+// otherwise returns a null types.String.
+func StringValueOrNull(s string) types.String {
+	if s != "" {
+		return types.StringValue(s)
+	}
+	return types.StringNull()
+}
+
 // mapModelToAPIRequest converts the Terraform model to an API request
 func mapModelToAPIRequest(ctx context.Context, model *BackupAndDrApplicationResourceModel) (*client.PolicyCreateRequest, error) {
 	// Validate schedule first
@@ -135,26 +144,14 @@ func mapAPIResponseToModel(response *client.PolicyResponse, model *BackupAndDrAp
 	model.Region = types.StringValue(response.Region)
 	model.ProviderType = types.StringValue(response.ProviderType)
 
-	if response.Description != "" {
-		model.Description = types.StringValue(response.Description)
-	} else {
-		model.Description = types.StringNull()
-	}
+	model.Description = StringValueOrNull(response.Description)
 
 	// Note: backup_on_save is write-only (only in CREATE requests), not returned by API
 	// We preserve the value from the plan/config instead of reading from API response
 
-	if response.NotificationID != "" {
-		model.NotificationID = types.StringValue(response.NotificationID)
-	} else {
-		model.NotificationID = types.StringNull()
-	}
+	model.NotificationID = StringValueOrNull(response.NotificationID)
 
-	if response.RestoreInstructions != "" {
-		model.RestoreInstructions = types.StringValue(response.RestoreInstructions)
-	} else {
-		model.RestoreInstructions = types.StringNull()
-	}
+	model.RestoreInstructions = StringValueOrNull(response.RestoreInstructions)
 
 	// Update schedule (always present)
 	scheduleModel := &ScheduleModel{
@@ -179,11 +176,7 @@ func mapAPIResponseToModel(response *client.PolicyResponse, model *BackupAndDrAp
 		scheduleModel.DaysOfWeek = types.ListNull(types.StringType)
 	}
 
-	if response.Schedule.MonthlyScheduleType != "" {
-		scheduleModel.MonthlyScheduleType = types.StringValue(response.Schedule.MonthlyScheduleType)
-	} else {
-		scheduleModel.MonthlyScheduleType = types.StringNull()
-	}
+	scheduleModel.MonthlyScheduleType = StringValueOrNull(response.Schedule.MonthlyScheduleType)
 
 	if response.Schedule.DayOfMonth != 0 {
 		scheduleModel.DayOfMonth = types.Int64Value(int64(response.Schedule.DayOfMonth))
@@ -191,23 +184,11 @@ func mapAPIResponseToModel(response *client.PolicyResponse, model *BackupAndDrAp
 		scheduleModel.DayOfMonth = types.Int64Null()
 	}
 
-	if response.Schedule.WeekdayOrdinal != "" {
-		scheduleModel.WeekdayOrdinal = types.StringValue(response.Schedule.WeekdayOrdinal)
-	} else {
-		scheduleModel.WeekdayOrdinal = types.StringNull()
-	}
+	scheduleModel.WeekdayOrdinal = StringValueOrNull(response.Schedule.WeekdayOrdinal)
 
-	if response.Schedule.WeekdayName != "" {
-		scheduleModel.WeekdayName = types.StringValue(response.Schedule.WeekdayName)
-	} else {
-		scheduleModel.WeekdayName = types.StringNull()
-	}
+	scheduleModel.WeekdayName = StringValueOrNull(response.Schedule.WeekdayName)
 
-	if response.Schedule.CronExpression != "" {
-		scheduleModel.CronExpression = types.StringValue(response.Schedule.CronExpression)
-	} else {
-		scheduleModel.CronExpression = types.StringNull()
-	}
+	scheduleModel.CronExpression = StringValueOrNull(response.Schedule.CronExpression)
 
 	model.Schedule = scheduleModel
 
@@ -233,23 +214,11 @@ func mapAPIResponseToModel(response *client.PolicyResponse, model *BackupAndDrAp
 	if response.VCS != nil {
 		vcsModel := &VCSModel{}
 
-		if response.VCS.ProjectID != "" {
-			vcsModel.ProjectID = types.StringValue(response.VCS.ProjectID)
-		} else {
-			vcsModel.ProjectID = types.StringNull()
-		}
+		vcsModel.ProjectID = StringValueOrNull(response.VCS.ProjectID)
 
-		if response.VCS.VCSIntegrationID != "" {
-			vcsModel.VCSIntegrationID = types.StringValue(response.VCS.VCSIntegrationID)
-		} else {
-			vcsModel.VCSIntegrationID = types.StringNull()
-		}
+		vcsModel.VCSIntegrationID = StringValueOrNull(response.VCS.VCSIntegrationID)
 
-		if response.VCS.RepoID != "" {
-			vcsModel.RepoID = types.StringValue(response.VCS.RepoID)
-		} else {
-			vcsModel.RepoID = types.StringNull()
-		}
+		vcsModel.RepoID = StringValueOrNull(response.VCS.RepoID)
 
 		model.VCS = vcsModel
 	} else {
@@ -260,29 +229,13 @@ func mapAPIResponseToModel(response *client.PolicyResponse, model *BackupAndDrAp
 	model.Status = types.StringValue(response.Status)
 	model.SnapshotsCount = types.Int64Value(int64(response.SnapshotsCount))
 
-	if response.LastBackupSnapshotID != "" {
-		model.LastBackupSnapshotID = types.StringValue(response.LastBackupSnapshotID)
-	} else {
-		model.LastBackupSnapshotID = types.StringNull()
-	}
+	model.LastBackupSnapshotID = StringValueOrNull(response.LastBackupSnapshotID)
 
-	if response.LastBackupTime != "" {
-		model.LastBackupTime = types.StringValue(response.LastBackupTime)
-	} else {
-		model.LastBackupTime = types.StringNull()
-	}
+	model.LastBackupTime = StringValueOrNull(response.LastBackupTime)
 
-	if response.LastBackupStatus != "" {
-		model.LastBackupStatus = types.StringValue(response.LastBackupStatus)
-	} else {
-		model.LastBackupStatus = types.StringNull()
-	}
+	model.LastBackupStatus = StringValueOrNull(response.LastBackupStatus)
 
-	if response.NextBackupTime != "" {
-		model.NextBackupTime = types.StringValue(response.NextBackupTime)
-	} else {
-		model.NextBackupTime = types.StringNull()
-	}
+	model.NextBackupTime = StringValueOrNull(response.NextBackupTime)
 
 	model.CreatedAt = types.StringValue(response.CreatedAt)
 	model.UpdatedAt = types.StringValue(response.UpdatedAt)

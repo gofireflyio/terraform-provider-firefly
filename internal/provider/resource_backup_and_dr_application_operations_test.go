@@ -9,6 +9,45 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
+// Unit tests for StringValueOrNull helper
+
+func TestStringValueOrNull_EmptyString(t *testing.T) {
+	result := StringValueOrNull("")
+	if !result.IsNull() {
+		t.Error("Expected null types.String for empty string, got value")
+	}
+}
+
+func TestStringValueOrNull_NonEmptyString(t *testing.T) {
+	result := StringValueOrNull("test-value")
+	if result.IsNull() {
+		t.Error("Expected non-null types.String for non-empty string, got null")
+	}
+	if result.ValueString() != "test-value" {
+		t.Errorf("Expected value 'test-value', got '%s'", result.ValueString())
+	}
+}
+
+func TestStringValueOrNull_WhitespaceString(t *testing.T) {
+	result := StringValueOrNull("   ")
+	if result.IsNull() {
+		t.Error("Expected non-null types.String for whitespace string (not treated as empty), got null")
+	}
+	if result.ValueString() != "   " {
+		t.Errorf("Expected value '   ', got '%s'", result.ValueString())
+	}
+}
+
+func TestStringValueOrNull_SingleCharacter(t *testing.T) {
+	result := StringValueOrNull("a")
+	if result.IsNull() {
+		t.Error("Expected non-null types.String for single character, got null")
+	}
+	if result.ValueString() != "a" {
+		t.Errorf("Expected value 'a', got '%s'", result.ValueString())
+	}
+}
+
 // Unit tests for schedule validation
 
 func TestValidateScheduleConfig_Daily(t *testing.T) {
