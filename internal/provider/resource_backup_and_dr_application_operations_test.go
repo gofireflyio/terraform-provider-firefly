@@ -178,7 +178,7 @@ func TestMapModelToAPIRequest_Daily(t *testing.T) {
 	ctx := context.Background()
 	model := &BackupAndDrApplicationResourceModel{
 		AccountID:     types.StringValue("test-account"),
-		PolicyName:    types.StringValue("Test Policy"),
+		ApplicationName:    types.StringValue("Test Policy"),
 		IntegrationID: types.StringValue("int-123"),
 		Region:        types.StringValue("us-east-1"),
 		ProviderType:  types.StringValue("aws"),
@@ -232,7 +232,7 @@ func TestMapModelToAPIRequest_WithScope(t *testing.T) {
 
 	model := &BackupAndDrApplicationResourceModel{
 		AccountID:     types.StringValue("test-account"),
-		PolicyName:    types.StringValue("Scoped Policy"),
+		ApplicationName:    types.StringValue("Scoped Policy"),
 		IntegrationID: types.StringValue("int-123"),
 		Region:        types.StringValue("us-east-1"),
 		ProviderType:  types.StringValue("aws"),
@@ -279,7 +279,7 @@ func TestMapModelToAPIRequest_WithVCS(t *testing.T) {
 	ctx := context.Background()
 	model := &BackupAndDrApplicationResourceModel{
 		AccountID:     types.StringValue("test-account"),
-		PolicyName:    types.StringValue("VCS Policy"),
+		ApplicationName:    types.StringValue("VCS Policy"),
 		IntegrationID: types.StringValue("int-123"),
 		Region:        types.StringValue("us-east-1"),
 		ProviderType:  types.StringValue("aws"),
@@ -354,8 +354,8 @@ func TestMapAPIResponseToModel(t *testing.T) {
 		t.Errorf("Expected AccountID 'account-456', got '%s'", model.AccountID.ValueString())
 	}
 
-	if model.PolicyName.ValueString() != "Test Policy" {
-		t.Errorf("Expected PolicyName 'Test Policy', got '%s'", model.PolicyName.ValueString())
+	if model.ApplicationName.ValueString() != "Test Policy" {
+		t.Errorf("Expected ApplicationName 'Test Policy', got '%s'", model.ApplicationName.ValueString())
 	}
 
 	if model.Status.ValueString() != "Active" {

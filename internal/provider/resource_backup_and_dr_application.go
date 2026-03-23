@@ -40,18 +40,18 @@ func (r *BackupAndDrApplicationResource) Metadata(ctx context.Context, req resou
 
 func (r *BackupAndDrApplicationResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Manages a Firefly Backup & DR application (backup policy)",
+		MarkdownDescription: "Manages a Firefly Backup & DR application",
 
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
-				MarkdownDescription: "The unique identifier of the backup policy",
+				MarkdownDescription: "The unique identifier of the backup application",
 				Computed:            true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 			"account_id": schema.StringAttribute{
-				MarkdownDescription: "The account ID for the backup policy",
+				MarkdownDescription: "The account ID for the backup application",
 				Required:            true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -60,8 +60,8 @@ func (r *BackupAndDrApplicationResource) Schema(ctx context.Context, req resourc
 					stringvalidator.LengthAtLeast(1),
 				},
 			},
-			"policy_name": schema.StringAttribute{
-				MarkdownDescription: "The name of the backup policy (max 100 characters)",
+			"application_name": schema.StringAttribute{
+				MarkdownDescription: "The name of the backup application (max 100 characters)",
 				Required:            true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 100),
@@ -89,7 +89,7 @@ func (r *BackupAndDrApplicationResource) Schema(ctx context.Context, req resourc
 				},
 			},
 			"description": schema.StringAttribute{
-				MarkdownDescription: "Description of the backup policy (max 500 characters)",
+				MarkdownDescription: "Description of the backup application (max 500 characters)",
 				Optional:            true,
 				Validators: []validator.String{
 					stringvalidator.LengthAtMost(500),
@@ -107,21 +107,21 @@ func (r *BackupAndDrApplicationResource) Schema(ctx context.Context, req resourc
 				},
 			},
 			"backup_on_save": schema.BoolAttribute{
-				MarkdownDescription: "Whether to trigger a backup immediately on policy creation/update",
+				MarkdownDescription: "Whether to trigger a backup immediately on application creation/update",
 				Optional:            true,
 				Computed:            true,
 				Default:             booldefault.StaticBool(true),
 			},
 			// Computed fields
 			"status": schema.StringAttribute{
-				MarkdownDescription: "Current status of the policy (Active/Inactive)",
+				MarkdownDescription: "Current status of the application (Active/Inactive)",
 				Computed:            true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 			"snapshots_count": schema.Int64Attribute{
-				MarkdownDescription: "Number of snapshots created by this policy",
+				MarkdownDescription: "Number of snapshots created by this application",
 				Computed:            true,
 			},
 			"last_backup_snapshot_id": schema.StringAttribute{
@@ -141,11 +141,11 @@ func (r *BackupAndDrApplicationResource) Schema(ctx context.Context, req resourc
 				Computed:            true,
 			},
 			"created_at": schema.StringAttribute{
-				MarkdownDescription: "Timestamp when the policy was created",
+				MarkdownDescription: "Timestamp when the application was created",
 				Computed:            true,
 			},
 			"updated_at": schema.StringAttribute{
-				MarkdownDescription: "Timestamp when the policy was last updated",
+				MarkdownDescription: "Timestamp when the application was last updated",
 				Computed:            true,
 			},
 		},
@@ -209,8 +209,9 @@ func (r *BackupAndDrApplicationResource) Schema(ctx context.Context, req resourc
 						Optional:            true,
 					},
 					"cron_expression": schema.StringAttribute{
-						MarkdownDescription: "Cron expression as alternative to explicit schedule",
+						MarkdownDescription: "Cron expression as alternative to explicit schedule. If not provided, it may be computed by the server based on the schedule configuration.",
 						Optional:            true,
+						Computed:            true,
 					},
 				},
 			},
@@ -219,10 +220,10 @@ func (r *BackupAndDrApplicationResource) Schema(ctx context.Context, req resourc
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"type": schema.StringAttribute{
-							MarkdownDescription: "Scope type (tags, resource_group, asset_types, selected_resources)",
+							MarkdownDescription: "Scope type (tags, resource_group, asset_types, exclude_asset_types, selected_resources)",
 							Required:            true,
 							Validators: []validator.String{
-								stringvalidator.OneOf("tags", "resource_group", "asset_types", "selected_resources"),
+								stringvalidator.OneOf("tags", "resource_group", "asset_types", "exclude_asset_types", "selected_resources"),
 							},
 						},
 						"value": schema.ListAttribute{
@@ -288,13 +289,13 @@ func (r *BackupAndDrApplicationResource) Create(ctx context.Context, req resourc
 	request, err := mapModelToAPIRequest(ctx, &data)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error creating backup policy",
+			"Error creating backup application",
 			fmt.Sprintf("Could not convert model to API request: %s", err),
 		)
 		return
 	}
 
-	tflog.Debug(ctx, "Creating backup policy", map[string]interface{}{
+	tflog.Debug(ctx, "Creating backup application", map[string]interface{}{
 		"account_id":  data.AccountID.ValueString(),
 		"policy_name": request.PolicyName,
 	})
@@ -303,13 +304,13 @@ func (r *BackupAndDrApplicationResource) Create(ctx context.Context, req resourc
 	createdPolicy, err := r.client.BackupAndDr.Create(request)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error creating backup policy",
-			fmt.Sprintf("Could not create backup policy: %s", err),
+			"Error creating backup application",
+			fmt.Sprintf("Could not create backup application: %s", err),
 		)
 		return
 	}
 
-	tflog.Debug(ctx, "Created backup policy", map[string]interface{}{
+	tflog.Debug(ctx, "Created backup application", map[string]interface{}{
 		"policy_id":   createdPolicy.PolicyID,
 		"policy_name": createdPolicy.PolicyName,
 		"status":      createdPolicy.Status,
@@ -319,7 +320,7 @@ func (r *BackupAndDrApplicationResource) Create(ctx context.Context, req resourc
 	err = mapAPIResponseToModel(createdPolicy, &data)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error creating backup policy",
+			"Error creating backup application",
 			fmt.Sprintf("Could not map API response to model: %s", err),
 		)
 		return
@@ -339,7 +340,7 @@ func (r *BackupAndDrApplicationResource) Read(ctx context.Context, req resource.
 
 	policyID := data.ID.ValueString()
 
-	tflog.Debug(ctx, "Reading backup policy", map[string]interface{}{
+	tflog.Debug(ctx, "Reading backup application", map[string]interface{}{
 		"account_id": data.AccountID.ValueString(),
 		"policy_id":  policyID,
 	})
@@ -351,7 +352,7 @@ func (r *BackupAndDrApplicationResource) Read(ctx context.Context, req resource.
 		if strings.Contains(errorMsg, "policy not found") ||
 			strings.Contains(errorMsg, "not found") ||
 			strings.Contains(errorMsg, "status 404") {
-			tflog.Info(ctx, "Backup policy not found, removing from state", map[string]interface{}{
+			tflog.Info(ctx, "Backup application not found, removing from state", map[string]interface{}{
 				"account_id": data.AccountID.ValueString(),
 				"policy_id":  policyID,
 			})
@@ -360,8 +361,8 @@ func (r *BackupAndDrApplicationResource) Read(ctx context.Context, req resource.
 		}
 
 		resp.Diagnostics.AddError(
-			"Error reading backup policy",
-			fmt.Sprintf("Could not read backup policy: %s", err),
+			"Error reading backup application",
+			fmt.Sprintf("Could not read backup application: %s", err),
 		)
 		return
 	}
@@ -370,7 +371,7 @@ func (r *BackupAndDrApplicationResource) Read(ctx context.Context, req resource.
 	err = mapAPIResponseToModel(policy, &data)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error reading backup policy",
+			"Error reading backup application",
 			fmt.Sprintf("Could not map API response to model: %s", err),
 		)
 		return
@@ -392,7 +393,7 @@ func (r *BackupAndDrApplicationResource) Update(ctx context.Context, req resourc
 	request, err := mapModelToAPIRequest(ctx, &data)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error updating backup policy",
+			"Error updating backup application",
 			fmt.Sprintf("Could not convert model to API request: %s", err),
 		)
 		return
@@ -400,7 +401,7 @@ func (r *BackupAndDrApplicationResource) Update(ctx context.Context, req resourc
 
 	policyID := data.ID.ValueString()
 
-	tflog.Debug(ctx, "Updating backup policy", map[string]interface{}{
+	tflog.Debug(ctx, "Updating backup application", map[string]interface{}{
 		"account_id":  data.AccountID.ValueString(),
 		"policy_id":   policyID,
 		"policy_name": request.PolicyName,
@@ -413,13 +414,13 @@ func (r *BackupAndDrApplicationResource) Update(ctx context.Context, req resourc
 	updatedPolicy, err := r.client.BackupAndDr.Update(policyID, updateRequest)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error updating backup policy",
-			fmt.Sprintf("Could not update backup policy: %s", err),
+			"Error updating backup application",
+			fmt.Sprintf("Could not update backup application: %s", err),
 		)
 		return
 	}
 
-	tflog.Debug(ctx, "Updated backup policy", map[string]interface{}{
+	tflog.Debug(ctx, "Updated backup application", map[string]interface{}{
 		"policy_id":   updatedPolicy.PolicyID,
 		"policy_name": updatedPolicy.PolicyName,
 		"status":      updatedPolicy.Status,
@@ -429,7 +430,7 @@ func (r *BackupAndDrApplicationResource) Update(ctx context.Context, req resourc
 	err = mapAPIResponseToModel(updatedPolicy, &data)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error updating backup policy",
+			"Error updating backup application",
 			fmt.Sprintf("Could not map API response to model: %s", err),
 		)
 		return
@@ -449,7 +450,7 @@ func (r *BackupAndDrApplicationResource) Delete(ctx context.Context, req resourc
 
 	policyID := data.ID.ValueString()
 
-	tflog.Debug(ctx, "Deleting backup policy", map[string]interface{}{
+	tflog.Debug(ctx, "Deleting backup application", map[string]interface{}{
 		"account_id": data.AccountID.ValueString(),
 		"policy_id":  policyID,
 	})
@@ -457,33 +458,33 @@ func (r *BackupAndDrApplicationResource) Delete(ctx context.Context, req resourc
 	err := r.client.BackupAndDr.Delete(policyID)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error deleting backup policy",
-			fmt.Sprintf("Could not delete backup policy: %s", err),
+			"Error deleting backup application",
+			fmt.Sprintf("Could not delete backup application: %s", err),
 		)
 		return
 	}
 
-	tflog.Debug(ctx, "Deleted backup policy", map[string]interface{}{
+	tflog.Debug(ctx, "Deleted backup application", map[string]interface{}{
 		"account_id": data.AccountID.ValueString(),
 		"policy_id":  policyID,
 	})
 }
 
 func (r *BackupAndDrApplicationResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	// Parse the import ID in format "account_id:policy_id"
+	// Parse the import ID in format "account_id:application_id"
 	parts := strings.Split(req.ID, ":")
 	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
 		resp.Diagnostics.AddError(
-			"Error importing backup policy",
-			fmt.Sprintf("Invalid import ID format. Expected 'account_id:policy_id', got: %s", req.ID),
+			"Error importing backup application",
+			fmt.Sprintf("Invalid import ID format. Expected 'account_id:application_id', got: %s", req.ID),
 		)
 		return
 	}
 
 	accountID := parts[0]
-	policyID := parts[1]
+	applicationID := parts[1]
 
 	// Set both IDs in state
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("account_id"), accountID)...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), policyID)...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), applicationID)...)
 }

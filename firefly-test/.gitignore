@@ -1,0 +1,16 @@
+# Terraform files
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
+
+# Sensitive files - NEVER commit these
+terraform.tfvars
+*.auto.tfvars
+
+# Crash log files
+crash.log
+
+# Local environment files
+.env
+.env.local

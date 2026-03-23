@@ -41,7 +41,7 @@ type PolicyUpdateRequest struct {
 	NotificationID      *string         `json:"notificationId,omitempty"`
 	VCS                 *VCSConfig      `json:"vcs,omitempty"`
 	RestoreInstructions *string         `json:"restore_instructions,omitempty"`
-	// Note: backup_on_save is only for creation, not updates
+	BackupOnSave        *bool           `json:"backup_on_save,omitempty"`
 }
 
 // PolicyResponse represents a backup policy from API responses
@@ -164,6 +164,8 @@ func ConvertCreateToUpdate(create *PolicyCreateRequest) *PolicyUpdateRequest {
 	if create.VCS != nil {
 		update.VCS = create.VCS
 	}
+
+	update.BackupOnSave = &create.BackupOnSave
 
 	return update
 }

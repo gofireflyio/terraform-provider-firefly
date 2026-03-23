@@ -16,10 +16,10 @@ func TestAccBackupAndDrApplicationsDataSource(t *testing.T) {
 				Config: testAccBackupAndDrApplicationsDataSourceConfig(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					// Check the resource was created
-					resource.TestCheckResourceAttr("firefly_backup_and_dr_application.test", "policy_name", "data-source-test-policy"),
+					resource.TestCheckResourceAttr("firefly_backup_and_dr_application.test", "application_name", "data-source-test-policy"),
 					// Check the data source can read it
 					resource.TestCheckResourceAttrSet("data.firefly_backup_and_dr_applications.test", "id"),
-					resource.TestCheckResourceAttrSet("data.firefly_backup_and_dr_applications.test", "policies.#"),
+					resource.TestCheckResourceAttrSet("data.firefly_backup_and_dr_applications.test", "applications.#"),
 				),
 			},
 		},
@@ -83,7 +83,7 @@ func testAccBackupAndDrApplicationsDataSourceConfig() string {
 	return `
 resource "firefly_backup_and_dr_application" "test" {
   account_id     = "test-account-id"
-  policy_name    = "data-source-test-policy"
+  application_name    = "data-source-test-policy"
   integration_id = "test-integration-id"
   region         = "us-east-1"
   provider_type  = "aws"
@@ -109,7 +109,7 @@ func testAccBackupAndDrApplicationsDataSourceConfigFilterByStatus() string {
 	return `
 resource "firefly_backup_and_dr_application" "active_test" {
   account_id     = "test-account-id"
-  policy_name    = "active-policy"
+  application_name    = "active-policy"
   integration_id = "test-integration-id"
   region         = "us-east-1"
   provider_type  = "aws"
@@ -136,7 +136,7 @@ func testAccBackupAndDrApplicationsDataSourceConfigFilterByRegion() string {
 	return `
 resource "firefly_backup_and_dr_application" "regional_test" {
   account_id     = "test-account-id"
-  policy_name    = "regional-policy"
+  application_name    = "regional-policy"
   integration_id = "test-integration-id"
   region         = "us-east-1"
   provider_type  = "aws"
@@ -164,7 +164,7 @@ func testAccBackupAndDrApplicationsDataSourceConfigMultipleFilters() string {
 	return `
 resource "firefly_backup_and_dr_application" "multi_filter_test" {
   account_id     = "test-account-id"
-  policy_name    = "multi-filter-policy"
+  application_name    = "multi-filter-policy"
   integration_id = "test-integration-id"
   region         = "us-west-2"
   provider_type  = "aws"

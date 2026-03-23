@@ -70,7 +70,7 @@ func mapModelToAPIRequest(ctx context.Context, model *BackupAndDrApplicationReso
 
 	// Build base request
 	request := &client.PolicyCreateRequest{
-		PolicyName:    model.PolicyName.ValueString(),
+		PolicyName:    model.ApplicationName.ValueString(),
 		IntegrationID: model.IntegrationID.ValueString(),
 		Region:        model.Region.ValueString(),
 		ProviderType:  model.ProviderType.ValueString(),
@@ -139,15 +139,14 @@ func mapAPIResponseToModel(response *client.PolicyResponse, model *BackupAndDrAp
 	model.AccountID = types.StringValue(response.AccountID)
 
 	// Update all user-provided fields from API (API is source of truth)
-	model.PolicyName = types.StringValue(response.PolicyName)
+	model.ApplicationName = types.StringValue(response.PolicyName)
 	model.IntegrationID = types.StringValue(response.IntegrationID)
 	model.Region = types.StringValue(response.Region)
 	model.ProviderType = types.StringValue(response.ProviderType)
 
 	model.Description = StringValueOrNull(response.Description)
 
-	// Note: backup_on_save is write-only (only in CREATE requests), not returned by API
-	// We preserve the value from the plan/config instead of reading from API response
+	model.BackupOnSave = types.BoolValue(response.BackupOnSave)
 
 	model.NotificationID = StringValueOrNull(response.NotificationID)
 
