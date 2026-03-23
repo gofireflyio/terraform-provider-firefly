@@ -178,7 +178,7 @@ func TestMapModelToAPIRequest_Daily(t *testing.T) {
 	ctx := context.Background()
 	model := &BackupAndDrApplicationResourceModel{
 		AccountID:     types.StringValue("test-account"),
-		PolicyName:    types.StringValue("Test Policy"),
+		ApplicationName:    types.StringValue("Test Policy"),
 		IntegrationID: types.StringValue("int-123"),
 		Region:        types.StringValue("us-east-1"),
 		ProviderType:  types.StringValue("aws"),
@@ -232,7 +232,7 @@ func TestMapModelToAPIRequest_WithScope(t *testing.T) {
 
 	model := &BackupAndDrApplicationResourceModel{
 		AccountID:     types.StringValue("test-account"),
-		PolicyName:    types.StringValue("Scoped Policy"),
+		ApplicationName:    types.StringValue("Scoped Policy"),
 		IntegrationID: types.StringValue("int-123"),
 		Region:        types.StringValue("us-east-1"),
 		ProviderType:  types.StringValue("aws"),
@@ -279,7 +279,7 @@ func TestMapModelToAPIRequest_WithVCS(t *testing.T) {
 	ctx := context.Background()
 	model := &BackupAndDrApplicationResourceModel{
 		AccountID:     types.StringValue("test-account"),
-		PolicyName:    types.StringValue("VCS Policy"),
+		ApplicationName:    types.StringValue("VCS Policy"),
 		IntegrationID: types.StringValue("int-123"),
 		Region:        types.StringValue("us-east-1"),
 		ProviderType:  types.StringValue("aws"),
@@ -340,7 +340,9 @@ func TestMapAPIResponseToModel(t *testing.T) {
 		UpdatedAt: "2025-01-01T10:00:00Z",
 	}
 
-	model := &BackupAndDrApplicationResourceModel{}
+	model := &BackupAndDrApplicationResourceModel{
+		AccountID: types.StringValue("account-456"),
+	}
 	err := mapAPIResponseToModel(response, model)
 	if err != nil {
 		t.Fatalf("mapAPIResponseToModel failed: %v", err)
@@ -350,12 +352,13 @@ func TestMapAPIResponseToModel(t *testing.T) {
 		t.Errorf("Expected ID 'policy-123', got '%s'", model.ID.ValueString())
 	}
 
+	// account_id is preserved from the model (user-provided), not overwritten by API
 	if model.AccountID.ValueString() != "account-456" {
 		t.Errorf("Expected AccountID 'account-456', got '%s'", model.AccountID.ValueString())
 	}
 
-	if model.PolicyName.ValueString() != "Test Policy" {
-		t.Errorf("Expected PolicyName 'Test Policy', got '%s'", model.PolicyName.ValueString())
+	if model.ApplicationName.ValueString() != "Test Policy" {
+		t.Errorf("Expected ApplicationName 'Test Policy', got '%s'", model.ApplicationName.ValueString())
 	}
 
 	if model.Status.ValueString() != "Active" {

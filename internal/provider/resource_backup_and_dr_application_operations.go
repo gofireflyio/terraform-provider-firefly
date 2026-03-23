@@ -70,7 +70,7 @@ func mapModelToAPIRequest(ctx context.Context, model *BackupAndDrApplicationReso
 
 	// Build base request
 	request := &client.PolicyCreateRequest{
-		PolicyName:    model.PolicyName.ValueString(),
+		PolicyName:    model.ApplicationName.ValueString(),
 		IntegrationID: model.IntegrationID.ValueString(),
 		Region:        model.Region.ValueString(),
 		ProviderType:  model.ProviderType.ValueString(),
@@ -134,12 +134,11 @@ func mapModelToAPIRequest(ctx context.Context, model *BackupAndDrApplicationReso
 // mapAPIResponseToModel converts an API response to the Terraform model
 // This function updates ALL fields from the API response, treating the API as the source of truth
 func mapAPIResponseToModel(response *client.PolicyResponse, model *BackupAndDrApplicationResourceModel) error {
-	// Update ID and account ID
+	// Update ID from API response; preserve account_id from plan/config
 	model.ID = types.StringValue(response.PolicyID)
-	model.AccountID = types.StringValue(response.AccountID)
 
 	// Update all user-provided fields from API (API is source of truth)
-	model.PolicyName = types.StringValue(response.PolicyName)
+	model.ApplicationName = types.StringValue(response.PolicyName)
 	model.IntegrationID = types.StringValue(response.IntegrationID)
 	model.Region = types.StringValue(response.Region)
 	model.ProviderType = types.StringValue(response.ProviderType)
