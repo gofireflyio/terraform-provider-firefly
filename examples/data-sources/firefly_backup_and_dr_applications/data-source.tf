@@ -23,16 +23,16 @@ data "firefly_backup_and_dr_applications" "specific_integration" {
 }
 
 # Use in outputs to display policy names
-output "active_policy_names" {
-  value       = [for p in data.firefly_backup_and_dr_applications.active.policies : p.policy_name]
+output "active_application_names" {
+  value       = [for p in data.firefly_backup_and_dr_applications.active.applications : p.application_name]
   description = "List of all active backup policy names"
 }
 
 # Use in outputs to display policy details
 output "aws_east_policies" {
   value = [
-    for p in data.firefly_backup_and_dr_applications.aws_east.policies : {
-      name              = p.policy_name
+    for p in data.firefly_backup_and_dr_applications.aws_east.applications : {
+      name              = p.application_name
       status            = p.status
       schedule          = p.schedule_frequency
       snapshots_count   = p.snapshots_count
@@ -45,5 +45,5 @@ output "aws_east_policies" {
 
 # Find policies by status and use them in other resources
 locals {
-  active_policy_ids = [for p in data.firefly_backup_and_dr_applications.active.policies : p.policy_id]
+  active_application_ids = [for p in data.firefly_backup_and_dr_applications.active.applications : p.application_id]
 }

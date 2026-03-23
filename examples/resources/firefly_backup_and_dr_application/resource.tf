@@ -1,7 +1,7 @@
 # Daily backup with tags scope
 resource "firefly_backup_and_dr_application" "daily_production" {
   account_id     = "your-account-id"
-  policy_name    = "Daily Production Backup"
+  application_name    = "Daily Production Backup"
   description    = "Backs up all production resources daily at 2 AM"
   integration_id = "aws-integration-123"
   region         = "us-east-1"
@@ -24,7 +24,7 @@ resource "firefly_backup_and_dr_application" "daily_production" {
 # Weekly backup with multiple scopes and VCS integration
 resource "firefly_backup_and_dr_application" "weekly_multi_scope" {
   account_id     = "your-account-id"
-  policy_name    = "Weekly Multi-Scope Backup"
+  application_name    = "Weekly Multi-Scope Backup"
   integration_id = "aws-integration-123"
   region         = "us-west-2"
   provider_type  = "aws"
@@ -59,7 +59,7 @@ resource "firefly_backup_and_dr_application" "weekly_multi_scope" {
 # Monthly backup with specific weekday schedule
 resource "firefly_backup_and_dr_application" "monthly_archive" {
   account_id     = "your-account-id"
-  policy_name    = "Monthly Archive Backup"
+  application_name    = "Monthly Archive Backup"
   integration_id = "aws-integration-123"
   region         = "us-east-1"
   provider_type  = "aws"
@@ -92,7 +92,7 @@ resource "firefly_backup_and_dr_application" "monthly_archive" {
 # Monthly backup with specific day of month
 resource "firefly_backup_and_dr_application" "monthly_first_day" {
   account_id     = "your-account-id"
-  policy_name    = "Monthly First Day Backup"
+  application_name    = "Monthly First Day Backup"
   integration_id = "aws-integration-123"
   region         = "us-east-1"
   provider_type  = "aws"
