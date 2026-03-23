@@ -17,7 +17,7 @@ func TestAccBackupAndDrApplicationResource(t *testing.T) {
 			{
 				Config: testAccBackupAndDrApplicationResourceConfig("test-daily-backup", "Daily"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("firefly_backup_and_dr_application.test", "policy_name", "test-daily-backup"),
+					resource.TestCheckResourceAttr("firefly_backup_and_dr_application.test", "application_name", "test-daily-backup"),
 					resource.TestCheckResourceAttr("firefly_backup_and_dr_application.test", "description", "Test backup policy"),
 					resource.TestCheckResourceAttr("firefly_backup_and_dr_application.test", "region", "us-east-1"),
 					resource.TestCheckResourceAttr("firefly_backup_and_dr_application.test", "provider_type", "aws"),
@@ -42,7 +42,7 @@ func TestAccBackupAndDrApplicationResource(t *testing.T) {
 			{
 				Config: testAccBackupAndDrApplicationResourceConfig("test-daily-backup-updated", "Weekly"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("firefly_backup_and_dr_application.test", "policy_name", "test-daily-backup-updated"),
+					resource.TestCheckResourceAttr("firefly_backup_and_dr_application.test", "application_name", "test-daily-backup-updated"),
 					resource.TestCheckResourceAttr("firefly_backup_and_dr_application.test", "schedule.frequency", "Weekly"),
 					resource.TestCheckResourceAttr("firefly_backup_and_dr_application.test", "schedule.days_of_week.#", "2"),
 					resource.TestCheckResourceAttr("firefly_backup_and_dr_application.test", "schedule.days_of_week.0", "Monday"),
@@ -62,7 +62,7 @@ func TestAccBackupAndDrApplicationResource_WithScope(t *testing.T) {
 			{
 				Config: testAccBackupAndDrApplicationResourceConfigWithScope(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("firefly_backup_and_dr_application.scoped", "policy_name", "scoped-backup"),
+					resource.TestCheckResourceAttr("firefly_backup_and_dr_application.scoped", "application_name", "scoped-backup"),
 					resource.TestCheckResourceAttr("firefly_backup_and_dr_application.scoped", "scope.#", "2"),
 					resource.TestCheckResourceAttr("firefly_backup_and_dr_application.scoped", "scope.0.type", "tags"),
 					resource.TestCheckResourceAttr("firefly_backup_and_dr_application.scoped", "scope.0.value.#", "2"),
@@ -112,7 +112,7 @@ func TestAccBackupAndDrApplicationResource_WithVCS(t *testing.T) {
 			{
 				Config: testAccBackupAndDrApplicationResourceConfigWithVCS(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("firefly_backup_and_dr_application.vcs", "policy_name", "vcs-backup"),
+					resource.TestCheckResourceAttr("firefly_backup_and_dr_application.vcs", "application_name", "vcs-backup"),
 					resource.TestCheckResourceAttr("firefly_backup_and_dr_application.vcs", "vcs.project_id", "project-123"),
 					resource.TestCheckResourceAttr("firefly_backup_and_dr_application.vcs", "vcs.vcs_integration_id", "github-456"),
 					resource.TestCheckResourceAttr("firefly_backup_and_dr_application.vcs", "vcs.repo_id", "repo-789"),
@@ -164,7 +164,7 @@ func testAccBackupAndDrApplicationResourceConfig(name string, frequency string) 
 		return fmt.Sprintf(`
 resource "firefly_backup_and_dr_application" "test" {
   account_id     = "test-account-id"
-  policy_name    = %[1]q
+  application_name    = %[1]q
   description    = "Test backup policy"
   integration_id = "test-integration-id"
   region         = "us-east-1"
@@ -185,7 +185,7 @@ resource "firefly_backup_and_dr_application" "test" {
 	return fmt.Sprintf(`
 resource "firefly_backup_and_dr_application" "test" {
   account_id     = "test-account-id"
-  policy_name    = %[1]q
+  application_name    = %[1]q
   description    = "Test backup policy"
   integration_id = "test-integration-id"
   region         = "us-east-1"
@@ -206,7 +206,7 @@ func testAccBackupAndDrApplicationResourceConfigWithScope() string {
 	return `
 resource "firefly_backup_and_dr_application" "scoped" {
   account_id     = "test-account-id"
-  policy_name    = "scoped-backup"
+  application_name    = "scoped-backup"
   integration_id = "test-integration-id"
   region         = "us-east-1"
   provider_type  = "aws"
@@ -236,7 +236,7 @@ func testAccBackupAndDrApplicationResourceConfigMonthlySpecificDay() string {
 	return `
 resource "firefly_backup_and_dr_application" "monthly" {
   account_id     = "test-account-id"
-  policy_name    = "monthly-backup"
+  application_name    = "monthly-backup"
   integration_id = "test-integration-id"
   region         = "us-east-1"
   provider_type  = "aws"
@@ -258,7 +258,7 @@ func testAccBackupAndDrApplicationResourceConfigMonthlySpecificWeekday() string 
 	return `
 resource "firefly_backup_and_dr_application" "monthly" {
   account_id     = "test-account-id"
-  policy_name    = "monthly-backup"
+  application_name    = "monthly-backup"
   integration_id = "test-integration-id"
   region         = "us-east-1"
   provider_type  = "aws"
@@ -281,7 +281,7 @@ func testAccBackupAndDrApplicationResourceConfigWithVCS() string {
 	return `
 resource "firefly_backup_and_dr_application" "vcs" {
   account_id     = "test-account-id"
-  policy_name    = "vcs-backup"
+  application_name    = "vcs-backup"
   integration_id = "test-integration-id"
   region         = "us-east-1"
   provider_type  = "aws"
@@ -307,7 +307,7 @@ func testAccBackupAndDrApplicationResourceConfigWithRestoreInstructions() string
 	return `
 resource "firefly_backup_and_dr_application" "instructions" {
   account_id     = "test-account-id"
-  policy_name    = "documented-backup"
+  application_name    = "documented-backup"
   integration_id = "test-integration-id"
   region         = "us-east-1"
   provider_type  = "aws"
