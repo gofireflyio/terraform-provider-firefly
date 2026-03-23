@@ -340,9 +340,7 @@ func TestMapAPIResponseToModel(t *testing.T) {
 		UpdatedAt: "2025-01-01T10:00:00Z",
 	}
 
-	model := &BackupAndDrApplicationResourceModel{
-		AccountID: types.StringValue("account-456"),
-	}
+	model := &BackupAndDrApplicationResourceModel{}
 	err := mapAPIResponseToModel(response, model)
 	if err != nil {
 		t.Fatalf("mapAPIResponseToModel failed: %v", err)
@@ -352,7 +350,6 @@ func TestMapAPIResponseToModel(t *testing.T) {
 		t.Errorf("Expected ID 'policy-123', got '%s'", model.ID.ValueString())
 	}
 
-	// account_id is preserved from the model (user-provided), not overwritten by API
 	if model.AccountID.ValueString() != "account-456" {
 		t.Errorf("Expected AccountID 'account-456', got '%s'", model.AccountID.ValueString())
 	}
