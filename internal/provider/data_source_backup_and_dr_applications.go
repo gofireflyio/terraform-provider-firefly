@@ -31,7 +31,7 @@ func (d *BackupAndDrApplicationsDataSource) Metadata(ctx context.Context, req da
 
 func (d *BackupAndDrApplicationsDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Data source for retrieving Firefly Backup & DR applications (backup policies)",
+		MarkdownDescription: "Data source for retrieving Firefly Backup & DR applications",
 
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
@@ -39,11 +39,11 @@ func (d *BackupAndDrApplicationsDataSource) Schema(ctx context.Context, req data
 				Computed:            true,
 			},
 			"account_id": schema.StringAttribute{
-				MarkdownDescription: "The account ID to list policies for",
+				MarkdownDescription: "The account ID to list applications for",
 				Required:            true,
 			},
 			"status": schema.StringAttribute{
-				MarkdownDescription: "Filter by policy status (Active/Inactive)",
+				MarkdownDescription: "Filter by application status (Active/Inactive)",
 				Optional:            true,
 			},
 			"integration_id": schema.StringAttribute{
@@ -58,21 +58,21 @@ func (d *BackupAndDrApplicationsDataSource) Schema(ctx context.Context, req data
 				MarkdownDescription: "Filter by cloud provider type",
 				Optional:            true,
 			},
-			"policies": schema.ListNestedAttribute{
-				MarkdownDescription: "List of backup policies",
+			"applications": schema.ListNestedAttribute{
+				MarkdownDescription: "List of backup applications",
 				Computed:            true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
-						"policy_id": schema.StringAttribute{
-							MarkdownDescription: "The unique identifier of the backup policy",
+						"application_id": schema.StringAttribute{
+							MarkdownDescription: "The unique identifier of the backup application",
 							Computed:            true,
 						},
 						"account_id": schema.StringAttribute{
 							MarkdownDescription: "The account ID",
 							Computed:            true,
 						},
-						"policy_name": schema.StringAttribute{
-							MarkdownDescription: "The name of the backup policy",
+						"application_name": schema.StringAttribute{
+							MarkdownDescription: "The name of the backup application",
 							Computed:            true,
 						},
 						"integration_id": schema.StringAttribute{
@@ -88,7 +88,7 @@ func (d *BackupAndDrApplicationsDataSource) Schema(ctx context.Context, req data
 							Computed:            true,
 						},
 						"description": schema.StringAttribute{
-							MarkdownDescription: "Description of the backup policy",
+							MarkdownDescription: "Description of the backup application",
 							Computed:            true,
 						},
 						"schedule_frequency": schema.StringAttribute{
@@ -108,7 +108,7 @@ func (d *BackupAndDrApplicationsDataSource) Schema(ctx context.Context, req data
 							Computed:            true,
 						},
 						"status": schema.StringAttribute{
-							MarkdownDescription: "Current status of the policy",
+							MarkdownDescription: "Current status of the application",
 							Computed:            true,
 						},
 						"snapshots_count": schema.Int64Attribute{
@@ -194,7 +194,7 @@ func (d *BackupAndDrApplicationsDataSource) Read(ctx context.Context, req dataso
 		filters.ProviderType = data.ProviderType.ValueString()
 	}
 
-	tflog.Debug(ctx, "Reading backup policies", map[string]interface{}{
+	tflog.Debug(ctx, "Reading backup applications", map[string]interface{}{
 		"account_id":     accountID,
 		"status":         filters.Status,
 		"integration_id": filters.IntegrationID,
@@ -206,19 +206,19 @@ func (d *BackupAndDrApplicationsDataSource) Read(ctx context.Context, req dataso
 	policies, err := d.client.BackupAndDr.List(filters)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error reading backup policies",
-			fmt.Sprintf("Could not read backup policies: %s", err),
+			"Error reading backup applications",
+			fmt.Sprintf("Could not read backup applications: %s", err),
 		)
 		return
 	}
 
-	// Map policies to data source model
-	data.Policies = make([]BackupAndDrApplicationDataSourceModel, len(policies.Data))
+	// Map applications to data source model
+	data.Applications = make([]BackupAndDrApplicationDataSourceModel, len(policies.Data))
 	for i, policy := range policies.Data {
 		policyModel := BackupAndDrApplicationDataSourceModel{
-			PolicyID:          types.StringValue(policy.PolicyID),
-			AccountID:         types.StringValue(policy.AccountID),
-			PolicyName:        types.StringValue(policy.PolicyName),
+			ApplicationID:    types.StringValue(policy.PolicyID),
+			AccountID:        types.StringValue(policy.AccountID),
+			ApplicationName:  types.StringValue(policy.PolicyName),
 			IntegrationID:     types.StringValue(policy.IntegrationID),
 			Region:            types.StringValue(policy.Region),
 			ProviderType:      types.StringValue(policy.ProviderType),
@@ -245,7 +245,7 @@ func (d *BackupAndDrApplicationsDataSource) Read(ctx context.Context, req dataso
 
 		policyModel.NextBackupTime = StringValueOrNull(policy.NextBackupTime)
 
-		data.Policies[i] = policyModel
+		data.Applications[i] = policyModel
 	}
 
 	// Generate unique ID based on account_id and filters
@@ -259,8 +259,8 @@ func (d *BackupAndDrApplicationsDataSource) Read(ctx context.Context, req dataso
 	hash := sha256.Sum256([]byte(idStr))
 	data.ID = types.StringValue(fmt.Sprintf("%x", hash[:8]))
 
-	tflog.Debug(ctx, "Read backup policies", map[string]interface{}{
-		"count": len(data.Policies),
+	tflog.Debug(ctx, "Read backup applications", map[string]interface{}{
+		"count": len(data.Applications),
 	})
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

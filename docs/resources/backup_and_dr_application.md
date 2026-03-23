@@ -1,6 +1,6 @@
 # firefly_backup_and_dr_application (Resource)
 
-Manages a Firefly Backup & DR application (backup policy) for automated infrastructure backup and disaster recovery.
+Manages a Firefly Backup & DR application (backup application) for automated infrastructure backup and disaster recovery.
 
 ## Example Usage
 
@@ -8,7 +8,7 @@ Manages a Firefly Backup & DR application (backup policy) for automated infrastr
 # Basic one-time backup with tag-based scope
 resource "firefly_backup_and_dr_application" "simple_backup" {
   account_id     = "66169d5af4992fc0bab04510"
-  policy_name    = "Simple One-time Backup"
+  application_name    = "Simple One-time Backup"
   integration_id = "692ec8acce65b3dc46cfceb5"
   region         = "us-east-1"
   provider_type  = "aws"
@@ -27,7 +27,7 @@ resource "firefly_backup_and_dr_application" "simple_backup" {
 # Daily backup with specific time and multiple tag filters
 resource "firefly_backup_and_dr_application" "daily_backup" {
   account_id            = "66169d5af4992fc0bab04510"
-  policy_name           = "Daily Production Backup"
+  application_name           = "Daily Production Backup"
   integration_id        = "692ec8acce65b3dc46cfceb5"
   region                = "us-east-1"
   provider_type         = "aws"
@@ -51,7 +51,7 @@ resource "firefly_backup_and_dr_application" "daily_backup" {
 # Weekly backup on specific days with asset type filtering
 resource "firefly_backup_and_dr_application" "weekly_backup" {
   account_id     = "66169d5af4992fc0bab04510"
-  policy_name    = "Weekly Database Backup"
+  application_name    = "Weekly Database Backup"
   integration_id = "692ec8acce65b3dc46cfceb5"
   region         = "eu-west-1"
   provider_type  = "aws"
@@ -73,7 +73,7 @@ resource "firefly_backup_and_dr_application" "weekly_backup" {
 # Monthly backup on specific day with resource group scope
 resource "firefly_backup_and_dr_application" "monthly_specific_day" {
   account_id     = "66169d5af4992fc0bab04510"
-  policy_name    = "Monthly First-Day Backup"
+  application_name    = "Monthly First-Day Backup"
   integration_id = "692ec8acce65b3dc46cfceb5"
   region         = "us-west-2"
   provider_type  = "aws"
@@ -96,7 +96,7 @@ resource "firefly_backup_and_dr_application" "monthly_specific_day" {
 # Monthly backup on specific weekday (e.g., last Friday)
 resource "firefly_backup_and_dr_application" "monthly_last_friday" {
   account_id     = "66169d5af4992fc0bab04510"
-  policy_name    = "Last Friday Monthly Backup"
+  application_name    = "Last Friday Monthly Backup"
   integration_id = "692ec8acce65b3dc46cfceb5"
   region         = "us-east-1"
   provider_type  = "aws"
@@ -120,7 +120,7 @@ resource "firefly_backup_and_dr_application" "monthly_last_friday" {
 # Monthly backup on last day of month
 resource "firefly_backup_and_dr_application" "monthly_last_day" {
   account_id     = "66169d5af4992fc0bab04510"
-  policy_name    = "End of Month Backup"
+  application_name    = "End of Month Backup"
   integration_id = "692ec8acce65b3dc46cfceb5"
   region         = "us-east-1"
   provider_type  = "aws"
@@ -142,7 +142,7 @@ resource "firefly_backup_and_dr_application" "monthly_last_day" {
 # Backup with VCS integration for artifact storage
 resource "firefly_backup_and_dr_application" "backup_with_vcs" {
   account_id     = "66169d5af4992fc0bab04510"
-  policy_name    = "Backup to Git Repository"
+  application_name    = "Backup to Git Repository"
   integration_id = "692ec8acce65b3dc46cfceb5"
   region         = "us-east-1"
   provider_type  = "aws"
@@ -169,7 +169,7 @@ resource "firefly_backup_and_dr_application" "backup_with_vcs" {
 # Backup with multiple scope types
 resource "firefly_backup_and_dr_application" "multi_scope_backup" {
   account_id     = "66169d5af4992fc0bab04510"
-  policy_name    = "Multi-Scope Backup"
+  application_name    = "Multi-Scope Backup"
   integration_id = "692ec8acce65b3dc46cfceb5"
   region         = "us-east-1"
   provider_type  = "aws"
@@ -203,7 +203,7 @@ resource "firefly_backup_and_dr_application" "multi_scope_backup" {
 # Backup with specific resource IDs
 resource "firefly_backup_and_dr_application" "selected_resources_backup" {
   account_id     = "66169d5af4992fc0bab04510"
-  policy_name    = "Specific Resources Backup"
+  application_name    = "Specific Resources Backup"
   integration_id = "692ec8acce65b3dc46cfceb5"
   region         = "us-east-1"
   provider_type  = "aws"
@@ -230,8 +230,8 @@ resource "firefly_backup_and_dr_application" "selected_resources_backup" {
 
 ### Required
 
-- `account_id` (String) - The account ID for the backup policy. **Note**: Changing this forces replacement of the resource.
-- `policy_name` (String) - The name of the backup policy (max 100 characters)
+- `account_id` (String) - The account ID for the backup application. **Note**: Changing this forces replacement of the resource.
+- `application_name` (String) - The name of the backup application (max 100 characters)
 - `integration_id` (String) - The integration ID for cloud provider credentials
 - `region` (String) - The cloud region where backups will be stored
 - `provider_type` (String) - The cloud provider type (max 50 characters, e.g., `aws`, `azure`, `gcp`)
@@ -240,23 +240,23 @@ resource "firefly_backup_and_dr_application" "selected_resources_backup" {
 
 ### Optional
 
-- `description` (String) - Description of the backup policy (max 500 characters)
+- `description` (String) - Description of the backup application (max 500 characters)
 - `notification_id` (String) - Notification channel ID for backup alerts
 - `restore_instructions` (String) - Instructions for restoring from backups (max 2000 characters)
-- `backup_on_save` (Boolean) - Whether to trigger a backup immediately on policy creation/update. Defaults to `true`.
+- `backup_on_save` (Boolean) - Whether to trigger a backup immediately on application creation/update. Defaults to `true`.
 - `vcs` (Block) - VCS integration configuration for backup artifacts (see [below for nested schema](#nestedblock--vcs))
 
 ### Read-Only
 
-- `id` (String) - The unique identifier of the backup policy
-- `status` (String) - Current status of the policy (`Active` or `Inactive`)
-- `snapshots_count` (Number) - Number of snapshots created by this policy
+- `id` (String) - The unique identifier of the backup application
+- `status` (String) - Current status of the application (`Active` or `Inactive`)
+- `snapshots_count` (Number) - Number of snapshots created by this application
 - `last_backup_snapshot_id` (String) - ID of the most recent backup snapshot
 - `last_backup_time` (String) - Timestamp of the last backup
 - `last_backup_status` (String) - Status of the last backup
 - `next_backup_time` (String) - Timestamp of the next scheduled backup
-- `created_at` (String) - Timestamp when the policy was created
-- `updated_at` (String) - Timestamp when the policy was last updated
+- `created_at` (String) - Timestamp when the application was created
+- `updated_at` (String) - Timestamp when the application was last updated
 
 <a id="nestedblock--schedule"></a>
 ### Nested Schema for `schedule`
@@ -281,11 +281,12 @@ resource "firefly_backup_and_dr_application" "selected_resources_backup" {
 
 #### Required
 
-- `type` (String) - Scope type. Valid values: `tags`, `resource_group`, `asset_types`, `selected_resources`
+- `type` (String) - Scope type. Valid values: `tags`, `resource_group`, `asset_types`, `exclude_asset_types`, `selected_resources`
 - `value` (List of String) - List of values for this scope type. Format depends on type:
   - `tags`: Tag key-value pairs in format `"key:value"` (e.g., `["Environment:Production", "Team:DevOps"]`)
   - `resource_group`: Resource group names (e.g., `["prod-rg", "staging-rg"]`)
-  - `asset_types`: Terraform resource types (e.g., `["aws_instance", "aws_db_instance"]`)
+  - `asset_types`: Terraform resource types to include (e.g., `["aws_instance", "aws_db_instance"]`)
+  - `exclude_asset_types`: Terraform resource types to exclude (e.g., `["aws_s3_bucket"]`)
   - `selected_resources`: Specific resource ARNs or IDs
 
 **Note**: Multiple scope blocks can be defined. Resources must match ALL scope criteria (AND logic).
@@ -430,7 +431,7 @@ scope {
 
 ## Important Notes
 
-- **Immediate Backup**: By default, `backup_on_save` is `true`, which triggers an immediate backup when the policy is created or updated. Set to `false` to disable this behavior.
+- **Immediate Backup**: By default, `backup_on_save` is `true`, which triggers an immediate backup when the application is created or updated. Set to `false` to disable this behavior.
 - **Account ID Changes**: Changing the `account_id` attribute forces replacement (destroy and recreate) of the resource.
 - **Computed Fields**: All timestamp and status fields are read-only and automatically updated by Firefly.
 - **Schedule Validation**: The provider validates schedule parameters based on frequency type. For example, `days_of_week` is required for Weekly frequency but invalid for Daily.
@@ -438,8 +439,8 @@ scope {
 
 ## Import
 
-Backup & DR applications can be imported using the format `account_id:policy_id`:
+Backup & DR applications can be imported using the format `account_id:application_id`:
 
 ```shell
-terraform import firefly_backup_and_dr_application.example 66169d5af4992fc0bab04510:policy-id-here
+terraform import firefly_backup_and_dr_application.example 66169d5af4992fc0bab04510:application-id-here
 ```

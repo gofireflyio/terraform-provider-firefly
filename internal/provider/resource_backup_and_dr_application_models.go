@@ -4,12 +4,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
-// BackupAndDrApplicationResourceModel represents the resource model for a backup and DR application (policy)
+// BackupAndDrApplicationResourceModel represents the resource model for a backup and DR application
 type BackupAndDrApplicationResourceModel struct {
 	// User-provided fields
-	ID                  types.String   `tfsdk:"id"`                    // computed (policy_id)
+	ID                  types.String   `tfsdk:"id"`                    // computed (application_id)
 	AccountID           types.String   `tfsdk:"account_id"`            // required
-	PolicyName          types.String   `tfsdk:"policy_name"`           // required
+	ApplicationName     types.String   `tfsdk:"application_name"`      // required
 	IntegrationID       types.String   `tfsdk:"integration_id"`        // required
 	Region              types.String   `tfsdk:"region"`                // required
 	ProviderType        types.String   `tfsdk:"provider_type"`         // required
@@ -58,12 +58,12 @@ type VCSModel struct {
 	RepoID           types.String `tfsdk:"repo_id"`            // optional
 }
 
-// BackupAndDrApplicationDataSourceModel represents the data source model for a single policy
+// BackupAndDrApplicationDataSourceModel represents the data source model for a single application
 // Note: Simplified schema without nested blocks (schedule, scope, vcs) to comply with data source limitations
 type BackupAndDrApplicationDataSourceModel struct {
-	PolicyID             types.String `tfsdk:"policy_id"`
+	ApplicationID        types.String `tfsdk:"application_id"`
 	AccountID            types.String `tfsdk:"account_id"`
-	PolicyName           types.String `tfsdk:"policy_name"`
+	ApplicationName      types.String `tfsdk:"application_name"`
 	IntegrationID        types.String `tfsdk:"integration_id"`
 	Region               types.String `tfsdk:"region"`
 	ProviderType         types.String `tfsdk:"provider_type"`
@@ -82,13 +82,13 @@ type BackupAndDrApplicationDataSourceModel struct {
 	UpdatedAt            types.String `tfsdk:"updated_at"`
 }
 
-// BackupAndDrApplicationsDataSourceModel represents the data source model for listing policies
+// BackupAndDrApplicationsDataSourceModel represents the data source model for listing applications
 type BackupAndDrApplicationsDataSourceModel struct {
-	ID            types.String                                 `tfsdk:"id"`
-	AccountID     types.String                                 `tfsdk:"account_id"`
-	Status        types.String                                 `tfsdk:"status"`
-	IntegrationID types.String                                 `tfsdk:"integration_id"`
-	Region        types.String                                 `tfsdk:"region"`
-	ProviderType  types.String                                 `tfsdk:"provider_type"`
-	Policies      []BackupAndDrApplicationDataSourceModel `tfsdk:"policies"`
+	ID            types.String                            `tfsdk:"id"`
+	AccountID     types.String                            `tfsdk:"account_id"`
+	Status        types.String                            `tfsdk:"status"`
+	IntegrationID types.String                            `tfsdk:"integration_id"`
+	Region        types.String                            `tfsdk:"region"`
+	ProviderType  types.String                            `tfsdk:"provider_type"`
+	Applications  []BackupAndDrApplicationDataSourceModel `tfsdk:"applications"`
 }
