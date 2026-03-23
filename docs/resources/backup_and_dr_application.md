@@ -281,11 +281,12 @@ resource "firefly_backup_and_dr_application" "selected_resources_backup" {
 
 #### Required
 
-- `type` (String) - Scope type. Valid values: `tags`, `resource_group`, `asset_types`, `selected_resources`
+- `type` (String) - Scope type. Valid values: `tags`, `resource_group`, `asset_types`, `exclude_asset_types`, `selected_resources`
 - `value` (List of String) - List of values for this scope type. Format depends on type:
   - `tags`: Tag key-value pairs in format `"key:value"` (e.g., `["Environment:Production", "Team:DevOps"]`)
   - `resource_group`: Resource group names (e.g., `["prod-rg", "staging-rg"]`)
-  - `asset_types`: Terraform resource types (e.g., `["aws_instance", "aws_db_instance"]`)
+  - `asset_types`: Terraform resource types to include (e.g., `["aws_instance", "aws_db_instance"]`)
+  - `exclude_asset_types`: Terraform resource types to exclude (e.g., `["aws_s3_bucket"]`)
   - `selected_resources`: Specific resource ARNs or IDs
 
 **Note**: Multiple scope blocks can be defined. Resources must match ALL scope criteria (AND logic).

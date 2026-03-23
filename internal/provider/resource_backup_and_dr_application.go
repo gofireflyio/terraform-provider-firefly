@@ -220,10 +220,10 @@ func (r *BackupAndDrApplicationResource) Schema(ctx context.Context, req resourc
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"type": schema.StringAttribute{
-							MarkdownDescription: "Scope type (tags, resource_group, asset_types, selected_resources)",
+							MarkdownDescription: "Scope type (tags, resource_group, asset_types, exclude_asset_types, selected_resources)",
 							Required:            true,
 							Validators: []validator.String{
-								stringvalidator.OneOf("tags", "resource_group", "asset_types", "selected_resources"),
+								stringvalidator.OneOf("tags", "resource_group", "asset_types", "exclude_asset_types", "selected_resources"),
 							},
 						},
 						"value": schema.ListAttribute{

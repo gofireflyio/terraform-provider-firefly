@@ -146,8 +146,7 @@ func mapAPIResponseToModel(response *client.PolicyResponse, model *BackupAndDrAp
 
 	model.Description = StringValueOrNull(response.Description)
 
-	// Note: backup_on_save is write-only (only in CREATE requests), not returned by API
-	// We preserve the value from the plan/config instead of reading from API response
+	model.BackupOnSave = types.BoolValue(response.BackupOnSave)
 
 	model.NotificationID = StringValueOrNull(response.NotificationID)
 
