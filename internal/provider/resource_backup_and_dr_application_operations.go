@@ -146,7 +146,9 @@ func mapAPIResponseToModel(response *client.PolicyResponse, model *BackupAndDrAp
 
 	model.Description = StringValueOrNull(response.Description)
 
-	model.BackupOnSave = types.BoolValue(response.BackupOnSave)
+	// Note: BackupOnSave is a trigger flag (fires a backup on create/update).
+	// The API always returns false after the backup completes, so we preserve
+	// the user's configured value to avoid an inconsistent result error.
 
 	model.NotificationID = StringValueOrNull(response.NotificationID)
 
