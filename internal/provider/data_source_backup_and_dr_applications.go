@@ -103,10 +103,6 @@ func (d *BackupAndDrApplicationsDataSource) Schema(ctx context.Context, req data
 							MarkdownDescription: "Restore instructions",
 							Computed:            true,
 						},
-						"backup_on_save": schema.BoolAttribute{
-							MarkdownDescription: "Whether to backup on save",
-							Computed:            true,
-						},
 						"status": schema.StringAttribute{
 							MarkdownDescription: "Current status of the application",
 							Computed:            true,
@@ -223,7 +219,6 @@ func (d *BackupAndDrApplicationsDataSource) Read(ctx context.Context, req dataso
 			Region:            types.StringValue(policy.Region),
 			ProviderType:      types.StringValue(policy.ProviderType),
 			ScheduleFrequency: types.StringValue(policy.Schedule.Frequency),
-			BackupOnSave:      types.BoolValue(policy.BackupOnSave),
 			Status:            types.StringValue(policy.Status),
 			SnapshotsCount:    types.Int64Value(int64(policy.SnapshotsCount)),
 			CreatedAt:         types.StringValue(policy.CreatedAt),

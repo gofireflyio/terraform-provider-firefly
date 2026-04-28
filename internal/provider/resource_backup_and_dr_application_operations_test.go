@@ -328,7 +328,6 @@ func TestMapAPIResponseToModel(t *testing.T) {
 		Region:         "us-east-1",
 		ProviderType:   "aws",
 		Description:    "Test description",
-		BackupOnSave:   true,
 		Status:         "Active",
 		SnapshotsCount: 5,
 		Schedule: client.ScheduleConfig{
@@ -401,7 +400,6 @@ func TestMapAPIResponseToModel_WithScope(t *testing.T) {
 		Status:     "Active",
 		CreatedAt:  "2025-01-01T00:00:00Z",
 		UpdatedAt:  "2025-01-01T10:00:00Z",
-		BackupOnSave: true,
 	}
 
 	model := &BackupAndDrApplicationResourceModel{}
@@ -434,10 +432,9 @@ func TestMapAPIResponseToModel_NullOptionalFields(t *testing.T) {
 		Schedule: client.ScheduleConfig{
 			Frequency: "Daily",
 		},
-		Status:       "Active",
-		CreatedAt:    "2025-01-01T00:00:00Z",
-		UpdatedAt:    "2025-01-01T10:00:00Z",
-		BackupOnSave: false,
+		Status:    "Active",
+		CreatedAt: "2025-01-01T00:00:00Z",
+		UpdatedAt: "2025-01-01T10:00:00Z",
 		// All optional fields are empty
 	}
 
