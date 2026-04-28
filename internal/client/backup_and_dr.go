@@ -58,7 +58,6 @@ type PolicyResponse struct {
 	NotificationID       string         `json:"notificationId,omitempty"`
 	VCS                  *VCSConfig     `json:"vcs,omitempty"`
 	RestoreInstructions  string         `json:"restore_instructions,omitempty"`
-	BackupOnSave         bool           `json:"backup_on_save"`
 	Status               string         `json:"status"`
 	SnapshotsCount       int            `json:"snapshots_count"`
 	LastBackupSnapshotID string         `json:"last_backup_snapshot_id,omitempty"`

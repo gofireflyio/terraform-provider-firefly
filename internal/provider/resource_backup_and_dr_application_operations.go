@@ -146,8 +146,6 @@ func mapAPIResponseToModel(response *client.PolicyResponse, model *BackupAndDrAp
 
 	model.Description = StringValueOrNull(response.Description)
 
-	model.BackupOnSave = types.BoolValue(response.BackupOnSave)
-
 	model.NotificationID = StringValueOrNull(response.NotificationID)
 
 	model.RestoreInstructions = StringValueOrNull(response.RestoreInstructions)

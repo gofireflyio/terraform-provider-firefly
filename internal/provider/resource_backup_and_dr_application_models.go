@@ -47,7 +47,7 @@ type ScheduleModel struct {
 
 // ScopeModel represents a resource scope configuration
 type ScopeModel struct {
-	Type  types.String `tfsdk:"type"`  // required: tags, resource_group, asset_types, selected_resources
+	Type  types.String `tfsdk:"type"`  // required: tags, resource_group, asset_types, exclude_asset_types, selected_resources, excluded_resources
 	Value types.List   `tfsdk:"value"` // required: list of strings, min 1
 }
 
@@ -71,7 +71,6 @@ type BackupAndDrApplicationDataSourceModel struct {
 	ScheduleFrequency    types.String `tfsdk:"schedule_frequency"` // Simplified: only showing frequency
 	NotificationID       types.String `tfsdk:"notification_id"`
 	RestoreInstructions  types.String `tfsdk:"restore_instructions"`
-	BackupOnSave         types.Bool   `tfsdk:"backup_on_save"`
 	Status               types.String `tfsdk:"status"`
 	SnapshotsCount       types.Int64  `tfsdk:"snapshots_count"`
 	LastBackupSnapshotID types.String `tfsdk:"last_backup_snapshot_id"`
