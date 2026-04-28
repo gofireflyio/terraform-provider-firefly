@@ -47,7 +47,7 @@ type ScheduleModel struct {
 
 // ScopeModel represents a resource scope configuration
 type ScopeModel struct {
-	Type  types.String `tfsdk:"type"`  // required: tags, resource_group, asset_types, exclude_asset_types, selected_resources, excluded_resources
+	Type  types.String `tfsdk:"type"`  // required: tags, resource_group, asset_types, excluded_asset_types, selected_resources, excluded_resources
 	Value types.List   `tfsdk:"value"` // required: list of strings, min 1
 }
 
