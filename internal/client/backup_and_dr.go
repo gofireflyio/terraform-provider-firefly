@@ -15,70 +15,69 @@ type BackupAndDrService struct {
 
 // PolicyCreateRequest represents a backup policy for API requests (POST)
 type PolicyCreateRequest struct {
-	PolicyName          string         `json:"policy_name"`
-	IntegrationID       string         `json:"integration_id"`
-	Region              string         `json:"region"`
-	ProviderType        string         `json:"provider_type"`
-	Schedule            ScheduleConfig `json:"schedule"`
-	Description         string         `json:"description,omitempty"`
-	Scope               []ScopeConfig  `json:"scope,omitempty"`
-	NotificationID      string         `json:"notificationId,omitempty"`
-	VCS                 *VCSConfig     `json:"vcs,omitempty"`
-	RestoreInstructions string         `json:"restore_instructions,omitempty"`
-	BackupOnSave        bool           `json:"backup_on_save,omitempty"`
+	PolicyName          string        `json:"policy_name"`
+	IntegrationID       string        `json:"integration_id"`
+	Region              string        `json:"region"`
+	ProviderType        string        `json:"provider_type"`
+	Frequency           int           `json:"frequency,omitempty"`
+	Description         string        `json:"description,omitempty"`
+	Scope               []ScopeConfig `json:"scope,omitempty"`
+	NotificationID      string        `json:"notificationId,omitempty"`
+	VCS                 *VCSConfig    `json:"vcs,omitempty"`
+	RestoreInstructions string        `json:"restore_instructions,omitempty"`
+	BackupOnSave        bool          `json:"backup_on_save,omitempty"`
+	TargetAccount       string        `json:"target_account,omitempty"`
+	TargetRegion        string        `json:"target_region,omitempty"`
+	AutoCreatePR        bool          `json:"auto_create_pr,omitempty"`
+	ResilienceEnabled   bool          `json:"resilience_enabled,omitempty"`
 }
 
 // PolicyUpdateRequest represents a backup policy update for API requests (PUT)
 // All fields are optional to support partial updates
 type PolicyUpdateRequest struct {
-	PolicyName          *string         `json:"policy_name,omitempty"`
-	IntegrationID       *string         `json:"integration_id,omitempty"`
-	Region              *string         `json:"region,omitempty"`
-	ProviderType        *string         `json:"provider_type,omitempty"`
-	Schedule            *ScheduleConfig `json:"schedule,omitempty"`
-	Description         *string         `json:"description,omitempty"`
-	Scope               []ScopeConfig   `json:"scope,omitempty"`
-	NotificationID      *string         `json:"notificationId,omitempty"`
-	VCS                 *VCSConfig      `json:"vcs,omitempty"`
-	RestoreInstructions *string         `json:"restore_instructions,omitempty"`
-	BackupOnSave        *bool           `json:"backup_on_save,omitempty"`
+	PolicyName          *string       `json:"policy_name,omitempty"`
+	IntegrationID       *string       `json:"integration_id,omitempty"`
+	Region              *string       `json:"region,omitempty"`
+	ProviderType        *string       `json:"provider_type,omitempty"`
+	Frequency           *int          `json:"frequency,omitempty"`
+	Description         *string       `json:"description,omitempty"`
+	Scope               []ScopeConfig `json:"scope,omitempty"`
+	NotificationID      *string       `json:"notificationId,omitempty"`
+	VCS                 *VCSConfig    `json:"vcs,omitempty"`
+	RestoreInstructions *string       `json:"restore_instructions,omitempty"`
+	BackupOnSave        *bool         `json:"backup_on_save,omitempty"`
+	TargetAccount       *string       `json:"target_account,omitempty"`
+	TargetRegion        *string       `json:"target_region,omitempty"`
+	AutoCreatePR        *bool         `json:"auto_create_pr,omitempty"`
+	ResilienceEnabled   *bool         `json:"resilience_enabled,omitempty"`
 }
 
 // PolicyResponse represents a backup policy from API responses
 type PolicyResponse struct {
-	PolicyID             string         `json:"policy_id"`
-	AccountID            string         `json:"account_id"`
-	PolicyName           string         `json:"policy_name"`
-	IntegrationID        string         `json:"integration_id"`
-	Region               string         `json:"region"`
-	ProviderType         string         `json:"provider_type"`
-	Schedule             ScheduleConfig `json:"schedule"`
-	Description          string         `json:"description,omitempty"`
-	Scope                []ScopeConfig  `json:"scope,omitempty"`
-	NotificationID       string         `json:"notificationId,omitempty"`
-	VCS                  *VCSConfig     `json:"vcs,omitempty"`
-	RestoreInstructions  string         `json:"restore_instructions,omitempty"`
-	Status               string         `json:"status"`
-	SnapshotsCount       int            `json:"snapshots_count"`
-	LastBackupSnapshotID string         `json:"last_backup_snapshot_id,omitempty"`
-	LastBackupTime       string         `json:"last_backup_time,omitempty"`
-	LastBackupStatus     string         `json:"last_backup_status,omitempty"`
-	NextBackupTime       string         `json:"next_backup_time,omitempty"`
-	CreatedAt            string         `json:"created_at"`
-	UpdatedAt            string         `json:"updated_at"`
-}
-
-// ScheduleConfig represents the backup schedule configuration
-type ScheduleConfig struct {
-	Frequency           string   `json:"frequency"`
-	Hour                int      `json:"hour,omitempty"`
-	Minute              int      `json:"minute,omitempty"`
-	DaysOfWeek          []string `json:"days_of_week,omitempty"`
-	MonthlyScheduleType string   `json:"monthly_schedule_type,omitempty"`
-	DayOfMonth          int      `json:"day_of_month,omitempty"`
-	WeekdayOrdinal      string   `json:"weekday_ordinal,omitempty"`
-	WeekdayName         string   `json:"weekday_name,omitempty"`
-	CronExpression      string   `json:"cron_expression,omitempty"`
+	PolicyID             string        `json:"policy_id"`
+	AccountID            string        `json:"account_id"`
+	PolicyName           string        `json:"policy_name"`
+	IntegrationID        string        `json:"integration_id"`
+	Region               string        `json:"region"`
+	ProviderType         string        `json:"provider_type"`
+	Frequency            int           `json:"frequency"`
+	Description          string        `json:"description,omitempty"`
+	Scope                []ScopeConfig `json:"scope,omitempty"`
+	NotificationID       string        `json:"notificationId,omitempty"`
+	VCS                  *VCSConfig    `json:"vcs,omitempty"`
+	RestoreInstructions  string        `json:"restore_instructions,omitempty"`
+	Status               string        `json:"status"`
+	SnapshotsCount       int           `json:"snapshots_count"`
+	LastBackupSnapshotID string        `json:"last_backup_snapshot_id,omitempty"`
+	LastBackupTime       string        `json:"last_backup_time,omitempty"`
+	LastBackupStatus     string        `json:"last_backup_status,omitempty"`
+	NextBackupTime       string        `json:"next_backup_time,omitempty"`
+	CreatedAt            string        `json:"created_at"`
+	UpdatedAt            string        `json:"updated_at"`
+	TargetAccount        string        `json:"target_account,omitempty"`
+	TargetRegion         string        `json:"target_region,omitempty"`
+	AutoCreatePR         bool          `json:"auto_create_pr"`
+	ResilienceEnabled    bool          `json:"resilience_enabled"`
 }
 
 // ScopeConfig represents a resource scope configuration
@@ -89,7 +88,6 @@ type ScopeConfig struct {
 
 // VCSConfig represents VCS integration configuration
 type VCSConfig struct {
-	ProjectID        string `json:"project_id,omitempty"`
 	VCSIntegrationID string `json:"vcs_integration_id,omitempty"`
 	RepoID           string `json:"repo_id,omitempty"`
 }
@@ -144,8 +142,15 @@ func ConvertCreateToUpdate(create *PolicyCreateRequest) *PolicyUpdateRequest {
 		IntegrationID:       &create.IntegrationID,
 		Region:              &create.Region,
 		ProviderType:        &create.ProviderType,
-		Schedule:            &create.Schedule,
 		RestoreInstructions: &create.RestoreInstructions,
+		BackupOnSave:        &create.BackupOnSave,
+		AutoCreatePR:        &create.AutoCreatePR,
+		ResilienceEnabled:   &create.ResilienceEnabled,
+	}
+
+	if create.Frequency != 0 {
+		freq := create.Frequency
+		update.Frequency = &freq
 	}
 
 	if create.Description != "" {
@@ -164,14 +169,20 @@ func ConvertCreateToUpdate(create *PolicyCreateRequest) *PolicyUpdateRequest {
 		update.VCS = create.VCS
 	}
 
-	update.BackupOnSave = &create.BackupOnSave
+	if create.TargetAccount != "" {
+		update.TargetAccount = &create.TargetAccount
+	}
+
+	if create.TargetRegion != "" {
+		update.TargetRegion = &create.TargetRegion
+	}
 
 	return update
 }
 
 // Create creates a new backup policy
-func (s *BackupAndDrService) Create(policy *PolicyCreateRequest) (*PolicyResponse, error) {
-	endpoint := "/v2/backup-and-dr/policies"
+func (s *BackupAndDrService) Create(accountID string, policy *PolicyCreateRequest) (*PolicyResponse, error) {
+	endpoint := fmt.Sprintf("/backup/%s/policies", url.PathEscape(accountID))
 
 	req, err := s.client.newRequest("POST", endpoint, policy)
 	if err != nil {
@@ -198,8 +209,8 @@ func (s *BackupAndDrService) Create(policy *PolicyCreateRequest) (*PolicyRespons
 }
 
 // Get retrieves a specific backup policy by ID
-func (s *BackupAndDrService) Get(policyID string) (*PolicyResponse, error) {
-	endpoint := fmt.Sprintf("/v2/backup-and-dr/policies/%s", url.PathEscape(policyID))
+func (s *BackupAndDrService) Get(accountID, policyID string) (*PolicyResponse, error) {
+	endpoint := fmt.Sprintf("/backup/%s/policies/%s", url.PathEscape(accountID), url.PathEscape(policyID))
 
 	req, err := s.client.newRequest("GET", endpoint, nil)
 	if err != nil {
@@ -230,8 +241,8 @@ func (s *BackupAndDrService) Get(policyID string) (*PolicyResponse, error) {
 }
 
 // Update updates an existing backup policy
-func (s *BackupAndDrService) Update(policyID string, policy *PolicyUpdateRequest) (*PolicyResponse, error) {
-	endpoint := fmt.Sprintf("/v2/backup-and-dr/policies/%s", url.PathEscape(policyID))
+func (s *BackupAndDrService) Update(accountID, policyID string, policy *PolicyUpdateRequest) (*PolicyResponse, error) {
+	endpoint := fmt.Sprintf("/backup/%s/policies/%s", url.PathEscape(accountID), url.PathEscape(policyID))
 
 	req, err := s.client.newRequest("PUT", endpoint, policy)
 	if err != nil {
@@ -258,8 +269,8 @@ func (s *BackupAndDrService) Update(policyID string, policy *PolicyUpdateRequest
 }
 
 // Delete deletes a backup policy
-func (s *BackupAndDrService) Delete(policyID string) error {
-	endpoint := fmt.Sprintf("/v2/backup-and-dr/policies/%s", url.PathEscape(policyID))
+func (s *BackupAndDrService) Delete(accountID, policyID string) error {
+	endpoint := fmt.Sprintf("/backup/%s/policies/%s", url.PathEscape(accountID), url.PathEscape(policyID))
 
 	req, err := s.client.newRequest("DELETE", endpoint, nil)
 	if err != nil {
@@ -282,8 +293,8 @@ func (s *BackupAndDrService) Delete(policyID string) error {
 }
 
 // List retrieves all backup policies with optional filters
-func (s *BackupAndDrService) List(filters *PolicyListFilters) (*PolicyListResponse, error) {
-	endpoint := "/v2/backup-and-dr/policies"
+func (s *BackupAndDrService) List(accountID string, filters *PolicyListFilters) (*PolicyListResponse, error) {
+	endpoint := fmt.Sprintf("/backup/%s/policies", url.PathEscape(accountID))
 
 	// Build query parameters if filters are provided
 	queryParams := url.Values{}

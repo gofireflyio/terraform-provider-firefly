@@ -48,147 +48,19 @@ func TestStringValueOrNull_SingleCharacter(t *testing.T) {
 	}
 }
 
-// Unit tests for schedule validation
-
-func TestValidateScheduleConfig_Daily(t *testing.T) {
-	schedule := &ScheduleModel{
-		Frequency: types.StringValue("Daily"),
-		Hour:      types.Int64Value(2),
-		Minute:    types.Int64Value(30),
-	}
-
-	err := validateScheduleConfig(schedule)
-	if err != nil {
-		t.Errorf("Daily schedule validation failed: %v", err)
-	}
-}
-
-func TestValidateScheduleConfig_Weekly_Valid(t *testing.T) {
-	daysOfWeek := []attr.Value{
-		types.StringValue("Monday"),
-		types.StringValue("Friday"),
-	}
-
-	schedule := &ScheduleModel{
-		Frequency:  types.StringValue("Weekly"),
-		DaysOfWeek: types.ListValueMust(types.StringType, daysOfWeek),
-		Hour:       types.Int64Value(2),
-		Minute:     types.Int64Value(30),
-	}
-
-	err := validateScheduleConfig(schedule)
-	if err != nil {
-		t.Errorf("Weekly schedule validation failed: %v", err)
-	}
-}
-
-func TestValidateScheduleConfig_Weekly_MissingDays(t *testing.T) {
-	schedule := &ScheduleModel{
-		Frequency:  types.StringValue("Weekly"),
-		DaysOfWeek: types.ListNull(types.StringType),
-		Hour:       types.Int64Value(2),
-		Minute:     types.Int64Value(30),
-	}
-
-	err := validateScheduleConfig(schedule)
-	if err == nil {
-		t.Error("Expected error for Weekly schedule without days_of_week, got nil")
-	}
-
-	expectedMsg := "weekly schedule requires days_of_week to be specified"
-	if err.Error() != expectedMsg {
-		t.Errorf("Expected error message %q, got %q", expectedMsg, err.Error())
-	}
-}
-
-func TestValidateScheduleConfig_Monthly_SpecificDay(t *testing.T) {
-	schedule := &ScheduleModel{
-		Frequency:           types.StringValue("Monthly"),
-		MonthlyScheduleType: types.StringValue("specific_day"),
-		DayOfMonth:          types.Int64Value(15),
-		Hour:                types.Int64Value(3),
-		Minute:              types.Int64Value(0),
-	}
-
-	err := validateScheduleConfig(schedule)
-	if err != nil {
-		t.Errorf("Monthly specific_day validation failed: %v", err)
-	}
-}
-
-func TestValidateScheduleConfig_Monthly_SpecificDay_Invalid(t *testing.T) {
-	schedule := &ScheduleModel{
-		Frequency:           types.StringValue("Monthly"),
-		MonthlyScheduleType: types.StringValue("specific_day"),
-		DayOfMonth:          types.Int64Value(32),
-		Hour:                types.Int64Value(3),
-		Minute:              types.Int64Value(0),
-	}
-
-	err := validateScheduleConfig(schedule)
-	if err == nil {
-		t.Error("Expected error for day_of_month > 31, got nil")
-	}
-}
-
-func TestValidateScheduleConfig_Monthly_SpecificWeekday(t *testing.T) {
-	schedule := &ScheduleModel{
-		Frequency:           types.StringValue("Monthly"),
-		MonthlyScheduleType: types.StringValue("specific_weekday"),
-		WeekdayOrdinal:      types.StringValue("First"),
-		WeekdayName:         types.StringValue("Sunday"),
-		Hour:                types.Int64Value(3),
-		Minute:              types.Int64Value(0),
-	}
-
-	err := validateScheduleConfig(schedule)
-	if err != nil {
-		t.Errorf("Monthly specific_weekday validation failed: %v", err)
-	}
-}
-
-func TestValidateScheduleConfig_Monthly_MissingType(t *testing.T) {
-	schedule := &ScheduleModel{
-		Frequency:           types.StringValue("Monthly"),
-		MonthlyScheduleType: types.StringNull(),
-		Hour:                types.Int64Value(3),
-		Minute:              types.Int64Value(0),
-	}
-
-	err := validateScheduleConfig(schedule)
-	if err == nil {
-		t.Error("Expected error for Monthly without monthly_schedule_type, got nil")
-	}
-}
-
-func TestValidateScheduleConfig_InvalidFrequency(t *testing.T) {
-	schedule := &ScheduleModel{
-		Frequency: types.StringValue("Yearly"),
-	}
-
-	err := validateScheduleConfig(schedule)
-	if err == nil {
-		t.Error("Expected error for invalid frequency, got nil")
-	}
-}
-
 // Unit tests for model to API conversion
 
-func TestMapModelToAPIRequest_Daily(t *testing.T) {
+func TestMapModelToAPIRequest_WithFrequency(t *testing.T) {
 	ctx := context.Background()
 	model := &BackupAndDrApplicationResourceModel{
-		AccountID:     types.StringValue("test-account"),
-		ApplicationName:    types.StringValue("Test Policy"),
-		IntegrationID: types.StringValue("int-123"),
-		Region:        types.StringValue("us-east-1"),
-		ProviderType:  types.StringValue("aws"),
-		Description:   types.StringValue("Test description"),
-		BackupOnSave:  types.BoolValue(true),
-		Schedule: &ScheduleModel{
-			Frequency: types.StringValue("Daily"),
-			Hour:      types.Int64Value(2),
-			Minute:    types.Int64Value(30),
-		},
+		AccountID:       types.StringValue("test-account"),
+		ApplicationName: types.StringValue("Test Policy"),
+		IntegrationID:   types.StringValue("int-123"),
+		Region:          types.StringValue("us-east-1"),
+		ProviderType:    types.StringValue("aws"),
+		Description:     types.StringValue("Test description"),
+		BackupOnSave:    types.BoolValue(true),
+		Frequency:       types.Int64Value(24),
 	}
 
 	request, err := mapModelToAPIRequest(ctx, model)
@@ -200,20 +72,33 @@ func TestMapModelToAPIRequest_Daily(t *testing.T) {
 		t.Errorf("Expected PolicyName 'Test Policy', got '%s'", request.PolicyName)
 	}
 
-	if request.Schedule.Frequency != "Daily" {
-		t.Errorf("Expected Frequency 'Daily', got '%s'", request.Schedule.Frequency)
-	}
-
-	if request.Schedule.Hour != 2 {
-		t.Errorf("Expected Hour 2, got %d", request.Schedule.Hour)
-	}
-
-	if request.Schedule.Minute != 30 {
-		t.Errorf("Expected Minute 30, got %d", request.Schedule.Minute)
+	if request.Frequency != 24 {
+		t.Errorf("Expected Frequency 24, got %d", request.Frequency)
 	}
 
 	if !request.BackupOnSave {
 		t.Error("Expected BackupOnSave true, got false")
+	}
+}
+
+func TestMapModelToAPIRequest_FrequencyNull(t *testing.T) {
+	ctx := context.Background()
+	model := &BackupAndDrApplicationResourceModel{
+		AccountID:       types.StringValue("test-account"),
+		ApplicationName: types.StringValue("No Frequency Policy"),
+		IntegrationID:   types.StringValue("int-123"),
+		Region:          types.StringValue("us-east-1"),
+		ProviderType:    types.StringValue("aws"),
+		Frequency:       types.Int64Null(),
+	}
+
+	request, err := mapModelToAPIRequest(ctx, model)
+	if err != nil {
+		t.Fatalf("mapModelToAPIRequest failed: %v", err)
+	}
+
+	if request.Frequency != 0 {
+		t.Errorf("Expected Frequency 0 (not set), got %d", request.Frequency)
 	}
 }
 
@@ -231,16 +116,12 @@ func TestMapModelToAPIRequest_WithScope(t *testing.T) {
 	}
 
 	model := &BackupAndDrApplicationResourceModel{
-		AccountID:     types.StringValue("test-account"),
-		ApplicationName:    types.StringValue("Scoped Policy"),
-		IntegrationID: types.StringValue("int-123"),
-		Region:        types.StringValue("us-east-1"),
-		ProviderType:  types.StringValue("aws"),
-		Schedule: &ScheduleModel{
-			Frequency: types.StringValue("Daily"),
-			Hour:      types.Int64Value(2),
-			Minute:    types.Int64Value(0),
-		},
+		AccountID:       types.StringValue("test-account"),
+		ApplicationName: types.StringValue("Scoped Policy"),
+		IntegrationID:   types.StringValue("int-123"),
+		Region:          types.StringValue("us-east-1"),
+		ProviderType:    types.StringValue("aws"),
+		Frequency:       types.Int64Value(8),
 		Scope: []ScopeModel{
 			{
 				Type:  types.StringValue("tags"),
@@ -278,18 +159,13 @@ func TestMapModelToAPIRequest_WithScope(t *testing.T) {
 func TestMapModelToAPIRequest_WithVCS(t *testing.T) {
 	ctx := context.Background()
 	model := &BackupAndDrApplicationResourceModel{
-		AccountID:     types.StringValue("test-account"),
-		ApplicationName:    types.StringValue("VCS Policy"),
-		IntegrationID: types.StringValue("int-123"),
-		Region:        types.StringValue("us-east-1"),
-		ProviderType:  types.StringValue("aws"),
-		Schedule: &ScheduleModel{
-			Frequency: types.StringValue("Daily"),
-			Hour:      types.Int64Value(2),
-			Minute:    types.Int64Value(0),
-		},
+		AccountID:       types.StringValue("test-account"),
+		ApplicationName: types.StringValue("VCS Policy"),
+		IntegrationID:   types.StringValue("int-123"),
+		Region:          types.StringValue("us-east-1"),
+		ProviderType:    types.StringValue("aws"),
+		Frequency:       types.Int64Value(24),
 		VCS: &VCSModel{
-			ProjectID:        types.StringValue("project-123"),
 			VCSIntegrationID: types.StringValue("github-456"),
 			RepoID:           types.StringValue("repo-789"),
 		},
@@ -304,16 +180,49 @@ func TestMapModelToAPIRequest_WithVCS(t *testing.T) {
 		t.Fatal("Expected VCS config, got nil")
 	}
 
-	if request.VCS.ProjectID != "project-123" {
-		t.Errorf("Expected ProjectID 'project-123', got '%s'", request.VCS.ProjectID)
-	}
-
 	if request.VCS.VCSIntegrationID != "github-456" {
 		t.Errorf("Expected VCSIntegrationID 'github-456', got '%s'", request.VCS.VCSIntegrationID)
 	}
 
 	if request.VCS.RepoID != "repo-789" {
 		t.Errorf("Expected RepoID 'repo-789', got '%s'", request.VCS.RepoID)
+	}
+}
+
+func TestMapModelToAPIRequest_WithResilienceFields(t *testing.T) {
+	ctx := context.Background()
+	model := &BackupAndDrApplicationResourceModel{
+		AccountID:         types.StringValue("test-account"),
+		ApplicationName:   types.StringValue("Resilience Policy"),
+		IntegrationID:     types.StringValue("int-123"),
+		Region:            types.StringValue("us-east-1"),
+		ProviderType:      types.StringValue("aws"),
+		Frequency:         types.Int64Value(4),
+		TargetAccount:     types.StringValue("target-int-456"),
+		TargetRegion:      types.StringValue("eu-west-1"),
+		AutoCreatePR:      types.BoolValue(true),
+		ResilienceEnabled: types.BoolValue(true),
+	}
+
+	request, err := mapModelToAPIRequest(ctx, model)
+	if err != nil {
+		t.Fatalf("mapModelToAPIRequest failed: %v", err)
+	}
+
+	if request.TargetAccount != "target-int-456" {
+		t.Errorf("Expected TargetAccount 'target-int-456', got '%s'", request.TargetAccount)
+	}
+
+	if request.TargetRegion != "eu-west-1" {
+		t.Errorf("Expected TargetRegion 'eu-west-1', got '%s'", request.TargetRegion)
+	}
+
+	if !request.AutoCreatePR {
+		t.Error("Expected AutoCreatePR true, got false")
+	}
+
+	if !request.ResilienceEnabled {
+		t.Error("Expected ResilienceEnabled true, got false")
 	}
 }
 
@@ -328,15 +237,11 @@ func TestMapAPIResponseToModel(t *testing.T) {
 		Region:         "us-east-1",
 		ProviderType:   "aws",
 		Description:    "Test description",
+		Frequency:      24,
 		Status:         "Active",
 		SnapshotsCount: 5,
-		Schedule: client.ScheduleConfig{
-			Frequency: "Daily",
-			Hour:      2,
-			Minute:    30,
-		},
-		CreatedAt: "2025-01-01T00:00:00Z",
-		UpdatedAt: "2025-01-01T10:00:00Z",
+		CreatedAt:      "2025-01-01T00:00:00Z",
+		UpdatedAt:      "2025-01-01T10:00:00Z",
 	}
 
 	model := &BackupAndDrApplicationResourceModel{}
@@ -365,12 +270,8 @@ func TestMapAPIResponseToModel(t *testing.T) {
 		t.Errorf("Expected SnapshotsCount 5, got %d", model.SnapshotsCount.ValueInt64())
 	}
 
-	if model.Schedule == nil {
-		t.Fatal("Expected schedule, got nil")
-	}
-
-	if model.Schedule.Frequency.ValueString() != "Daily" {
-		t.Errorf("Expected Frequency 'Daily', got '%s'", model.Schedule.Frequency.ValueString())
+	if model.Frequency.ValueInt64() != 24 {
+		t.Errorf("Expected Frequency 24, got %d", model.Frequency.ValueInt64())
 	}
 }
 
@@ -382,11 +283,7 @@ func TestMapAPIResponseToModel_WithScope(t *testing.T) {
 		IntegrationID: "int-789",
 		Region:        "us-east-1",
 		ProviderType:  "aws",
-		Schedule: client.ScheduleConfig{
-			Frequency: "Daily",
-			Hour:      2,
-			Minute:    0,
-		},
+		Frequency:     8,
 		Scope: []client.ScopeConfig{
 			{
 				Type:  "tags",
@@ -397,9 +294,9 @@ func TestMapAPIResponseToModel_WithScope(t *testing.T) {
 				Value: []string{"aws_instance"},
 			},
 		},
-		Status:     "Active",
-		CreatedAt:  "2025-01-01T00:00:00Z",
-		UpdatedAt:  "2025-01-01T10:00:00Z",
+		Status:    "Active",
+		CreatedAt: "2025-01-01T00:00:00Z",
+		UpdatedAt: "2025-01-01T10:00:00Z",
 	}
 
 	model := &BackupAndDrApplicationResourceModel{}
@@ -421,20 +318,59 @@ func TestMapAPIResponseToModel_WithScope(t *testing.T) {
 	}
 }
 
+func TestMapAPIResponseToModel_WithResilienceFields(t *testing.T) {
+	response := &client.PolicyResponse{
+		PolicyID:          "policy-123",
+		AccountID:         "account-456",
+		PolicyName:        "Resilience Policy",
+		IntegrationID:     "int-789",
+		Region:            "us-east-1",
+		ProviderType:      "aws",
+		Frequency:         4,
+		TargetAccount:     "target-int-456",
+		TargetRegion:      "eu-west-1",
+		AutoCreatePR:      true,
+		ResilienceEnabled: true,
+		Status:            "Active",
+		CreatedAt:         "2025-01-01T00:00:00Z",
+		UpdatedAt:         "2025-01-01T10:00:00Z",
+	}
+
+	model := &BackupAndDrApplicationResourceModel{}
+	err := mapAPIResponseToModel(response, model)
+	if err != nil {
+		t.Fatalf("mapAPIResponseToModel failed: %v", err)
+	}
+
+	if model.TargetAccount.ValueString() != "target-int-456" {
+		t.Errorf("Expected TargetAccount 'target-int-456', got '%s'", model.TargetAccount.ValueString())
+	}
+
+	if model.TargetRegion.ValueString() != "eu-west-1" {
+		t.Errorf("Expected TargetRegion 'eu-west-1', got '%s'", model.TargetRegion.ValueString())
+	}
+
+	if !model.AutoCreatePR.ValueBool() {
+		t.Error("Expected AutoCreatePR true, got false")
+	}
+
+	if !model.ResilienceEnabled.ValueBool() {
+		t.Error("Expected ResilienceEnabled true, got false")
+	}
+}
+
 func TestMapAPIResponseToModel_NullOptionalFields(t *testing.T) {
 	response := &client.PolicyResponse{
-		PolicyID:       "policy-123",
-		AccountID:      "account-456",
-		PolicyName:     "Minimal Policy",
-		IntegrationID:  "int-789",
-		Region:         "us-east-1",
-		ProviderType:   "aws",
-		Schedule: client.ScheduleConfig{
-			Frequency: "Daily",
-		},
-		Status:    "Active",
-		CreatedAt: "2025-01-01T00:00:00Z",
-		UpdatedAt: "2025-01-01T10:00:00Z",
+		PolicyID:      "policy-123",
+		AccountID:     "account-456",
+		PolicyName:    "Minimal Policy",
+		IntegrationID: "int-789",
+		Region:        "us-east-1",
+		ProviderType:  "aws",
+		Frequency:     0,
+		Status:        "Active",
+		CreatedAt:     "2025-01-01T00:00:00Z",
+		UpdatedAt:     "2025-01-01T10:00:00Z",
 		// All optional fields are empty
 	}
 
@@ -454,6 +390,14 @@ func TestMapAPIResponseToModel_NullOptionalFields(t *testing.T) {
 
 	if !model.LastBackupSnapshotID.IsNull() {
 		t.Error("Expected LastBackupSnapshotID to be null")
+	}
+
+	if !model.TargetAccount.IsNull() {
+		t.Error("Expected TargetAccount to be null")
+	}
+
+	if !model.TargetRegion.IsNull() {
+		t.Error("Expected TargetRegion to be null")
 	}
 
 	if model.Scope != nil {
