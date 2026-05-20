@@ -22,7 +22,7 @@ data "firefly_backup_and_dr_applications" "aws_integration" {
   integration_id = "692ec8acce65b3dc46cfceb5"
 }
 
-# Combined filters: Active AWS policies in us-east-1
+# Combined filters: Active AWS applications in us-east-1
 data "firefly_backup_and_dr_applications" "filtered" {
   account_id     = "66169d5af4992fc0bab04510"
   status         = "Active"
@@ -33,27 +33,27 @@ data "firefly_backup_and_dr_applications" "filtered" {
 
 # Use results in outputs
 output "all_application_names" {
-  value = [for p in data.firefly_backup_and_dr_applications.all.applications : p.application_name]
+  value = [for app in data.firefly_backup_and_dr_applications.all.applications : app.application_name]
 }
 
 output "active_application_ids" {
-  value = [for p in data.firefly_backup_and_dr_applications.active.applications : p.application_id]
+  value = [for app in data.firefly_backup_and_dr_applications.active.applications : app.application_id]
 }
 
-# Find policies with failed last backup
+# Find applications with failed last backup
 locals {
   failed_backups = [
-    for p in data.firefly_backup_and_dr_applications.all.applications :
-    { name = p.application_name, id = p.application_id, last_backup_time = p.last_backup_time }
-    if p.last_backup_status == "Failed"
+    for app in data.firefly_backup_and_dr_applications.all.applications :
+    { name = app.application_name, id = app.application_id, last_backup_time = app.last_backup_time }
+    if app.last_backup_status == "Failed"
   ]
 }
 
 # Group by frequency
 output "frequency_distribution" {
   value = {
-    for freq in distinct([for p in data.firefly_backup_and_dr_applications.all.applications : tostring(p.frequency)]) :
-    freq => length([for p in data.firefly_backup_and_dr_applications.all.applications : p if tostring(p.frequency) == freq])
+    for freq in distinct([for app in data.firefly_backup_and_dr_applications.all.applications : tostring(app.frequency)]) :
+    freq => length([for app in data.firefly_backup_and_dr_applications.all.applications : app if tostring(app.frequency) == freq])
   }
 }
 ```
@@ -107,9 +107,9 @@ output "frequency_distribution" {
 ## Filter Behavior
 
 - **No Filters**: Returns all backup applications for the specified account
-- **Single Filter**: Returns only policies matching that specific criterion
-- **Multiple Filters**: Returns policies matching ALL specified criteria (AND logic)
-- **Empty Results**: If no policies match the criteria, the `applications` list will be empty (not an error)
+- **Single Filter**: Returns only applications matching that specific criterion
+- **Multiple Filters**: Returns applications matching ALL specified criteria (AND logic)
+- **Empty Results**: If no applications match the criteria, the `applications` list will be empty (not an error)
 
 ## Notes
 
