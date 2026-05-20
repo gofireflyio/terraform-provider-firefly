@@ -35,12 +35,12 @@ data "firefly_backup_and_dr_applications" "us_east" {
 }
 
 # Get backup applications for a specific cloud provider
-data "firefly_backup_and_dr_applications" "aws_policies" {
+data "firefly_backup_and_dr_applications" "aws_apps" {
   account_id    = "66169d5af4992fc0bab04510"
   provider_type = "aws"
 }
 
-# Combined filters: Active AWS policies in us-east-1
+# Combined filters: Active AWS applications in us-east-1
 data "firefly_backup_and_dr_applications" "filtered" {
   account_id     = "66169d5af4992fc0bab04510"
   status         = "Active"
@@ -51,38 +51,38 @@ data "firefly_backup_and_dr_applications" "filtered" {
 
 # Use results in outputs
 output "all_application_names" {
-  value = [for policy in data.firefly_backup_and_dr_applications.all.applications : policy.application_name]
+  value = [for app in data.firefly_backup_and_dr_applications.all.applications : app.application_name]
 }
 
 output "active_application_ids" {
-  value = [for policy in data.firefly_backup_and_dr_applications.active.applications : policy.application_id]
+  value = [for app in data.firefly_backup_and_dr_applications.active.applications : app.application_id]
 }
 
-output "policy_count_by_region" {
+output "application_count_by_region" {
   value = {
-    for region in distinct([for p in data.firefly_backup_and_dr_applications.all.applications : p.region]) :
-    region => length([for p in data.firefly_backup_and_dr_applications.all.applications : p if p.region == region])
+    for region in distinct([for app in data.firefly_backup_and_dr_applications.all.applications : app.region]) :
+    region => length([for app in data.firefly_backup_and_dr_applications.all.applications : app if app.region == region])
   }
 }
 
-# Reference specific policies for other resources
+# Reference specific applications for other resources
 locals {
-  daily_backup_policies = [
-    for policy in data.firefly_backup_and_dr_applications.all.applications :
-    policy if policy.schedule_frequency == "Daily"
+  frequent_backup_apps = [
+    for app in data.firefly_backup_and_dr_applications.all.applications :
+    app if app.frequency <= 8
   ]
 
   production_backups = [
-    for policy in data.firefly_backup_and_dr_applications.all.applications :
-    policy if can(regex("production", lower(policy.application_name)))
+    for app in data.firefly_backup_and_dr_applications.all.applications :
+    app if can(regex("production", lower(app.application_name)))
   ]
 }
 
-# Find policies with recent backups
+# Find applications with recent successful backups
 locals {
   recently_backed_up = [
-    for policy in data.firefly_backup_and_dr_applications.all.applications :
-    policy if policy.last_backup_status == "Success"
+    for app in data.firefly_backup_and_dr_applications.all.applications :
+    app if app.last_backup_status == "Success"
   ]
 }
 ```
@@ -117,10 +117,13 @@ locals {
 - `region` (String) - The cloud region where backups are stored
 - `provider_type` (String) - The cloud provider type
 - `description` (String) - Description of the backup application
-- `schedule_frequency` (String) - Backup schedule frequency (`One-time`, `Daily`, `Weekly`, `Monthly`)
+- `frequency` (Number) - Hours between scheduled backups (4, 8, 16, or 24)
 - `notification_id` (String) - Notification channel ID for backup alerts
 - `restore_instructions` (String) - Instructions for restoring from backups
-- `backup_on_save` (Boolean) - Whether backups are triggered on application save
+- `target_account` (String) - Target account/integration ID where the restore should land
+- `target_region` (String) - Target region where the restore should land
+- `auto_create_pr` (Boolean) - Whether the restore flow automatically opens a VCS pull request
+- `resilience_enabled` (Boolean) - Whether DR scheduling is enabled
 - `status` (String) - Current status of the application (`Active` or `Inactive`)
 - `snapshots_count` (Number) - Number of snapshots created by this application
 - `last_backup_snapshot_id` (String) - ID of the most recent backup snapshot
@@ -132,30 +135,30 @@ locals {
 
 ## Usage Examples
 
-### Listing All Policies
+### Listing All Applications
 ```terraform
 data "firefly_backup_and_dr_applications" "all" {
   account_id = "66169d5af4992fc0bab04510"
 }
 
-output "total_policies" {
+output "total_applications" {
   value = length(data.firefly_backup_and_dr_applications.all.applications)
 }
 
-output "policy_summary" {
+output "application_summary" {
   value = {
-    for policy in data.firefly_backup_and_dr_applications.all.applications :
-    policy.application_name => {
-      id        = policy.application_id
-      status    = policy.status
-      frequency = policy.schedule_frequency
-      region    = policy.region
+    for app in data.firefly_backup_and_dr_applications.all.applications :
+    app.application_name => {
+      id        = app.application_id
+      status    = app.status
+      frequency = app.frequency
+      region    = app.region
     }
   }
 }
 ```
 
-### Filtering Active Policies by Region
+### Filtering Active Applications by Region
 ```terraform
 data "firefly_backup_and_dr_applications" "active_us_east" {
   account_id = "66169d5af4992fc0bab04510"
@@ -163,50 +166,48 @@ data "firefly_backup_and_dr_applications" "active_us_east" {
   region     = "us-east-1"
 }
 
-# Use the filtered policies
 locals {
   active_us_east_application_ids = [
-    for policy in data.firefly_backup_and_dr_applications.active_us_east.applications :
-    policy.application_id
+    for app in data.firefly_backup_and_dr_applications.active_us_east.applications :
+    app.application_id
   ]
 }
 ```
 
-### Finding Policies with Backup Issues
+### Finding Applications with Backup Issues
 ```terraform
 data "firefly_backup_and_dr_applications" "all" {
   account_id = "66169d5af4992fc0bab04510"
 }
 
-# Identify policies with failed last backup
 locals {
   failed_backups = [
-    for policy in data.firefly_backup_and_dr_applications.all.applications :
+    for app in data.firefly_backup_and_dr_applications.all.applications :
     {
-      name              = policy.application_name
-      id                = policy.application_id
-      last_backup_time  = policy.last_backup_time
-      status            = policy.last_backup_status
+      name             = app.application_name
+      id               = app.application_id
+      last_backup_time = app.last_backup_time
+      status           = app.last_backup_status
     }
-    if policy.last_backup_status == "Failed"
+    if app.last_backup_status == "Failed"
   ]
 }
 
-output "failed_backup_policies" {
+output "failed_backup_applications" {
   value = local.failed_backups
 }
 ```
 
-### Grouping Policies by Provider and Region
+### Grouping Applications by Provider and Region
 ```terraform
 data "firefly_backup_and_dr_applications" "all" {
   account_id = "66169d5af4992fc0bab04510"
 }
 
-output "policies_by_provider_region" {
+output "applications_by_provider_region" {
   value = {
-    for policy in data.firefly_backup_and_dr_applications.all.applications :
-    "${policy.provider_type}/${policy.region}" => policy.application_name...
+    for app in data.firefly_backup_and_dr_applications.all.applications :
+    "${app.provider_type}/${app.region}" => app.application_name...
   }
 }
 ```
@@ -219,33 +220,32 @@ data "firefly_backup_and_dr_applications" "all" {
 
 output "frequency_distribution" {
   value = {
-    for freq in distinct([for p in data.firefly_backup_and_dr_applications.all.applications : p.schedule_frequency]) :
-    freq => length([for p in data.firefly_backup_and_dr_applications.all.applications : p if p.schedule_frequency == freq])
+    for freq in distinct([for app in data.firefly_backup_and_dr_applications.all.applications : tostring(app.frequency)]) :
+    freq => length([for app in data.firefly_backup_and_dr_applications.all.applications : app if tostring(app.frequency) == freq])
   }
 }
 
 # Example output:
 # {
-#   "Daily" = 15
-#   "Weekly" = 8
-#   "Monthly" = 3
-#   "One-time" = 2
+#   "4"  = 3
+#   "8"  = 8
+#   "16" = 5
+#   "24" = 15
 # }
 ```
 
-### Finding Policies by Integration
+### Finding Applications by Integration
 ```terraform
-# Get all policies for a specific cloud integration
-data "firefly_backup_and_dr_applications" "integration_policies" {
+data "firefly_backup_and_dr_applications" "integration_apps" {
   account_id     = "66169d5af4992fc0bab04510"
   integration_id = "692ec8acce65b3dc46cfceb5"
 }
 
 output "integration_backup_summary" {
   value = {
-    total_policies   = length(data.firefly_backup_and_dr_applications.integration_policies.applications)
-    active_count     = length([for p in data.firefly_backup_and_dr_applications.integration_policies.applications : p if p.status == "Active"])
-    total_snapshots  = sum([for p in data.firefly_backup_and_dr_applications.integration_policies.applications : p.snapshots_count])
+    total_applications = length(data.firefly_backup_and_dr_applications.integration_apps.applications)
+    active_count       = length([for app in data.firefly_backup_and_dr_applications.integration_apps.applications : app if app.status == "Active"])
+    total_snapshots    = sum([for app in data.firefly_backup_and_dr_applications.integration_apps.applications : app.snapshots_count])
   }
 }
 ```
@@ -257,20 +257,19 @@ data "firefly_backup_and_dr_applications" "active" {
   status     = "Active"
 }
 
-# Check for policies without recent backups
 locals {
-  policies_without_recent_backups = [
-    for policy in data.firefly_backup_and_dr_applications.active.applications :
-    policy if policy.last_backup_time == "" || policy.last_backup_status != "Success"
+  applications_without_recent_backups = [
+    for app in data.firefly_backup_and_dr_applications.active.applications :
+    app if app.last_backup_time == "" || app.last_backup_status != "Success"
   ]
 }
 
 output "backup_health_alert" {
   value = length(local.applications_without_recent_backups) > 0 ? {
-    alert = "WARNING: ${length(local.applications_without_recent_backups)} active policies without successful recent backups"
-    policies = [for p in local.applications_without_recent_backups : p.application_name]
+    alert        = "WARNING: ${length(local.applications_without_recent_backups)} active applications without successful recent backups"
+    applications = [for app in local.applications_without_recent_backups : app.application_name]
   } : {
-    alert = "OK: All active policies have successful recent backups"
+    alert = "OK: All active applications have successful recent backups"
   }
 }
 ```
@@ -284,25 +283,25 @@ data "firefly_backup_and_dr_applications" "all" {
 output "backup_inventory_report" {
   value = {
     summary = {
-      total_policies      = length(data.firefly_backup_and_dr_applications.all.applications)
-      active_policies     = length([for p in data.firefly_backup_and_dr_applications.all.applications : p if p.status == "Active"])
-      inactive_policies   = length([for p in data.firefly_backup_and_dr_applications.all.applications : p if p.status == "Inactive"])
-      total_snapshots     = sum([for p in data.firefly_backup_and_dr_applications.all.applications : p.snapshots_count])
+      total_applications  = length(data.firefly_backup_and_dr_applications.all.applications)
+      active_applications = length([for app in data.firefly_backup_and_dr_applications.all.applications : app if app.status == "Active"])
+      inactive_applications = length([for app in data.firefly_backup_and_dr_applications.all.applications : app if app.status == "Inactive"])
+      total_snapshots     = sum([for app in data.firefly_backup_and_dr_applications.all.applications : app.snapshots_count])
     }
     by_frequency = {
-      for freq in distinct([for p in data.firefly_backup_and_dr_applications.all.applications : p.schedule_frequency]) :
+      for freq in distinct([for app in data.firefly_backup_and_dr_applications.all.applications : tostring(app.frequency)]) :
       freq => {
-        count    = length([for p in data.firefly_backup_and_dr_applications.all.applications : p if p.schedule_frequency == freq])
-        policies = [for p in data.firefly_backup_and_dr_applications.all.applications : p.application_name if p.schedule_frequency == freq]
+        count        = length([for app in data.firefly_backup_and_dr_applications.all.applications : app if tostring(app.frequency) == freq])
+        applications = [for app in data.firefly_backup_and_dr_applications.all.applications : app.application_name if tostring(app.frequency) == freq]
       }
     }
     by_region = {
-      for region in distinct([for p in data.firefly_backup_and_dr_applications.all.applications : p.region]) :
-      region => length([for p in data.firefly_backup_and_dr_applications.all.applications : p if p.region == region])
+      for region in distinct([for app in data.firefly_backup_and_dr_applications.all.applications : app.region]) :
+      region => length([for app in data.firefly_backup_and_dr_applications.all.applications : app if app.region == region])
     }
     by_provider = {
-      for provider in distinct([for p in data.firefly_backup_and_dr_applications.all.applications : p.provider_type]) :
-      provider => length([for p in data.firefly_backup_and_dr_applications.all.applications : p if p.provider_type == provider])
+      for provider in distinct([for app in data.firefly_backup_and_dr_applications.all.applications : app.provider_type]) :
+      provider => length([for app in data.firefly_backup_and_dr_applications.all.applications : app if app.provider_type == provider])
     }
   }
 }
@@ -314,27 +313,26 @@ output "backup_inventory_report" {
 Use this data source to generate compliance reports showing all backup applications, their schedules, and last backup status for audit purposes.
 
 ### Backup Monitoring and Alerting
-Query backup applications to identify failed backups, missing backups, or policies without recent successful snapshots for monitoring dashboards.
+Query backup applications to identify failed backups, missing backups, or applications without recent successful snapshots for monitoring dashboards.
 
 ### Cost Analysis
 Analyze backup applications by region and provider to understand backup storage distribution and optimize costs.
 
-### Policy Discovery
+### Application Discovery
 Find existing backup applications before creating new ones to avoid duplication and ensure consistent backup coverage.
 
 ### Integration Validation
-Verify that all cloud integrations have appropriate backup applications configured and that policies are actively backing up resources.
+Verify that all cloud integrations have appropriate backup applications configured and that applications are actively backing up resources.
 
 ## Filter Behavior
 
 - **No Filters**: Returns all backup applications for the specified account
-- **Single Filter**: Returns only policies matching that specific criterion
-- **Multiple Filters**: Returns policies matching ALL specified criteria (AND logic)
-- **Empty Results**: If no policies match the criteria, the `applications` list will be empty (not an error)
+- **Single Filter**: Returns only applications matching that specific criterion
+- **Multiple Filters**: Returns applications matching ALL specified criteria (AND logic)
+- **Empty Results**: If no applications match the criteria, the `applications` list will be empty (not an error)
 
 ## Notes
 
-- The data source returns a simplified representation of policies. Nested blocks like `schedule`, `scope`, and `vcs` are not included in the output. Use the `firefly_backup_and_dr_application` resource for full policy details.
-- The `schedule_frequency` field provides a simplified view of the schedule (frequency only, without specific times or days).
+- The data source returns a simplified representation of applications. Nested blocks like `scope` and `vcs` are not included in the output. Use the `firefly_backup_and_dr_application` resource for full application details.
 - All timestamp fields are in ISO 8601 format.
 - The `snapshots_count` includes all snapshots created by the application, both successful and failed.
