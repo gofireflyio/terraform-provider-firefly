@@ -18,7 +18,7 @@ func TestBackupAndDrService_Create(t *testing.T) {
 		json.NewEncoder(w).Encode(authResp)
 	})
 
-	mockServer.AddHandler("/backup/test-account/policies", func(w http.ResponseWriter, r *http.Request) {
+	mockServer.AddHandler("/v2/backup-and-dr/policies", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 			return
@@ -108,7 +108,7 @@ func TestBackupAndDrService_CreateWithScope(t *testing.T) {
 		json.NewEncoder(w).Encode(authResp)
 	})
 
-	mockServer.AddHandler("/backup/test-account/policies", func(w http.ResponseWriter, r *http.Request) {
+	mockServer.AddHandler("/v2/backup-and-dr/policies", func(w http.ResponseWriter, r *http.Request) {
 		var createReq PolicyCreateRequest
 		json.NewDecoder(r.Body).Decode(&createReq)
 
@@ -186,7 +186,7 @@ func TestBackupAndDrService_CreateWithVCS(t *testing.T) {
 		json.NewEncoder(w).Encode(authResp)
 	})
 
-	mockServer.AddHandler("/backup/test-account/policies", func(w http.ResponseWriter, r *http.Request) {
+	mockServer.AddHandler("/v2/backup-and-dr/policies", func(w http.ResponseWriter, r *http.Request) {
 		var createReq PolicyCreateRequest
 		json.NewDecoder(r.Body).Decode(&createReq)
 
@@ -258,7 +258,7 @@ func TestBackupAndDrService_CreateWithResilienceFields(t *testing.T) {
 		json.NewEncoder(w).Encode(authResp)
 	})
 
-	mockServer.AddHandler("/backup/test-account/policies", func(w http.ResponseWriter, r *http.Request) {
+	mockServer.AddHandler("/v2/backup-and-dr/policies", func(w http.ResponseWriter, r *http.Request) {
 		var createReq PolicyCreateRequest
 		json.NewDecoder(r.Body).Decode(&createReq)
 
@@ -337,13 +337,13 @@ func TestBackupAndDrService_Get(t *testing.T) {
 		json.NewEncoder(w).Encode(authResp)
 	})
 
-	mockServer.AddHandler("/backup/test-account/policies/", func(w http.ResponseWriter, r *http.Request) {
+	mockServer.AddHandler("/v2/backup-and-dr/policies/", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 			return
 		}
 
-		policyID := r.URL.Path[len("/backup/test-account/policies/"):]
+		policyID := r.URL.Path[len("/v2/backup-and-dr/policies/"):]
 		if policyID != "policy-123" {
 			http.Error(w, "Not found", http.StatusNotFound)
 			return
@@ -403,13 +403,13 @@ func TestBackupAndDrService_Update(t *testing.T) {
 		json.NewEncoder(w).Encode(authResp)
 	})
 
-	mockServer.AddHandler("/backup/test-account/policies/", func(w http.ResponseWriter, r *http.Request) {
+	mockServer.AddHandler("/v2/backup-and-dr/policies/", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPut {
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 			return
 		}
 
-		policyID := r.URL.Path[len("/backup/test-account/policies/"):]
+		policyID := r.URL.Path[len("/v2/backup-and-dr/policies/"):]
 		if policyID != "policy-123" {
 			http.Error(w, "Not found", http.StatusNotFound)
 			return
@@ -492,13 +492,13 @@ func TestBackupAndDrService_Delete(t *testing.T) {
 		json.NewEncoder(w).Encode(authResp)
 	})
 
-	mockServer.AddHandler("/backup/test-account/policies/", func(w http.ResponseWriter, r *http.Request) {
+	mockServer.AddHandler("/v2/backup-and-dr/policies/", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodDelete {
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 			return
 		}
 
-		policyID := r.URL.Path[len("/backup/test-account/policies/"):]
+		policyID := r.URL.Path[len("/v2/backup-and-dr/policies/"):]
 		if policyID != "policy-123" {
 			http.Error(w, "Not found", http.StatusNotFound)
 			return
@@ -531,7 +531,7 @@ func TestBackupAndDrService_List(t *testing.T) {
 		json.NewEncoder(w).Encode(authResp)
 	})
 
-	mockServer.AddHandler("/backup/test-account/policies", func(w http.ResponseWriter, r *http.Request) {
+	mockServer.AddHandler("/v2/backup-and-dr/policies", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 			return
@@ -611,7 +611,7 @@ func TestBackupAndDrService_ListWithFilters(t *testing.T) {
 		json.NewEncoder(w).Encode(authResp)
 	})
 
-	mockServer.AddHandler("/backup/test-account/policies", func(w http.ResponseWriter, r *http.Request) {
+	mockServer.AddHandler("/v2/backup-and-dr/policies", func(w http.ResponseWriter, r *http.Request) {
 		status := r.URL.Query().Get("status")
 		region := r.URL.Query().Get("region")
 
@@ -688,7 +688,7 @@ func TestBackupAndDrService_ErrorHandling(t *testing.T) {
 		json.NewEncoder(w).Encode(authResp)
 	})
 
-	mockServer.AddHandler("/backup/test-account/policies/not-found", func(w http.ResponseWriter, r *http.Request) {
+	mockServer.AddHandler("/v2/backup-and-dr/policies/not-found", func(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Policy not found", http.StatusNotFound)
 	})
 

@@ -182,7 +182,7 @@ func ConvertCreateToUpdate(create *PolicyCreateRequest) *PolicyUpdateRequest {
 
 // Create creates a new backup policy
 func (s *BackupAndDrService) Create(accountID string, policy *PolicyCreateRequest) (*PolicyResponse, error) {
-	endpoint := fmt.Sprintf("/backup/%s/policies", url.PathEscape(accountID))
+	endpoint := "/v2/backup-and-dr/policies"
 
 	req, err := s.client.newRequest("POST", endpoint, policy)
 	if err != nil {
@@ -210,7 +210,7 @@ func (s *BackupAndDrService) Create(accountID string, policy *PolicyCreateReques
 
 // Get retrieves a specific backup policy by ID
 func (s *BackupAndDrService) Get(accountID, policyID string) (*PolicyResponse, error) {
-	endpoint := fmt.Sprintf("/backup/%s/policies/%s", url.PathEscape(accountID), url.PathEscape(policyID))
+	endpoint := fmt.Sprintf("/v2/backup-and-dr/policies/%s", url.PathEscape(policyID))
 
 	req, err := s.client.newRequest("GET", endpoint, nil)
 	if err != nil {
@@ -242,7 +242,7 @@ func (s *BackupAndDrService) Get(accountID, policyID string) (*PolicyResponse, e
 
 // Update updates an existing backup policy
 func (s *BackupAndDrService) Update(accountID, policyID string, policy *PolicyUpdateRequest) (*PolicyResponse, error) {
-	endpoint := fmt.Sprintf("/backup/%s/policies/%s", url.PathEscape(accountID), url.PathEscape(policyID))
+	endpoint := fmt.Sprintf("/v2/backup-and-dr/policies/%s", url.PathEscape(policyID))
 
 	req, err := s.client.newRequest("PUT", endpoint, policy)
 	if err != nil {
@@ -270,7 +270,7 @@ func (s *BackupAndDrService) Update(accountID, policyID string, policy *PolicyUp
 
 // Delete deletes a backup policy
 func (s *BackupAndDrService) Delete(accountID, policyID string) error {
-	endpoint := fmt.Sprintf("/backup/%s/policies/%s", url.PathEscape(accountID), url.PathEscape(policyID))
+	endpoint := fmt.Sprintf("/v2/backup-and-dr/policies/%s", url.PathEscape(policyID))
 
 	req, err := s.client.newRequest("DELETE", endpoint, nil)
 	if err != nil {
@@ -294,7 +294,7 @@ func (s *BackupAndDrService) Delete(accountID, policyID string) error {
 
 // List retrieves all backup policies with optional filters
 func (s *BackupAndDrService) List(accountID string, filters *PolicyListFilters) (*PolicyListResponse, error) {
-	endpoint := fmt.Sprintf("/backup/%s/policies", url.PathEscape(accountID))
+	endpoint := "/v2/backup-and-dr/policies"
 
 	// Build query parameters if filters are provided
 	queryParams := url.Values{}
