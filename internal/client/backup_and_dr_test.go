@@ -77,7 +77,7 @@ func TestBackupAndDrService_Create(t *testing.T) {
 		BackupOnSave:  true,
 	}
 
-	response, err := c.BackupAndDr.Create(testAccountID, policy)
+	response, err := c.BackupAndDr.Create(policy)
 	if err != nil {
 		t.Fatalf("Create failed: %v", err)
 	}
@@ -159,7 +159,7 @@ func TestBackupAndDrService_CreateWithScope(t *testing.T) {
 		BackupOnSave: true,
 	}
 
-	response, err := c.BackupAndDr.Create(testAccountID, policy)
+	response, err := c.BackupAndDr.Create(policy)
 	if err != nil {
 		t.Fatalf("Create failed: %v", err)
 	}
@@ -231,7 +231,7 @@ func TestBackupAndDrService_CreateWithVCS(t *testing.T) {
 		BackupOnSave: true,
 	}
 
-	response, err := c.BackupAndDr.Create(testAccountID, policy)
+	response, err := c.BackupAndDr.Create(policy)
 	if err != nil {
 		t.Fatalf("Create failed: %v", err)
 	}
@@ -306,7 +306,7 @@ func TestBackupAndDrService_CreateWithResilienceFields(t *testing.T) {
 		ResilienceEnabled: true,
 	}
 
-	response, err := c.BackupAndDr.Create(testAccountID, policy)
+	response, err := c.BackupAndDr.Create(policy)
 	if err != nil {
 		t.Fatalf("Create failed: %v", err)
 	}
@@ -376,7 +376,7 @@ func TestBackupAndDrService_Get(t *testing.T) {
 		t.Fatalf("Failed to create client: %v", err)
 	}
 
-	response, err := c.BackupAndDr.Get(testAccountID, "policy-123")
+	response, err := c.BackupAndDr.Get("policy-123")
 	if err != nil {
 		t.Fatalf("Get failed: %v", err)
 	}
@@ -465,7 +465,7 @@ func TestBackupAndDrService_Update(t *testing.T) {
 	}
 
 	updatePolicy := ConvertCreateToUpdate(policy)
-	response, err := c.BackupAndDr.Update(testAccountID, "policy-123", updatePolicy)
+	response, err := c.BackupAndDr.Update("policy-123", updatePolicy)
 	if err != nil {
 		t.Fatalf("Update failed: %v", err)
 	}
@@ -516,7 +516,7 @@ func TestBackupAndDrService_Delete(t *testing.T) {
 		t.Fatalf("Failed to create client: %v", err)
 	}
 
-	err = c.BackupAndDr.Delete(testAccountID, "policy-123")
+	err = c.BackupAndDr.Delete("policy-123")
 	if err != nil {
 		t.Fatalf("Delete failed: %v", err)
 	}
@@ -584,7 +584,7 @@ func TestBackupAndDrService_List(t *testing.T) {
 		t.Fatalf("Failed to create client: %v", err)
 	}
 
-	response, err := c.BackupAndDr.List(testAccountID, nil)
+	response, err := c.BackupAndDr.List(nil)
 	if err != nil {
 		t.Fatalf("List failed: %v", err)
 	}
@@ -661,7 +661,7 @@ func TestBackupAndDrService_ListWithFilters(t *testing.T) {
 		Region: "us-east-1",
 	}
 
-	response, err := c.BackupAndDr.List(testAccountID, filters)
+	response, err := c.BackupAndDr.List(filters)
 	if err != nil {
 		t.Fatalf("List with filters failed: %v", err)
 	}
@@ -701,12 +701,12 @@ func TestBackupAndDrService_ErrorHandling(t *testing.T) {
 		t.Fatalf("Failed to create client: %v", err)
 	}
 
-	_, err = c.BackupAndDr.Get(testAccountID, "not-found")
+	_, err = c.BackupAndDr.Get("not-found")
 	if err == nil {
 		t.Error("Expected error for not found policy, got nil")
 	}
 
-	err = c.BackupAndDr.Delete(testAccountID, "not-found")
+	err = c.BackupAndDr.Delete("not-found")
 	if err == nil {
 		t.Error("Expected error for deleting not found policy, got nil")
 	}

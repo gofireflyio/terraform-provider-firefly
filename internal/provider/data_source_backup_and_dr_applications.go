@@ -215,7 +215,7 @@ func (d *BackupAndDrApplicationsDataSource) Read(ctx context.Context, req dataso
 	})
 
 	// Get policies
-	policies, err := d.client.BackupAndDr.List(accountID, filters)
+	policies, err := d.client.BackupAndDr.List(filters)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error reading backup applications",

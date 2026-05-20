@@ -261,7 +261,7 @@ func (r *BackupAndDrApplicationResource) Create(ctx context.Context, req resourc
 	})
 
 	// Create the policy
-	createdPolicy, err := r.client.BackupAndDr.Create(data.AccountID.ValueString(), request)
+	createdPolicy, err := r.client.BackupAndDr.Create(request)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating backup application",
@@ -306,7 +306,7 @@ func (r *BackupAndDrApplicationResource) Read(ctx context.Context, req resource.
 	})
 
 	// Get the policy
-	policy, err := r.client.BackupAndDr.Get(data.AccountID.ValueString(), policyID)
+	policy, err := r.client.BackupAndDr.Get(policyID)
 	if err != nil {
 		errorMsg := err.Error()
 		if strings.Contains(errorMsg, "policy not found") ||
@@ -371,7 +371,7 @@ func (r *BackupAndDrApplicationResource) Update(ctx context.Context, req resourc
 	updateRequest := client.ConvertCreateToUpdate(request)
 
 	// Update the policy
-	updatedPolicy, err := r.client.BackupAndDr.Update(data.AccountID.ValueString(), policyID, updateRequest)
+	updatedPolicy, err := r.client.BackupAndDr.Update(policyID, updateRequest)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error updating backup application",
@@ -415,7 +415,7 @@ func (r *BackupAndDrApplicationResource) Delete(ctx context.Context, req resourc
 		"policy_id":  policyID,
 	})
 
-	err := r.client.BackupAndDr.Delete(data.AccountID.ValueString(), policyID)
+	err := r.client.BackupAndDr.Delete(policyID)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error deleting backup application",
