@@ -22,40 +22,14 @@ variable "secret_key" {
   sensitive = true
 }
 
-# Test: Backup & DR Application with Monthly last_day schedule
-# This reproduces the cron_expression inconsistency bug fix
-resource "firefly_backup_and_dr_application" "monthly_last_day" {
-  account_id     = "66169d5af4992fc0bab04510"
-  application_name = "terraform-test-monthly-last-day"
-  integration_id = "692ec8acce65b3dc46cfceb5"
-  region         = "eu-west-1"
-  provider_type  = "aws"
-
-  schedule {
-    frequency             = "Monthly"
-    monthly_schedule_type = "last_day"
-  }
-
-  scope {
-    type  = "tags"
-    value = ["terraform-test:true"]
-  }
-}
-
-# Test: Backup & DR Application with Daily schedule
-resource "firefly_backup_and_dr_application" "daily_backup" {
+# Test: Backup & DR Application with 24-hour backup frequency
+resource "firefly_backup_and_dr_application" "daily_equivalent" {
   account_id       = "66169d5af4992fc0bab04510"
-  application_name = "terraform-test-daily"
+  application_name = "terraform-test-24h"
   integration_id   = "692ec8acce65b3dc46cfceb5"
   region           = "eu-west-1"
   provider_type    = "aws"
-  description      = "Daily backup test"
-
-  schedule {
-    frequency = "Daily"
-    hour      = 2
-    minute    = 30
-  }
+  frequency        = 24
 
   scope {
     type  = "tags"
@@ -63,3 +37,18 @@ resource "firefly_backup_and_dr_application" "daily_backup" {
   }
 }
 
+# Test: Backup & DR Application with 8-hour backup frequency
+resource "firefly_backup_and_dr_application" "frequent_backup" {
+  account_id       = "66169d5af4992fc0bab04510"
+  application_name = "terraform-test-8h"
+  integration_id   = "692ec8acce65b3dc46cfceb5"
+  region           = "eu-west-1"
+  provider_type    = "aws"
+  description      = "Frequent backup test"
+  frequency        = 8
+
+  scope {
+    type  = "tags"
+    value = ["Demo: BackupDR"]
+  }
+}

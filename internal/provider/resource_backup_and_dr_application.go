@@ -95,6 +95,14 @@ func (r *BackupAndDrApplicationResource) Schema(ctx context.Context, req resourc
 					stringvalidator.LengthAtMost(500),
 				},
 			},
+			"frequency": schema.Int64Attribute{
+				MarkdownDescription: "Hours between scheduled backups (4, 8, 16, or 24)",
+				Optional:            true,
+				Computed:            true,
+				Validators: []validator.Int64{
+					int64validator.OneOf(4, 8, 16, 24),
+				},
+			},
 			"notification_id": schema.StringAttribute{
 				MarkdownDescription: "Notification channel ID for backup alerts",
 				Optional:            true,
@@ -111,6 +119,26 @@ func (r *BackupAndDrApplicationResource) Schema(ctx context.Context, req resourc
 				Optional:            true,
 				Computed:            true,
 				Default:             booldefault.StaticBool(true),
+			},
+			"target_account": schema.StringAttribute{
+				MarkdownDescription: "Target account/integration ID where the restore should land",
+				Optional:            true,
+				Computed:            true,
+			},
+			"target_region": schema.StringAttribute{
+				MarkdownDescription: "Target region where the restore should land",
+				Optional:            true,
+				Computed:            true,
+			},
+			"auto_create_pr": schema.BoolAttribute{
+				MarkdownDescription: "If true, the restore flow automatically opens a VCS pull request with the restored IaC",
+				Optional:            true,
+				Computed:            true,
+			},
+			"resilience_enabled": schema.BoolAttribute{
+				MarkdownDescription: "When true, target_account, target_region, and frequency are required and DR scheduling applies",
+				Optional:            true,
+				Computed:            true,
 			},
 			// Computed fields
 			"status": schema.StringAttribute{
@@ -151,70 +179,6 @@ func (r *BackupAndDrApplicationResource) Schema(ctx context.Context, req resourc
 		},
 
 		Blocks: map[string]schema.Block{
-			"schedule": schema.SingleNestedBlock{
-				MarkdownDescription: "Backup schedule configuration",
-				Attributes: map[string]schema.Attribute{
-					"frequency": schema.StringAttribute{
-						MarkdownDescription: "Backup frequency (One-time, Daily, Weekly, Monthly)",
-						Required:            true,
-						Validators: []validator.String{
-							stringvalidator.OneOf("One-time", "Daily", "Weekly", "Monthly"),
-						},
-					},
-					"hour": schema.Int64Attribute{
-						MarkdownDescription: "Hour of day for backup (0-23)",
-						Optional:            true,
-						Validators: []validator.Int64{
-							int64validator.Between(0, 23),
-						},
-					},
-					"minute": schema.Int64Attribute{
-						MarkdownDescription: "Minute of hour for backup (0-59)",
-						Optional:            true,
-						Validators: []validator.Int64{
-							int64validator.Between(0, 59),
-						},
-					},
-					"days_of_week": schema.ListAttribute{
-						ElementType:         types.StringType,
-						MarkdownDescription: "Days of week for Weekly schedule (e.g., ['Monday', 'Friday'])",
-						Optional:            true,
-						Validators: []validator.List{
-							listvalidator.SizeAtLeast(1),
-						},
-					},
-					"monthly_schedule_type": schema.StringAttribute{
-						MarkdownDescription: "Type of monthly schedule (specific_day, specific_weekday, last_day)",
-						Optional:            true,
-						Validators: []validator.String{
-							stringvalidator.OneOf("specific_day", "specific_weekday", "last_day"),
-						},
-					},
-					"day_of_month": schema.Int64Attribute{
-						MarkdownDescription: "Day of month for specific_day monthly schedule (1-31)",
-						Optional:            true,
-						Validators: []validator.Int64{
-							int64validator.Between(1, 31),
-						},
-					},
-					"weekday_ordinal": schema.StringAttribute{
-						MarkdownDescription: "Weekday ordinal for specific_weekday monthly schedule (First, Second, Third, Fourth, Last)",
-						Optional:            true,
-						Validators: []validator.String{
-							stringvalidator.OneOf("First", "Second", "Third", "Fourth", "Last"),
-						},
-					},
-					"weekday_name": schema.StringAttribute{
-						MarkdownDescription: "Weekday name for specific_weekday monthly schedule (e.g., 'Sunday')",
-						Optional:            true,
-					},
-					"cron_expression": schema.StringAttribute{
-						MarkdownDescription: "Cron expression as alternative to explicit schedule. If not provided, it may be computed by the server based on the schedule configuration.",
-						Optional:            true,
-						Computed:            true,
-					},
-				},
-			},
 			"scope": schema.ListNestedBlock{
 				MarkdownDescription: "Resource scope configurations for backup targeting",
 				NestedObject: schema.NestedBlockObject{
@@ -240,10 +204,6 @@ func (r *BackupAndDrApplicationResource) Schema(ctx context.Context, req resourc
 			"vcs": schema.SingleNestedBlock{
 				MarkdownDescription: "VCS integration configuration for backup artifacts",
 				Attributes: map[string]schema.Attribute{
-					"project_id": schema.StringAttribute{
-						MarkdownDescription: "Project ID for VCS integration",
-						Optional:            true,
-					},
 					"vcs_integration_id": schema.StringAttribute{
 						MarkdownDescription: "VCS integration ID",
 						Optional:            true,

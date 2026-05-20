@@ -91,8 +91,8 @@ func (d *BackupAndDrApplicationsDataSource) Schema(ctx context.Context, req data
 							MarkdownDescription: "Description of the backup application",
 							Computed:            true,
 						},
-						"schedule_frequency": schema.StringAttribute{
-							MarkdownDescription: "Backup schedule frequency (One-time, Daily, Weekly, Monthly)",
+						"frequency": schema.Int64Attribute{
+							MarkdownDescription: "Hours between scheduled backups (4, 8, 16, or 24)",
 							Computed:            true,
 						},
 						"notification_id": schema.StringAttribute{
@@ -101,6 +101,22 @@ func (d *BackupAndDrApplicationsDataSource) Schema(ctx context.Context, req data
 						},
 						"restore_instructions": schema.StringAttribute{
 							MarkdownDescription: "Restore instructions",
+							Computed:            true,
+						},
+						"target_account": schema.StringAttribute{
+							MarkdownDescription: "Target account/integration ID where the restore should land",
+							Computed:            true,
+						},
+						"target_region": schema.StringAttribute{
+							MarkdownDescription: "Target region where the restore should land",
+							Computed:            true,
+						},
+						"auto_create_pr": schema.BoolAttribute{
+							MarkdownDescription: "If true, the restore flow automatically opens a VCS pull request",
+							Computed:            true,
+						},
+						"resilience_enabled": schema.BoolAttribute{
+							MarkdownDescription: "When true, DR scheduling applies",
 							Computed:            true,
 						},
 						"status": schema.StringAttribute{
@@ -212,32 +228,29 @@ func (d *BackupAndDrApplicationsDataSource) Read(ctx context.Context, req dataso
 	data.Applications = make([]BackupAndDrApplicationDataSourceModel, len(policies.Data))
 	for i, policy := range policies.Data {
 		policyModel := BackupAndDrApplicationDataSourceModel{
-			ApplicationID:    types.StringValue(policy.PolicyID),
-			AccountID:        types.StringValue(policy.AccountID),
-			ApplicationName:  types.StringValue(policy.PolicyName),
-			IntegrationID:     types.StringValue(policy.IntegrationID),
-			Region:            types.StringValue(policy.Region),
-			ProviderType:      types.StringValue(policy.ProviderType),
-			ScheduleFrequency: types.StringValue(policy.Schedule.Frequency),
-			Status:            types.StringValue(policy.Status),
-			SnapshotsCount:    types.Int64Value(int64(policy.SnapshotsCount)),
-			CreatedAt:         types.StringValue(policy.CreatedAt),
-			UpdatedAt:         types.StringValue(policy.UpdatedAt),
+			ApplicationID:   types.StringValue(policy.PolicyID),
+			AccountID:       types.StringValue(policy.AccountID),
+			ApplicationName: types.StringValue(policy.PolicyName),
+			IntegrationID:   types.StringValue(policy.IntegrationID),
+			Region:          types.StringValue(policy.Region),
+			ProviderType:    types.StringValue(policy.ProviderType),
+			Frequency:       types.Int64Value(int64(policy.Frequency)),
+			AutoCreatePR:    types.BoolValue(policy.AutoCreatePR),
+			ResilienceEnabled: types.BoolValue(policy.ResilienceEnabled),
+			Status:          types.StringValue(policy.Status),
+			SnapshotsCount:  types.Int64Value(int64(policy.SnapshotsCount)),
+			CreatedAt:       types.StringValue(policy.CreatedAt),
+			UpdatedAt:       types.StringValue(policy.UpdatedAt),
 		}
 
-		// Optional string fields
 		policyModel.Description = StringValueOrNull(policy.Description)
-
 		policyModel.NotificationID = StringValueOrNull(policy.NotificationID)
-
 		policyModel.RestoreInstructions = StringValueOrNull(policy.RestoreInstructions)
-
+		policyModel.TargetAccount = StringValueOrNull(policy.TargetAccount)
+		policyModel.TargetRegion = StringValueOrNull(policy.TargetRegion)
 		policyModel.LastBackupSnapshotID = StringValueOrNull(policy.LastBackupSnapshotID)
-
 		policyModel.LastBackupTime = StringValueOrNull(policy.LastBackupTime)
-
 		policyModel.LastBackupStatus = StringValueOrNull(policy.LastBackupStatus)
-
 		policyModel.NextBackupTime = StringValueOrNull(policy.NextBackupTime)
 
 		data.Applications[i] = policyModel

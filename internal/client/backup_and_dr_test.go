@@ -7,17 +7,17 @@ import (
 	"time"
 )
 
+const testAccountID = "test-account"
+
 func TestBackupAndDrService_Create(t *testing.T) {
 	mockServer := NewMockServer()
 	defer mockServer.Close()
 
-	// Mock login
 	mockServer.AddHandler("/v2/login", func(w http.ResponseWriter, r *http.Request) {
 		authResp := AuthResponse{AccessToken: "test-token", ExpiresAt: time.Now().Add(time.Hour).Unix()}
 		json.NewEncoder(w).Encode(authResp)
 	})
 
-	// Mock create policy
 	mockServer.AddHandler("/v2/backup-and-dr/policies", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -30,21 +30,19 @@ func TestBackupAndDrService_Create(t *testing.T) {
 			return
 		}
 
-		// Validate required fields
 		if createReq.PolicyName == "" {
 			http.Error(w, "PolicyName is required", http.StatusBadRequest)
 			return
 		}
 
-		// Create response
 		createResp := PolicyResponse{
 			PolicyID:        "policy-123",
-			AccountID:       "test-account",
+			AccountID:       testAccountID,
 			PolicyName:      createReq.PolicyName,
 			IntegrationID:   createReq.IntegrationID,
 			Region:          createReq.Region,
 			ProviderType:    createReq.ProviderType,
-			Schedule:        createReq.Schedule,
+			Frequency:       createReq.Frequency,
 			Description:     createReq.Description,
 			Scope:           createReq.Scope,
 			NotificationID:  createReq.NotificationID,
@@ -60,12 +58,11 @@ func TestBackupAndDrService_Create(t *testing.T) {
 		json.NewEncoder(w).Encode(createResp)
 	})
 
-	client, err := NewClient(Config{
+	c, err := NewClient(Config{
 		AccessKey: "test-access",
 		SecretKey: "test-secret",
 		APIURL:    mockServer.URL(),
 	})
-
 	if err != nil {
 		t.Fatalf("Failed to create client: %v", err)
 	}
@@ -75,16 +72,12 @@ func TestBackupAndDrService_Create(t *testing.T) {
 		IntegrationID: "int-123",
 		Region:        "us-east-1",
 		ProviderType:  "aws",
-		Schedule: ScheduleConfig{
-			Frequency: "Daily",
-			Hour:      2,
-			Minute:    30,
-		},
-		Description:  "Test backup policy",
-		BackupOnSave: true,
+		Frequency:     24,
+		Description:   "Test backup policy",
+		BackupOnSave:  true,
 	}
 
-	response, err := client.BackupAndDr.Create(policy)
+	response, err := c.BackupAndDr.Create(policy)
 	if err != nil {
 		t.Fatalf("Create failed: %v", err)
 	}
@@ -101,152 +94,8 @@ func TestBackupAndDrService_Create(t *testing.T) {
 		t.Errorf("Expected status 'Active', got '%s'", response.Status)
 	}
 
-	if response.Schedule.Frequency != "Daily" {
-		t.Errorf("Expected frequency 'Daily', got '%s'", response.Schedule.Frequency)
-	}
-}
-
-func TestBackupAndDrService_CreateWithWeeklySchedule(t *testing.T) {
-	mockServer := NewMockServer()
-	defer mockServer.Close()
-
-	// Mock login
-	mockServer.AddHandler("/v2/login", func(w http.ResponseWriter, r *http.Request) {
-		authResp := AuthResponse{AccessToken: "test-token", ExpiresAt: time.Now().Add(time.Hour).Unix()}
-		json.NewEncoder(w).Encode(authResp)
-	})
-
-	// Mock create policy
-	mockServer.AddHandler("/v2/backup-and-dr/policies", func(w http.ResponseWriter, r *http.Request) {
-		var createReq PolicyCreateRequest
-		json.NewDecoder(r.Body).Decode(&createReq)
-
-		createResp := PolicyResponse{
-			PolicyID:       "policy-456",
-			AccountID:      "test-account",
-			PolicyName:     createReq.PolicyName,
-			IntegrationID:  createReq.IntegrationID,
-			Region:         createReq.Region,
-			ProviderType:   createReq.ProviderType,
-			Schedule:       createReq.Schedule,
-			Status:         "Active",
-			SnapshotsCount: 0,
-			CreatedAt:      "2025-01-01T00:00:00Z",
-			UpdatedAt:      "2025-01-01T00:00:00Z",
-		}
-
-		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(createResp)
-	})
-
-	client, err := NewClient(Config{
-		AccessKey: "test-access",
-		SecretKey: "test-secret",
-		APIURL:    mockServer.URL(),
-	})
-
-	if err != nil {
-		t.Fatalf("Failed to create client: %v", err)
-	}
-
-	policy := &PolicyCreateRequest{
-		PolicyName:    "Test Weekly Backup",
-		IntegrationID: "int-123",
-		Region:        "us-west-2",
-		ProviderType:  "aws",
-		Schedule: ScheduleConfig{
-			Frequency:  "Weekly",
-			DaysOfWeek: []string{"Sunday", "Wednesday"},
-			Hour:       1,
-			Minute:     0,
-		},
-		BackupOnSave: true,
-	}
-
-	response, err := client.BackupAndDr.Create(policy)
-	if err != nil {
-		t.Fatalf("Create failed: %v", err)
-	}
-
-	if len(response.Schedule.DaysOfWeek) != 2 {
-		t.Errorf("Expected 2 days of week, got %d", len(response.Schedule.DaysOfWeek))
-	}
-
-	if response.Schedule.DaysOfWeek[0] != "Sunday" {
-		t.Errorf("Expected first day 'Sunday', got '%s'", response.Schedule.DaysOfWeek[0])
-	}
-}
-
-func TestBackupAndDrService_CreateWithMonthlySchedule(t *testing.T) {
-	mockServer := NewMockServer()
-	defer mockServer.Close()
-
-	// Mock login
-	mockServer.AddHandler("/v2/login", func(w http.ResponseWriter, r *http.Request) {
-		authResp := AuthResponse{AccessToken: "test-token", ExpiresAt: time.Now().Add(time.Hour).Unix()}
-		json.NewEncoder(w).Encode(authResp)
-	})
-
-	// Mock create policy
-	mockServer.AddHandler("/v2/backup-and-dr/policies", func(w http.ResponseWriter, r *http.Request) {
-		var createReq PolicyCreateRequest
-		json.NewDecoder(r.Body).Decode(&createReq)
-
-		createResp := PolicyResponse{
-			PolicyID:       "policy-789",
-			AccountID:      "test-account",
-			PolicyName:     createReq.PolicyName,
-			IntegrationID:  createReq.IntegrationID,
-			Region:         createReq.Region,
-			ProviderType:   createReq.ProviderType,
-			Schedule:       createReq.Schedule,
-			Status:         "Active",
-			SnapshotsCount: 0,
-			CreatedAt:      "2025-01-01T00:00:00Z",
-			UpdatedAt:      "2025-01-01T00:00:00Z",
-		}
-
-		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(createResp)
-	})
-
-	client, err := NewClient(Config{
-		AccessKey: "test-access",
-		SecretKey: "test-secret",
-		APIURL:    mockServer.URL(),
-	})
-
-	if err != nil {
-		t.Fatalf("Failed to create client: %v", err)
-	}
-
-	policy := &PolicyCreateRequest{
-		PolicyName:    "Test Monthly Backup",
-		IntegrationID: "int-123",
-		Region:        "us-east-1",
-		ProviderType:  "aws",
-		Schedule: ScheduleConfig{
-			Frequency:           "Monthly",
-			MonthlyScheduleType: "specific_weekday",
-			WeekdayOrdinal:      "First",
-			WeekdayName:         "Sunday",
-			Hour:                3,
-			Minute:              0,
-		},
-		BackupOnSave: true,
-	}
-
-	response, err := client.BackupAndDr.Create(policy)
-	if err != nil {
-		t.Fatalf("Create failed: %v", err)
-	}
-
-	if response.Schedule.MonthlyScheduleType != "specific_weekday" {
-		t.Errorf("Expected monthly_schedule_type 'specific_weekday', got '%s'", response.Schedule.MonthlyScheduleType)
-	}
-
-	if response.Schedule.WeekdayOrdinal != "First" {
-		t.Errorf("Expected weekday_ordinal 'First', got '%s'", response.Schedule.WeekdayOrdinal)
+	if response.Frequency != 24 {
+		t.Errorf("Expected frequency 24, got %d", response.Frequency)
 	}
 }
 
@@ -254,25 +103,23 @@ func TestBackupAndDrService_CreateWithScope(t *testing.T) {
 	mockServer := NewMockServer()
 	defer mockServer.Close()
 
-	// Mock login
 	mockServer.AddHandler("/v2/login", func(w http.ResponseWriter, r *http.Request) {
 		authResp := AuthResponse{AccessToken: "test-token", ExpiresAt: time.Now().Add(time.Hour).Unix()}
 		json.NewEncoder(w).Encode(authResp)
 	})
 
-	// Mock create policy
 	mockServer.AddHandler("/v2/backup-and-dr/policies", func(w http.ResponseWriter, r *http.Request) {
 		var createReq PolicyCreateRequest
 		json.NewDecoder(r.Body).Decode(&createReq)
 
 		createResp := PolicyResponse{
 			PolicyID:       "policy-scope",
-			AccountID:      "test-account",
+			AccountID:      testAccountID,
 			PolicyName:     createReq.PolicyName,
 			IntegrationID:  createReq.IntegrationID,
 			Region:         createReq.Region,
 			ProviderType:   createReq.ProviderType,
-			Schedule:       createReq.Schedule,
+			Frequency:      createReq.Frequency,
 			Scope:          createReq.Scope,
 			Status:         "Active",
 			SnapshotsCount: 0,
@@ -284,12 +131,11 @@ func TestBackupAndDrService_CreateWithScope(t *testing.T) {
 		json.NewEncoder(w).Encode(createResp)
 	})
 
-	client, err := NewClient(Config{
+	c, err := NewClient(Config{
 		AccessKey: "test-access",
 		SecretKey: "test-secret",
 		APIURL:    mockServer.URL(),
 	})
-
 	if err != nil {
 		t.Fatalf("Failed to create client: %v", err)
 	}
@@ -299,11 +145,7 @@ func TestBackupAndDrService_CreateWithScope(t *testing.T) {
 		IntegrationID: "int-123",
 		Region:        "us-east-1",
 		ProviderType:  "aws",
-		Schedule: ScheduleConfig{
-			Frequency: "Daily",
-			Hour:      2,
-			Minute:    0,
-		},
+		Frequency:     8,
 		Scope: []ScopeConfig{
 			{
 				Type:  "tags",
@@ -317,7 +159,7 @@ func TestBackupAndDrService_CreateWithScope(t *testing.T) {
 		BackupOnSave: true,
 	}
 
-	response, err := client.BackupAndDr.Create(policy)
+	response, err := c.BackupAndDr.Create(policy)
 	if err != nil {
 		t.Fatalf("Create failed: %v", err)
 	}
@@ -339,25 +181,23 @@ func TestBackupAndDrService_CreateWithVCS(t *testing.T) {
 	mockServer := NewMockServer()
 	defer mockServer.Close()
 
-	// Mock login
 	mockServer.AddHandler("/v2/login", func(w http.ResponseWriter, r *http.Request) {
 		authResp := AuthResponse{AccessToken: "test-token", ExpiresAt: time.Now().Add(time.Hour).Unix()}
 		json.NewEncoder(w).Encode(authResp)
 	})
 
-	// Mock create policy
 	mockServer.AddHandler("/v2/backup-and-dr/policies", func(w http.ResponseWriter, r *http.Request) {
 		var createReq PolicyCreateRequest
 		json.NewDecoder(r.Body).Decode(&createReq)
 
 		createResp := PolicyResponse{
 			PolicyID:       "policy-vcs",
-			AccountID:      "test-account",
+			AccountID:      testAccountID,
 			PolicyName:     createReq.PolicyName,
 			IntegrationID:  createReq.IntegrationID,
 			Region:         createReq.Region,
 			ProviderType:   createReq.ProviderType,
-			Schedule:       createReq.Schedule,
+			Frequency:      createReq.Frequency,
 			VCS:            createReq.VCS,
 			Status:         "Active",
 			SnapshotsCount: 0,
@@ -369,12 +209,11 @@ func TestBackupAndDrService_CreateWithVCS(t *testing.T) {
 		json.NewEncoder(w).Encode(createResp)
 	})
 
-	client, err := NewClient(Config{
+	c, err := NewClient(Config{
 		AccessKey: "test-access",
 		SecretKey: "test-secret",
 		APIURL:    mockServer.URL(),
 	})
-
 	if err != nil {
 		t.Fatalf("Failed to create client: %v", err)
 	}
@@ -384,20 +223,15 @@ func TestBackupAndDrService_CreateWithVCS(t *testing.T) {
 		IntegrationID: "int-123",
 		Region:        "us-east-1",
 		ProviderType:  "aws",
-		Schedule: ScheduleConfig{
-			Frequency: "Daily",
-			Hour:      2,
-			Minute:    0,
-		},
+		Frequency:     24,
 		VCS: &VCSConfig{
-			ProjectID:        "project-456",
 			VCSIntegrationID: "github-integration-789",
 			RepoID:           "backup-repo-123",
 		},
 		BackupOnSave: true,
 	}
 
-	response, err := client.BackupAndDr.Create(policy)
+	response, err := c.BackupAndDr.Create(policy)
 	if err != nil {
 		t.Fatalf("Create failed: %v", err)
 	}
@@ -406,12 +240,91 @@ func TestBackupAndDrService_CreateWithVCS(t *testing.T) {
 		t.Fatal("Expected VCS config, got nil")
 	}
 
-	if response.VCS.ProjectID != "project-456" {
-		t.Errorf("Expected VCS project ID 'project-456', got '%s'", response.VCS.ProjectID)
-	}
-
 	if response.VCS.VCSIntegrationID != "github-integration-789" {
 		t.Errorf("Expected VCS integration ID 'github-integration-789', got '%s'", response.VCS.VCSIntegrationID)
+	}
+
+	if response.VCS.RepoID != "backup-repo-123" {
+		t.Errorf("Expected VCS repo ID 'backup-repo-123', got '%s'", response.VCS.RepoID)
+	}
+}
+
+func TestBackupAndDrService_CreateWithResilienceFields(t *testing.T) {
+	mockServer := NewMockServer()
+	defer mockServer.Close()
+
+	mockServer.AddHandler("/v2/login", func(w http.ResponseWriter, r *http.Request) {
+		authResp := AuthResponse{AccessToken: "test-token", ExpiresAt: time.Now().Add(time.Hour).Unix()}
+		json.NewEncoder(w).Encode(authResp)
+	})
+
+	mockServer.AddHandler("/v2/backup-and-dr/policies", func(w http.ResponseWriter, r *http.Request) {
+		var createReq PolicyCreateRequest
+		json.NewDecoder(r.Body).Decode(&createReq)
+
+		createResp := PolicyResponse{
+			PolicyID:          "policy-resilience",
+			AccountID:         testAccountID,
+			PolicyName:        createReq.PolicyName,
+			IntegrationID:     createReq.IntegrationID,
+			Region:            createReq.Region,
+			ProviderType:      createReq.ProviderType,
+			Frequency:         createReq.Frequency,
+			TargetAccount:     createReq.TargetAccount,
+			TargetRegion:      createReq.TargetRegion,
+			AutoCreatePR:      createReq.AutoCreatePR,
+			ResilienceEnabled: createReq.ResilienceEnabled,
+			Status:            "Active",
+			SnapshotsCount:    0,
+			CreatedAt:         "2025-01-01T00:00:00Z",
+			UpdatedAt:         "2025-01-01T00:00:00Z",
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusCreated)
+		json.NewEncoder(w).Encode(createResp)
+	})
+
+	c, err := NewClient(Config{
+		AccessKey: "test-access",
+		SecretKey: "test-secret",
+		APIURL:    mockServer.URL(),
+	})
+	if err != nil {
+		t.Fatalf("Failed to create client: %v", err)
+	}
+
+	policy := &PolicyCreateRequest{
+		PolicyName:        "Test Resilience Backup",
+		IntegrationID:     "int-123",
+		Region:            "us-east-1",
+		ProviderType:      "aws",
+		Frequency:         4,
+		TargetAccount:     "target-int-456",
+		TargetRegion:      "eu-west-1",
+		AutoCreatePR:      true,
+		ResilienceEnabled: true,
+	}
+
+	response, err := c.BackupAndDr.Create(policy)
+	if err != nil {
+		t.Fatalf("Create failed: %v", err)
+	}
+
+	if response.TargetAccount != "target-int-456" {
+		t.Errorf("Expected TargetAccount 'target-int-456', got '%s'", response.TargetAccount)
+	}
+
+	if response.TargetRegion != "eu-west-1" {
+		t.Errorf("Expected TargetRegion 'eu-west-1', got '%s'", response.TargetRegion)
+	}
+
+	if !response.AutoCreatePR {
+		t.Error("Expected AutoCreatePR true, got false")
+	}
+
+	if !response.ResilienceEnabled {
+		t.Error("Expected ResilienceEnabled true, got false")
 	}
 }
 
@@ -419,13 +332,11 @@ func TestBackupAndDrService_Get(t *testing.T) {
 	mockServer := NewMockServer()
 	defer mockServer.Close()
 
-	// Mock login
 	mockServer.AddHandler("/v2/login", func(w http.ResponseWriter, r *http.Request) {
 		authResp := AuthResponse{AccessToken: "test-token", ExpiresAt: time.Now().Add(time.Hour).Unix()}
 		json.NewEncoder(w).Encode(authResp)
 	})
 
-	// Mock get policy
 	mockServer.AddHandler("/v2/backup-and-dr/policies/", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -439,17 +350,13 @@ func TestBackupAndDrService_Get(t *testing.T) {
 		}
 
 		policy := PolicyResponse{
-			PolicyID:      "policy-123",
-			AccountID:     "test-account",
-			PolicyName:    "Test Policy",
-			IntegrationID: "int-123",
-			Region:        "us-east-1",
-			ProviderType:  "aws",
-			Schedule: ScheduleConfig{
-				Frequency: "Daily",
-				Hour:      2,
-				Minute:    30,
-			},
+			PolicyID:       "policy-123",
+			AccountID:      testAccountID,
+			PolicyName:     "Test Policy",
+			IntegrationID:  "int-123",
+			Region:         "us-east-1",
+			ProviderType:   "aws",
+			Frequency:      24,
 			Status:         "Active",
 			SnapshotsCount: 5,
 			CreatedAt:      "2025-01-01T00:00:00Z",
@@ -460,17 +367,16 @@ func TestBackupAndDrService_Get(t *testing.T) {
 		json.NewEncoder(w).Encode(policy)
 	})
 
-	client, err := NewClient(Config{
+	c, err := NewClient(Config{
 		AccessKey: "test-access",
 		SecretKey: "test-secret",
 		APIURL:    mockServer.URL(),
 	})
-
 	if err != nil {
 		t.Fatalf("Failed to create client: %v", err)
 	}
 
-	response, err := client.BackupAndDr.Get("policy-123")
+	response, err := c.BackupAndDr.Get("policy-123")
 	if err != nil {
 		t.Fatalf("Get failed: %v", err)
 	}
@@ -492,13 +398,11 @@ func TestBackupAndDrService_Update(t *testing.T) {
 	mockServer := NewMockServer()
 	defer mockServer.Close()
 
-	// Mock login
 	mockServer.AddHandler("/v2/login", func(w http.ResponseWriter, r *http.Request) {
 		authResp := AuthResponse{AccessToken: "test-token", ExpiresAt: time.Now().Add(time.Hour).Unix()}
 		json.NewEncoder(w).Encode(authResp)
 	})
 
-	// Mock update policy
 	mockServer.AddHandler("/v2/backup-and-dr/policies/", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPut {
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -511,34 +415,41 @@ func TestBackupAndDrService_Update(t *testing.T) {
 			return
 		}
 
-		var updateReq PolicyCreateRequest
+		var updateReq PolicyUpdateRequest
 		json.NewDecoder(r.Body).Decode(&updateReq)
+
+		freq := 0
+		if updateReq.Frequency != nil {
+			freq = *updateReq.Frequency
+		}
 
 		updateResp := PolicyResponse{
 			PolicyID:       policyID,
-			AccountID:      "test-account",
-			PolicyName:     updateReq.PolicyName,
-			IntegrationID:  updateReq.IntegrationID,
-			Region:         updateReq.Region,
-			ProviderType:   updateReq.ProviderType,
-			Schedule:       updateReq.Schedule,
-			Description:    updateReq.Description,
+			AccountID:      testAccountID,
+			PolicyName:     *updateReq.PolicyName,
+			IntegrationID:  *updateReq.IntegrationID,
+			Region:         *updateReq.Region,
+			ProviderType:   *updateReq.ProviderType,
+			Frequency:      freq,
 			Status:         "Active",
 			SnapshotsCount: 10,
 			CreatedAt:      "2025-01-01T00:00:00Z",
 			UpdatedAt:      "2025-01-02T00:00:00Z",
 		}
 
+		if updateReq.Description != nil {
+			updateResp.Description = *updateReq.Description
+		}
+
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(updateResp)
 	})
 
-	client, err := NewClient(Config{
+	c, err := NewClient(Config{
 		AccessKey: "test-access",
 		SecretKey: "test-secret",
 		APIURL:    mockServer.URL(),
 	})
-
 	if err != nil {
 		t.Fatalf("Failed to create client: %v", err)
 	}
@@ -548,18 +459,13 @@ func TestBackupAndDrService_Update(t *testing.T) {
 		IntegrationID: "int-123",
 		Region:        "us-east-1",
 		ProviderType:  "aws",
-		Schedule: ScheduleConfig{
-			Frequency:  "Weekly",
-			DaysOfWeek: []string{"Monday", "Friday"},
-			Hour:       3,
-			Minute:     0,
-		},
-		Description:  "Updated description",
-		BackupOnSave: true,
+		Frequency:     8,
+		Description:   "Updated description",
+		BackupOnSave:  true,
 	}
 
 	updatePolicy := ConvertCreateToUpdate(policy)
-	response, err := client.BackupAndDr.Update("policy-123", updatePolicy)
+	response, err := c.BackupAndDr.Update("policy-123", updatePolicy)
 	if err != nil {
 		t.Fatalf("Update failed: %v", err)
 	}
@@ -568,8 +474,8 @@ func TestBackupAndDrService_Update(t *testing.T) {
 		t.Errorf("Expected name 'Updated Policy', got '%s'", response.PolicyName)
 	}
 
-	if response.Schedule.Frequency != "Weekly" {
-		t.Errorf("Expected frequency 'Weekly', got '%s'", response.Schedule.Frequency)
+	if response.Frequency != 8 {
+		t.Errorf("Expected frequency 8, got %d", response.Frequency)
 	}
 
 	if response.Description != "Updated description" {
@@ -581,13 +487,11 @@ func TestBackupAndDrService_Delete(t *testing.T) {
 	mockServer := NewMockServer()
 	defer mockServer.Close()
 
-	// Mock login
 	mockServer.AddHandler("/v2/login", func(w http.ResponseWriter, r *http.Request) {
 		authResp := AuthResponse{AccessToken: "test-token", ExpiresAt: time.Now().Add(time.Hour).Unix()}
 		json.NewEncoder(w).Encode(authResp)
 	})
 
-	// Mock delete policy
 	mockServer.AddHandler("/v2/backup-and-dr/policies/", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodDelete {
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -603,17 +507,16 @@ func TestBackupAndDrService_Delete(t *testing.T) {
 		w.WriteHeader(http.StatusNoContent)
 	})
 
-	client, err := NewClient(Config{
+	c, err := NewClient(Config{
 		AccessKey: "test-access",
 		SecretKey: "test-secret",
 		APIURL:    mockServer.URL(),
 	})
-
 	if err != nil {
 		t.Fatalf("Failed to create client: %v", err)
 	}
 
-	err = client.BackupAndDr.Delete("policy-123")
+	err = c.BackupAndDr.Delete("policy-123")
 	if err != nil {
 		t.Fatalf("Delete failed: %v", err)
 	}
@@ -623,13 +526,11 @@ func TestBackupAndDrService_List(t *testing.T) {
 	mockServer := NewMockServer()
 	defer mockServer.Close()
 
-	// Mock login
 	mockServer.AddHandler("/v2/login", func(w http.ResponseWriter, r *http.Request) {
 		authResp := AuthResponse{AccessToken: "test-token", ExpiresAt: time.Now().Add(time.Hour).Unix()}
 		json.NewEncoder(w).Encode(authResp)
 	})
 
-	// Mock list policies
 	mockServer.AddHandler("/v2/backup-and-dr/policies", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -639,33 +540,24 @@ func TestBackupAndDrService_List(t *testing.T) {
 		response := PolicyListResponse{
 			Data: []PolicyResponse{
 				{
-					PolicyID:      "policy-1",
-					AccountID:     "test-account",
-					PolicyName:    "Daily Backup",
-					IntegrationID: "int-123",
-					Region:        "us-east-1",
-					ProviderType:  "aws",
-					Schedule: ScheduleConfig{
-						Frequency: "Daily",
-						Hour:      2,
-						Minute:    0,
-					},
+					PolicyID:       "policy-1",
+					AccountID:      testAccountID,
+					PolicyName:     "Daily Backup",
+					IntegrationID:  "int-123",
+					Region:         "us-east-1",
+					ProviderType:   "aws",
+					Frequency:      24,
 					Status:         "Active",
 					SnapshotsCount: 5,
 				},
 				{
-					PolicyID:      "policy-2",
-					AccountID:     "test-account",
-					PolicyName:    "Weekly Backup",
-					IntegrationID: "int-456",
-					Region:        "us-west-2",
-					ProviderType:  "aws",
-					Schedule: ScheduleConfig{
-						Frequency:  "Weekly",
-						DaysOfWeek: []string{"Sunday"},
-						Hour:       1,
-						Minute:     0,
-					},
+					PolicyID:       "policy-2",
+					AccountID:      testAccountID,
+					PolicyName:     "Frequent Backup",
+					IntegrationID:  "int-456",
+					Region:         "us-west-2",
+					ProviderType:   "aws",
+					Frequency:      4,
 					Status:         "Inactive",
 					SnapshotsCount: 0,
 				},
@@ -683,17 +575,16 @@ func TestBackupAndDrService_List(t *testing.T) {
 		json.NewEncoder(w).Encode(response)
 	})
 
-	client, err := NewClient(Config{
+	c, err := NewClient(Config{
 		AccessKey: "test-access",
 		SecretKey: "test-secret",
 		APIURL:    mockServer.URL(),
 	})
-
 	if err != nil {
 		t.Fatalf("Failed to create client: %v", err)
 	}
 
-	response, err := client.BackupAndDr.List(nil)
+	response, err := c.BackupAndDr.List(nil)
 	if err != nil {
 		t.Fatalf("List failed: %v", err)
 	}
@@ -715,15 +606,12 @@ func TestBackupAndDrService_ListWithFilters(t *testing.T) {
 	mockServer := NewMockServer()
 	defer mockServer.Close()
 
-	// Mock login
 	mockServer.AddHandler("/v2/login", func(w http.ResponseWriter, r *http.Request) {
 		authResp := AuthResponse{AccessToken: "test-token", ExpiresAt: time.Now().Add(time.Hour).Unix()}
 		json.NewEncoder(w).Encode(authResp)
 	})
 
-	// Mock list policies with query parameters
 	mockServer.AddHandler("/v2/backup-and-dr/policies", func(w http.ResponseWriter, r *http.Request) {
-		// Verify query parameters
 		status := r.URL.Query().Get("status")
 		region := r.URL.Query().Get("region")
 
@@ -735,17 +623,13 @@ func TestBackupAndDrService_ListWithFilters(t *testing.T) {
 		response := PolicyListResponse{
 			Data: []PolicyResponse{
 				{
-					PolicyID:      "policy-filtered",
-					AccountID:     "test-account",
-					PolicyName:    "Filtered Policy",
-					IntegrationID: "int-123",
-					Region:        "us-east-1",
-					ProviderType:  "aws",
-					Schedule: ScheduleConfig{
-						Frequency: "Daily",
-						Hour:      2,
-						Minute:    0,
-					},
+					PolicyID:       "policy-filtered",
+					AccountID:      testAccountID,
+					PolicyName:     "Filtered Policy",
+					IntegrationID:  "int-123",
+					Region:         "us-east-1",
+					ProviderType:   "aws",
+					Frequency:      24,
 					Status:         "Active",
 					SnapshotsCount: 3,
 				},
@@ -763,12 +647,11 @@ func TestBackupAndDrService_ListWithFilters(t *testing.T) {
 		json.NewEncoder(w).Encode(response)
 	})
 
-	client, err := NewClient(Config{
+	c, err := NewClient(Config{
 		AccessKey: "test-access",
 		SecretKey: "test-secret",
 		APIURL:    mockServer.URL(),
 	})
-
 	if err != nil {
 		t.Fatalf("Failed to create client: %v", err)
 	}
@@ -778,7 +661,7 @@ func TestBackupAndDrService_ListWithFilters(t *testing.T) {
 		Region: "us-east-1",
 	}
 
-	response, err := client.BackupAndDr.List(filters)
+	response, err := c.BackupAndDr.List(filters)
 	if err != nil {
 		t.Fatalf("List with filters failed: %v", err)
 	}
@@ -800,35 +683,30 @@ func TestBackupAndDrService_ErrorHandling(t *testing.T) {
 	mockServer := NewMockServer()
 	defer mockServer.Close()
 
-	// Mock login
 	mockServer.AddHandler("/v2/login", func(w http.ResponseWriter, r *http.Request) {
 		authResp := AuthResponse{AccessToken: "test-token", ExpiresAt: time.Now().Add(time.Hour).Unix()}
 		json.NewEncoder(w).Encode(authResp)
 	})
 
-	// Mock error responses
 	mockServer.AddHandler("/v2/backup-and-dr/policies/not-found", func(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Policy not found", http.StatusNotFound)
 	})
 
-	client, err := NewClient(Config{
+	c, err := NewClient(Config{
 		AccessKey: "test-access",
 		SecretKey: "test-secret",
 		APIURL:    mockServer.URL(),
 	})
-
 	if err != nil {
 		t.Fatalf("Failed to create client: %v", err)
 	}
 
-	// Test Get with not found
-	_, err = client.BackupAndDr.Get("not-found")
+	_, err = c.BackupAndDr.Get("not-found")
 	if err == nil {
 		t.Error("Expected error for not found policy, got nil")
 	}
 
-	// Test Delete with not found
-	err = client.BackupAndDr.Delete("not-found")
+	err = c.BackupAndDr.Delete("not-found")
 	if err == nil {
 		t.Error("Expected error for deleting not found policy, got nil")
 	}
